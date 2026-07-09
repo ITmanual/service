@@ -1,0 +1,116 @@
+Here is the HTML code for a Bash Scripting Walk-through Exercise, covering **Variables, Booleans, Metacharacters, Strings, and Loops**.
+
+This file can be saved as an `.html` file and opened in any web browser.
+
+``` html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bash Scripting Walk-through: Core Concepts</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 900px; margin: 0 auto; }
+        h1 { color: #2C3E50; border-bottom: 2px solid #3498DB; padding-bottom: 10px; }
+        h2 { color: #34495E; margin-top: 25px; }
+        .instruction-box { background-color: #ECF0F1; border: 1px solid #BDC3C7; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .code-block { background-color: #2C3E50; color: #ECF0F1; padding: 15px; margin: 10px 0; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.9em; }
+        .output { background-color: #F8F9F9; border-left: 5px solid #2ECC71; padding: 10px; margin: 10px 0; }
+        ol { counter-reset: item; }
+        ol li { margin-bottom: 15px; }
+        ol li::before { content: "Step " counter(item) ": "; counter-increment: item; font-weight: bold; color: #E74C3C; }
+        strong { color: #3498DB; }
+    </style>
+</head>
+<body>
+
+    <h1>Bash Scripting Walk-through: Core Concepts</h1>
+
+    <div class="instruction-box">
+        <p><strong>Objective:</strong> To create a single Bash script that demonstrates the use of variables, strings, metacharacters, loops, and conditional logic (Booleans).</p>
+        <p><strong>Instructions:</strong> Follow the steps below. In your Linux environment, create a file named <code>core_script.sh</code> and execute the commands in your terminal as instructed.</p>
+    </div>
+
+    <h2>Activity Tasks</h2>
+    <ol>
+        <li>
+            <strong>Setup and Shebang:</strong>
+            <p>Open your script file and add the shebang line to ensure it executes with Bash. Add a comment with your name and the date.</p>
+            <div class="code-block">
+                #!/bin/bash<br>
+                # Student: [Your Name] - Date: [Current Date]
+            </div>
+            <p><em>Action:</em> Save the file.</p>
+        </li>
+
+        <li>
+            <strong>Variables and Strings:</strong>
+            <p>Define two variables: <code>USER_NAME</code> for your name (as a string) and <code>START_COUNT</code> with a numerical value of <code>1</code>. Use <strong>double quotes (")</strong> around your name to demonstrate proper string handling and the **metacharacter** for preserving spaces.</p>
+            <div class="code-block">
+                USER_NAME="James Parriett"<br>
+                START_COUNT=1<br>
+                TARGET_COUNT=5<br>
+                echo "--- Script Started by: $USER_NAME ---"
+            </div>
+            <p><em>Action:</em> Add the code above to your script and save.</p>
+        </li>
+
+        <li>
+            <strong>Loop (for loop) Implementation:</strong>
+            <p>Write a <code>for</code> loop that iterates from <code>START_COUNT</code> up to <code>TARGET_COUNT</code> (inclusive). In each iteration, print the current loop number. **Use single quotes (')** in the echo statement to observe the difference in metacharacter handling if you were to use a variable inside it (though not required here, it's a good learning point).</p>
+            <div class="code-block">
+                for i in $(seq $START_COUNT $TARGET_COUNT); do<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;echo "Current loop iteration: $i"<br>
+                done
+            </div>
+            <p><em>Action:</em> Add the code above to your script and save.</p>
+        </li>
+
+        <li>
+            <strong>Boolean/Conditional Logic (If Statement):</strong>
+            <p>After the loop, use an <code>if</code> statement to check if the <code>TARGET_COUNT</code> is greater than 3. This condition will evaluate to a **Boolean** true or false (exit code 0 for true, non-zero for false). If the condition is true, print a success message. Use the <strong>metacharacter `>` (redirection)</strong> to write a brief summary to a new file named <code>summary.txt</code>.</p>
+            <div class="code-block">
+                # Boolean/Conditional Logic Test<br>
+                if [ $TARGET_COUNT -gt 3 ]; then<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;echo -e "\nCondition is TRUE: Target count ($TARGET_COUNT) is greater than 3."<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;echo "Script completed successfully on $(date)." > summary.txt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;echo "Summary written to summary.txt"<br>
+                else<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;echo "\nCondition is FALSE: Target count is NOT greater than 3."<br>
+                fi<br>
+                echo "--- Script Finished ---"
+            </div>
+            <p><em>Action:</em> Add the conditional block to your script and save. The complete script should now be ready.</p>
+        </li>
+
+        <li>
+            <strong>Execution and Verification:</strong>
+            <p>Make the script executable, run it, and check the newly created file.</p>
+            <div class="code-block">
+                chmod +x core_script.sh<br>
+                ./core_script.sh<br>
+                cat summary.txt
+            </div>
+            <p><em>Expected Console Output (The `cat summary.txt` output should also be included here):</em></p>
+            <div class="output">
+                --- Script Started by: James Parriett ---<br>
+                Current loop iteration: 1<br>
+                Current loop iteration: 2<br>
+                Current loop iteration: 3<br>
+                Current loop iteration: 4<br>
+                Current loop iteration: 5<br>
+                <br>
+                Condition is TRUE: Target count (5) is greater than 3.<br>
+                Summary written to summary.txt<br>
+                --- Script Finished ---<br>
+                <br>
+                (Output of cat summary.txt)<br>
+                Script completed successfully on Mon Mar 30 13:42:00 PDT 2026.
+            </div>
+        </li>
+    </ol>
+
+</body>
+</html>
+
+```

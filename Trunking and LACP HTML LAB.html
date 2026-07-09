@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Switch Trunking, LACP, and VLAN Lab</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    header {
+      background: #111827;
+      padding: 16px 24px;
+      border-bottom: 1px solid #1f2937;
+    }
+    h1, h2, h3 {
+      margin: 0 0 8px 0;
+      color: #f9fafb;
+    }
+    main {
+      display: flex;
+      gap: 16px;
+      padding: 16px 24px 32px 24px;
+    }
+    .column {
+      flex: 1;
+      background: #111827;
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid #1f2937;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: #1d4ed8;
+      color: #e5e7eb;
+      margin-right: 4px;
+    }
+    p {
+      font-size: 14px;
+      line-height: 1.4;
+      margin: 6px 0;
+    }
+    ul {
+      padding-left: 18px;
+      font-size: 14px;
+    }
+    li {
+      margin-bottom: 4px;
+    }
+    .topology {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 32px;
+      margin: 12px 0 16px 0;
+      font-size: 13px;
+    }
+    .device {
+      border-radius: 8px;
+      padding: 8px 10px;
+      border: 1px solid #374151;
+      background: #020617;
+      min-width: 120px;
+      text-align: center;
+    }
+    .device-title {
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #facc15;
+    }
+    .link {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    select, textarea, button {
+      font-family: monospace;
+      font-size: 13px;
+    }
+    select {
+      background: #020617;
+      color: #e5e7eb;
+      border-radius: 4px;
+      border: 1px solid #374151;
+      padding: 4px 6px;
+      margin-bottom: 8px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      background: #020617;
+      color: #e5e7eb;
+      border-radius: 4px;
+      border: 1px solid #374151;
+      padding: 8px;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 6px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 600;
+    }
+    button.secondary {
+      background: #1d4ed8;
+      color: #e5e7eb;
+      margin-left: 4px;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 13px;
+      padding: 6px 8px;
+      border-radius: 4px;
+    }
+    .status.ok {
+      background: #022c22;
+      color: #bbf7d0;
+      border: 1px solid #16a34a;
+    }
+    .status.err {
+      background: #450a0a;
+      color: #fecaca;
+      border: 1px solid #b91c1c;
+    }
+    .checklist-item {
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .checklist-item span {
+      font-weight: bold;
+      margin-right: 4px;
+    }
+    code {
+      background: #020617;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+    .objective-done {
+      color: #22c55e;
+    }
+    .objective-pending {
+      color: #f97316;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Interactive Switch Trunking, LACP, and VLAN Lab</h1>
+  <p style="font-size:13px;color:#9ca3af;">
+    Scenario-focused practice aligned with CompTIA Network+ (N10-008) switching, VLAN, trunking, and link aggregation objectives.
+  </p>
+</header>
+
+<main>
+  <!-- LEFT: Scenario & CompTIA context -->
+  <section class="column">
+    <h2>Scenario & topology</h2>
+    <p>
+      You are the network technician for a small office. The environment uses two managed switches
+      to connect user devices and shared resources.
+    </p>
+    <p>
+      Your goal is to configure:
+    </p>
+    <ul>
+      <li><strong>Trunk ports</strong> between switches to carry multiple VLANs.</li>
+      <li><strong>LACP (802.3ad)</strong> to bundle two physical links into one logical port-channel.</li>
+      <li><strong>VLAN tagging</strong> so a PC on one switch can reach a printer on another switch in the same VLAN.</li>
+    </ul>
+
+    <div class="topology">
+      <div class="device">
+        <div class="device-title">SW1</div>
+        <div>Access port: <code>Fa0/10</code> → PC1 (VLAN 20)</div>
+        <div>Trunk/LACP: <code>Fa0/1</code>, <code>Fa0/2</code> → SW2</div>
+      </div>
+      <div class="device">
+        <div class="device-title">SW2</div>
+        <div>Access port: <code>Fa0/11</code> → Printer1 (VLAN 20)</div>
+        <div>Trunk/LACP: <code>Fa0/1</code>, <code>Fa0/2</code> → SW1</div>
+      </div>
+    </div>
+
+    <h3>CompTIA Network+ relevant objectives</h3>
+    <ul>
+      <li><span class="badge">2.1</span><strong>Compare and contrast network topologies and types</strong> (switching, VLANs, trunking).</li>
+      <li><span class="badge">2.3</span><strong>Configure and deploy common Ethernet switching features</strong> (VLANs, trunking, LACP).</li>
+      <li><span class="badge">3.1</span><strong>Use appropriate tools</strong> (show commands, verification of VLAN and trunk status).</li>
+    </ul>
+
+    <h3>High-level tasks</h3>
+    <ol style="font-size:14px;padding-left:18px;">
+      <li><strong>Create VLAN 20</strong> on both switches.</li>
+      <li><strong>Assign access ports</strong> to VLAN 20:
+        <ul>
+          <li>SW1: <code>Fa0/10</code> (PC1)</li>
+          <li>SW2: <code>Fa0/11</code> (Printer1)</li>
+        </ul>
+      </li>
+      <li><strong>Configure trunk ports</strong> between SW1 and SW2 on <code>Fa0/1</code> and <code>Fa0/2</code>.</li>
+      <li><strong>Bundle the trunk links using LACP</strong> into <code>Port-channel1</code>.</li>
+      <li><strong>Verify</strong> that VLAN 20 is allowed across the trunk and that PC1 can reach Printer1 (conceptually).</li>
+    </ol>
+
+    <h3>Concept reminders</h3>
+    <p><strong>VLAN:</strong> Logically segments a switch into multiple broadcast domains. Devices in the same VLAN can communicate at Layer 2, even if on different switches, as long as VLAN tagging is consistent and trunks carry that VLAN.</p>
+    <p><strong>Trunk port:</strong> A switch port that carries traffic for multiple VLANs using tagging (e.g., IEEE 802.1Q). Both ends of the trunk must agree on trunking mode and allowed VLANs.</p>
+    <p><strong>LACP (802.3ad):</strong> A standard for bundling multiple physical links into a single logical link (port-channel) for redundancy and increased bandwidth.</p>
+  </section>
+
+  <!-- RIGHT: Interactive CLI-style lab -->
+  <section class="column">
+    <h2>Interactive configuration lab</h2>
+    <p style="font-size:13px;color:#9ca3af;">
+      Choose a switch, enter your Cisco-style commands, and click “Check Configuration”.
+      This is a logic check only—no real devices are configured.
+    </p>
+
+    <label for="switchSelect"><strong>Active device:</strong></label><br />
+    <select id="switchSelect">
+      <option value="SW1">SW1</option>
+      <option value="SW2">SW2</option>
+    </select>
+
+    <h3>Step 1: Create VLAN 20 and name it</h3>
+    <p style="font-size:13px;">
+      Example:
+      <code>vlan 20</code>,
+      <code>name USERS</code>
+    </p>
+    <textarea id="vlanConfig" placeholder="SW(config)# vlan 20
+SW(config-vlan)# name USERS"></textarea>
+    <button onclick="checkVlan()">Check VLAN config</button>
+    <div id="vlanStatus" class="status"></div>
+
+    <h3>Step 2: Assign access ports to VLAN 20</h3>
+    <p style="font-size:13px;">
+      SW1: <code>interface Fa0/10</code> → <code>switchport mode access</code>, <code>switchport access vlan 20</code><br />
+      SW2: <code>interface Fa0/11</code> → same configuration.
+    </p>
+    <textarea id="accessConfig" placeholder="SW(config)# interface fa0/10
+SW(config-if)# switchport mode access
+SW(config-if)# switchport access vlan 20"></textarea>
+    <button onclick="checkAccess()">Check access port config</button>
+    <div id="accessStatus" class="status"></div>
+
+    <h3>Step 3: Configure trunk ports and LACP</h3>
+    <p style="font-size:13px;">
+      On both switches, bundle <code>Fa0/1</code> and <code>Fa0/2</code> into <code>Port-channel1</code> using LACP and allow VLAN 20:
+    </p>
+    <ul>
+      <li><code>interface range fa0/1 - 2</code></li>
+      <li><code>channel-group 1 mode active</code></li>
+      <li><code>interface port-channel 1</code></li>
+      <li><code>switchport mode trunk</code></li>
+      <li><code>switchport trunk allowed vlan 20</code> (or <code>20,other-vlans</code>)</li>
+    </ul>
+    <textarea id="trunkConfig" placeholder="SW(config)# interface range fa0/1 - 2
+SW(config-if-range)# channel-group 1 mode active
+SW(config)# interface port-channel 1
+SW(config-if)# switchport mode trunk
+SW(config-if)# switchport trunk allowed vlan 20"></textarea>
+    <button onclick="checkTrunk()">Check trunk &amp; LACP config</button>
+    <div id="trunkStatus" class="status"></div>
+
+    <h3>Step 4: Verification commands (conceptual)</h3>
+    <p style="font-size:13px;">
+      After configuration, you would typically verify with commands such as:
+    </p>
+    <ul>
+      <li><code>show vlan brief</code> – confirm VLAN 20 exists and ports are assigned.</li>
+      <li><code>show interfaces trunk</code> – confirm trunk status and allowed VLANs.</li>
+      <li><code>show etherchannel summary</code> – confirm LACP bundle is up.</li>
+      <li>From PC1, ping Printer1 (same VLAN 20, different switch).</li>
+    </ul>
+
+    <h3>Objective checklist</h3>
+    <div id="checklist">
+      <div class="checklist-item">
+        <span id="objVlan" class="objective-pending">[ ]</span> VLAN 20 created on both switches.
+      </div>
+      <div class="checklist-item">
+        <span id="objAccess" class="objective-pending">[ ]</span> PC and printer access ports assigned to VLAN 20.
+      </div>
+      <div class="checklist-item">
+        <span id="objTrunk" class="objective-pending">[ ]</span> Trunk/LACP configured and VLAN 20 allowed.
+      </div>
+    </div>
+
+    <button class="secondary" onclick="resetLab()">Reset lab</button>
+  </section>
+</main>
+
+<script>
+  // Simple state tracking for objectives
+  const state = {
+    vlanOK: false,
+    accessOK: false,
+    trunkOK: false
+  };
+
+  function updateChecklist() {
+    const objVlan = document.getElementById('objVlan');
+    const objAccess = document.getElementById('objAccess');
+    const objTrunk = document.getElementById('objTrunk');
+
+    if (state.vlanOK) {
+      objVlan.textContent = '[X]';
+      objVlan.className = 'objective-done';
+    } else {
+      objVlan.textContent = '[ ]';
+      objVlan.className = 'objective-pending';
+    }
+
+    if (state.accessOK) {
+      objAccess.textContent = '[X]';
+      objAccess.className = 'objective-done';
+    } else {
+      objAccess.textContent = '[ ]';
+      objAccess.className = 'objective-pending';
+    }
+
+    if (state.trunkOK) {
+      objTrunk.textContent = '[X]';
+      objTrunk.className = 'objective-done';
+    } else {
+      objTrunk.textContent = '[ ]';
+      objTrunk.className = 'objective-pending';
+    }
+  }
+
+  function setStatus(elementId, ok, msg) {
+    const el = document.getElementById(elementId);
+    el.className = 'status ' + (ok ? 'ok' : 'err');
+    el.textContent = msg;
+    updateChecklist();
+  }
+
+  // Very lightweight pattern checks – not strict, just enough to guide students
+  function checkVlan() {
+    const txt = document.getElementById('vlanConfig').value.toLowerCase();
+    const hasVlan20 = /vlan\s+20/.test(txt);
+    const hasName = /name\s+\S+/.test(txt);
+
+    if (hasVlan20 && hasName) {
+      state.vlanOK = true;
+      setStatus('vlanStatus', true, 'VLAN 20 with a name appears to be configured correctly on this switch.');
+    } else {
+      state.vlanOK = false;
+      setStatus('vlanStatus', false, 'Missing or incorrect VLAN 20 configuration. Ensure you have both "vlan 20" and a "name" command.');
+    }
+  }
+
+  function checkAccess() {
+    const txt = document.getElementById('accessConfig').value.toLowerCase();
+    const sw = document.getElementById('switchSelect').value;
+
+    let requiredInt = (sw === 'SW1') ? /interface\s+fa0\/10/ : /interface\s+fa0\/11/;
+    const hasInt = requiredInt.test(txt);
+    const hasModeAccess = /switchport\s+mode\s+access/.test(txt);
+    const hasAccessVlan20 = /switchport\s+access\s+vlan\s+20/.test(txt);
+
+    if (hasInt && hasModeAccess && hasAccessVlan20) {
+      state.accessOK = true;
+      setStatus('accessStatus', true, 'Access port for this switch appears correctly assigned to VLAN 20.');
+    } else {
+      state.accessOK = false;
+      setStatus('accessStatus', false, 'Access port config incomplete. Check interface number, "switchport mode access", and "switchport access vlan 20".');
+    }
+  }
+
+  function checkTrunk() {
+    const txt = document.getElementById('trunkConfig').value.toLowerCase();
+
+    const hasRange = /interface\s+range\s+fa0\/1\s*-\s*2/.test(txt);
+    const hasChannelGroup = /channel-group\s+1\s+mode\s+active/.test(txt);
+    const hasPoInt = /interface\s+port-channel\s*1/.test(txt);
+    const hasModeTrunk = /switchport\s+mode\s+trunk/.test(txt);
+    const hasAllowedVlan = /switchport\s+trunk\s+allowed\s+vlan\s+.*20/.test(txt);
+
+    if (hasRange && hasChannelGroup && hasPoInt && hasModeTrunk && hasAllowedVlan) {
+      state.trunkOK = true;
+      setStatus('trunkStatus', true, 'Trunk and LACP configuration for Port-channel1 looks correct, with VLAN 20 allowed.');
+    } else {
+      state.trunkOK = false;
+      setStatus('trunkStatus', false, 'Trunk/LACP config incomplete. Verify interface range, channel-group 1 mode active, Port-channel1 trunk, and allowed VLAN 20.');
+    }
+  }
+
+  function resetLab() {
+    document.getElementById('vlanConfig').value = '';
+    document.getElementById('accessConfig').value = '';
+    document.getElementById('trunkConfig').value = '';
+    document.getElementById('vlanStatus').textContent = '';
+    document.getElementById('accessStatus').textContent = '';
+    document.getElementById('trunkStatus').textContent = '';
+    document.getElementById('vlanStatus').className = 'status';
+    document.getElementById('accessStatus').className = 'status';
+    document.getElementById('trunkStatus').className = 'status';
+    state.vlanOK = false;
+    state.accessOK = false;
+    state.trunkOK = false;
+    updateChecklist();
+  }
+
+  // Initialize checklist
+  updateChecklist();
+</script>
+</body>
+</html>

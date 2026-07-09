@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Kali Linux Networking Lab — Top 20 Commands</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #121821;
+    --panel-2: #0f1620;
+    --text: #e8edf4;
+    --muted: #a9b1bd;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --border: #213042;
+    --code: #0d1117;
+  }
+  * { box-sizing: border-box }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  }
+  header {
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #0e1420, var(--panel));
+    padding: 16px 24px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { margin: 0; font-size: 20px }
+  header p { margin: 6px 0 0; color: var(--muted); font-size: 14px }
+  .container { display: grid; grid-template-columns: 280px 1fr 380px; gap: 16px; padding: 16px }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  }
+  .panel h2 {
+    font-size: 16px; margin: 0; padding: 10px 12px; border-bottom: 1px solid var(--border);
+    background: var(--panel-2); color: var(--text);
+  }
+  .panel-content { padding: 12px }
+  .cmd-list { list-style: none; margin: 0; padding: 0; }
+  .cmd-item {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+    padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer;
+  }
+  .cmd-item:hover { background: rgba(88,166,255,0.08) }
+  .cmd-item.active { background: rgba(63,185,80,0.08); border-left: 3px solid var(--green) }
+  .cmd-name { font-weight: 600; }
+  .cmd-purpose { color: var(--muted); font-size: 12px }
+  .tag {
+    font-size: 11px; color: #cfe8ff; background: #173052; padding: 2px 6px; border-radius: 999px; border: 1px solid #254b78;
+  }
+  .section { margin-bottom: 14px }
+  .section h3 { font-size: 14px; margin: 0 0 6px; color: #c7d2e0 }
+  .code {
+    background: var(--code); color: #d1e7ff; border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12.5px; overflow: auto;
+  }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap }
+  .btn {
+    background: #162235; border: 1px solid var(--border); color: var(--text);
+    padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  }
+  .btn:hover { border-color: #2b3f59 }
+  .btn.primary { background: #123256; border-color: #285a93; color: #cfe8ff }
+  .btn.green { background: #0f2a18; border-color: #2c6b45; color: #b6f0cd }
+  .btn.yellow { background: #2a200f; border-color: #806a2f; color: #f2e1b2 }
+  .btn.red { background: #2a1010; border-color: #743c3c; color: #f2c4c4 }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+  .inline-tags { display: flex; gap: 6px; flex-wrap: wrap }
+  .terminal {
+    background: #0a0f15; border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  }
+  .term-header { padding: 8px 10px; border-bottom: 1px solid var(--border); background: #0d1520; display: flex; align-items: center; gap: 8px }
+  .dot { width: 10px; height: 10px; border-radius: 999px }
+  .dot.red { background: #ff5f56 }
+  .dot.yellow { background: #ffbd2e }
+  .dot.green { background: #27c93f }
+  .term-body { padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: #d1e7ff; min-height: 160px; white-space: pre-wrap }
+  .search-row { display: grid; grid-template-columns: 1fr auto; gap: 8px }
+  input[type="text"], select {
+    width: 100%; background: #0e1520; color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 13px;
+  }
+  .hint { font-size: 12px; color: var(--muted) }
+  .task-card {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 10px;
+  }
+  .task-card h4 { margin: 0 0 6px; font-size: 14px }
+  .task-card .hint { margin-top: 6px }
+  .kbd {
+    background: #0f1722; border: 1px solid #1f2b3e; border-bottom-width: 3px; border-radius: 6px;
+    padding: 2px 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px;
+  }
+  .footer { color: var(--muted); font-size: 12px; padding: 12px 24px; border-top: 1px solid var(--border) }
+  .notice { background: #0e1520; border: 1px dashed var(--border); padding: 10px; border-radius: 8px; color: #cfe8ff }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); font-size: 11px; color: var(--muted) }
+  @media (max-width: 1100px) { .container { grid-template-columns: 1fr } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Kali Linux Networking Lab — Top 20 Commands</h1>
+  <p>Learn the essentials to troubleshoot and manage networks. Explore commands, run simulated outputs, and follow guided tasks with built‑in help.</p>
+</header>
+
+<div class="container">
+
+  <!-- Left: Commands -->
+  <aside class="panel">
+    <h2>Command explorer</h2>
+    <div class="panel-content">
+      <div class="notice">
+        Use the list to select a command. Read the overview, try examples, and run a simulated output. This lab explains what each command does and when to use it.
+      </div>
+      <ul id="cmdList" class="cmd-list"></ul>
+    </div>
+  </aside>
+
+  <!-- Middle: Details + Terminal -->
+  <main class="panel">
+    <h2>Command details</h2>
+    <div class="panel-content">
+      <div id="cmdDetails">
+        <div class="section">
+          <h3>No command selected</h3>
+          <p>Select a command from the left to see its purpose, common flags, and example usage.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Simulated terminal</h3>
+        <div class="terminal">
+          <div class="term-header">
+            <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+            <span class="pill">Lab shell (read‑only)</span>
+          </div>
+          <div id="terminal" class="term-body">Choose a command and press “Run example” to preview typical output.</div>
+        </div>
+        <div class="btn-row" style="margin-top:8px">
+          <button id="runBtn" class="btn primary">Run example</button>
+          <button id="clearBtn" class="btn">Clear</button>
+          <button id="copyBtn" class="btn">Copy output</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Right: Guided tasks + Help -->
+  <aside class="panel">
+    <h2>Guided tasks & help</h2>
+    <div class="panel-content">
+
+      <div class="section">
+        <h3>Lab instructions</h3>
+        <ul>
+          <li><span class="kbd">1</span> Select a command to learn what it does and how to use it.</li>
+          <li><span class="kbd">2</span> Click <strong>Run example</strong> to see simulated output and interpret results.</li>
+          <li><span class="kbd">3</span> Use <strong>Guided tasks</strong> to practice realistic scenarios.</li>
+          <li><span class="kbd">4</span> Try the <strong>Help</strong> tool: describe your issue and get suggested commands.</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <h3>Guided tasks</h3>
+        <div id="tasks"></div>
+      </div>
+
+      <div class="section">
+        <h3>Help: What should I use?</h3>
+        <div class="search-row">
+          <input id="helpInput" type="text" placeholder="Describe your issue (e.g., DNS failing, slow Wi‑Fi, port open?)" />
+          <button id="helpBtn" class="btn green">Suggest commands</button>
+        </div>
+        <p class="hint">Examples: “packet loss to gateway”, “find devices on LAN”, “check if port 443 is open”, “DNS timeout”, “which interface is up?”.</p>
+        <div id="helpOutput" class="code" style="margin-top:8px; min-height:90px"></div>
+      </div>
+
+    </div>
+  </aside>
+
+</div>
+
+<div class="footer">
+  Tip: Real outputs vary with your system and network. Use these commands on a test machine where you have permission.
+</div>
+
+<script>
+const COMMANDS = [
+  {
+    name: "ip",
+    purpose: "Modern interface and routing management (replaces ifconfig/route).",
+    tags: ["interfaces", "routes", "addr", "link"],
+    flags: [
+      {label: "addr", desc: "Show addresses for all interfaces"},
+      {label: "link", desc: "Show link‑level (MAC) and state"},
+      {label: "route", desc: "View routing table"},
+      {label: "addr add", desc: "Add IP to an interface"},
+      {label: "link set", desc: "Up/down or change MTU"}
+    ],
+    examples: [
+      "ip addr",
+      "ip link",
+      "ip route",
+      "sudo ip link set wlan0 up",
+      "sudo ip addr add 192.168.1.50/24 dev eth0"
+    ],
+    output:
+`$ ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.20/24 brd 192.168.1.255 scope global eth0
+3: wlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN
+    link/ether 1a:2b:3c:4d:5e:6f brd ff:ff:ff:ff:ff:ff`
+  },
+  {
+    name: "ping",
+    purpose: "Check reachability and latency; detects packet loss.",
+    tags: ["connectivity", "icmp", "latency"],
+    flags: [
+      {label: "-c N", desc: "Send N pings and stop"},
+      {label: "-i S", desc: "Interval between pings (seconds)"},
+      {label: "-W S", desc: "Timeout per reply (seconds)"}
+    ],
+    examples: [
+      "ping -c 4 8.8.8.8",
+      "ping -c 4 google.com",
+      "ping -c 4 -W 1 default-gateway"
+    ],
+    output:
+`$ ping -c 4 8.8.8.8
+PING 8.8.8.8 (8.8.8.8): 56 data bytes
+64 bytes from 8.8.8.8: icmp_seq=0 ttl=114 time=18.3 ms
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=114 time=17.9 ms
+64 bytes from 8.8.8.8: icmp_seq=2 ttl=114 time=18.1 ms
+64 bytes from 8.8.8.8: icmp_seq=3 ttl=114 time=18.0 ms
+
+--- 8.8.8.8 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3003ms
+rtt min/avg/max/mdev = 17.9/18.1/18.3/0.2 ms`
+  },
+  {
+    name: "traceroute",
+    purpose: "Map the path packets take; identify routing or ISP issues.",
+    tags: ["path", "hops", "routing"],
+    flags: [
+      {label: "-n", desc: "Do not resolve names (faster)"},
+      {label: "-I", desc: "Use ICMP instead of UDP"},
+      {label: "-p", desc: "Set destination port"}
+    ],
+    examples: [
+      "sudo traceroute -n 8.8.8.8",
+      "sudo traceroute -I -n example.com"
+    ],
+    output:
+`$ sudo traceroute -n 8.8.8.8
+traceroute to 8.8.8.8, 30 hops max
+ 1  192.168.1.1   1.2 ms
+ 2  10.0.0.1      8.4 ms
+ 3  203.0.113.5   12.3 ms
+ 4  8.8.8.8       18.0 ms`
+  },
+  {
+    name: "mtr",
+    purpose: "Combines ping and traceroute; shows loss and latency by hop.",
+    tags: ["loss", "latency", "path"],
+    flags: [
+      {label: "-rw", desc: "Report mode, wide output"},
+      {label: "-c N", desc: "Number of cycles"},
+      {label: "-a SRC", desc: "Bind to source address"}
+    ],
+    examples: [
+      "sudo mtr -rw -c 50 8.8.8.8"
+    ],
+    output:
+`$ sudo mtr -rw -c 20 8.8.8.8
+HOST: kali                Loss%   Snt   Last   Avg  Best  Wrst
+ 1. 192.168.1.1            0.0%    20    1.1   1.3   1.0   2.2
+ 2. 10.0.0.1               0.0%    20    8.2   8.5   7.8  10.2
+ 3. 203.0.113.5            5.0%    20   12.0  12.3  11.7  16.4
+ 4. 8.8.8.8                0.0%    20   18.3  18.1  17.9  18.8`
+  },
+  {
+    name: "ss",
+    purpose: "Inspect sockets and listening ports; modern netstat.",
+    tags: ["ports", "sockets", "connections"],
+    flags: [
+      {label: "-ltn", desc: "List TCP listening ports (numeric)"},
+      {label: "-uap", desc: "Show UDP with process info"},
+      {label: "-p", desc: "Show process owning socket"}
+    ],
+    examples: [
+      "ss -ltn",
+      "sudo ss -uap",
+      "sudo ss -tulpn"
+    ],
+    output:
+`$ ss -ltn
+State Recv-Q Send-Q Local Address:Port  Peer Address:Port
+LISTEN 0      128    0.0.0.0:22        0.0.0.0:*
+LISTEN 0      128    [::]:22           [::]:*`
+  },
+  {
+    name: "nmap",
+    purpose: "Port scanning, service detection, host discovery.",
+    tags: ["ports", "services", "discovery"],
+    flags: [
+      {label: "-sS", desc: "TCP SYN scan"},
+      {label: "-sU", desc: "UDP scan"},
+      {label: "-sV", desc: "Service/version detection"},
+      {label: "-O", desc: "OS detection"},
+      {label: "-Pn", desc: "No host discovery (treat as up)"}
+    ],
+    examples: [
+      "sudo nmap -sS -Pn 192.168.1.1",
+      "sudo nmap -sV -p 1-1024 192.168.1.0/24"
+    ],
+    output:
+`$ sudo nmap -sS -Pn 192.168.1.1
+Starting Nmap...
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+443/tcp closed https`
+  },
+  {
+    name: "tcpdump",
+    purpose: "Packet capture on interfaces; quick low-level inspection.",
+    tags: ["packets", "capture", "filter"],
+    flags: [
+      {label: "-i IFACE", desc: "Interface to capture on"},
+      {label: "-w FILE", desc: "Write to pcap file"},
+      {label: "-n", desc: "Numeric output (no DNS)"},
+      {label: "port N", desc: "Filter by port"}
+    ],
+    examples: [
+      "sudo tcpdump -i eth0 -n port 53",
+      "sudo tcpdump -i wlan0 -w dns.pcap udp port 53"
+    ],
+    output:
+`$ sudo tcpdump -i eth0 -n port 53
+12:00:01 IP 192.168.1.20.51324 > 8.8.8.8.53: 1234+ A? example.com
+12:00:01 IP 8.8.8.8.53 > 192.168.1.20.51324: 1234 1/0/0 A 93.184.216.34`
+  },
+  {
+    name: "tshark",
+    purpose: "Wireshark’s CLI; parse and filter pcap with rich decoders.",
+    tags: ["packets", "decode", "pcap"],
+    flags: [
+      {label: "-i IFACE", desc: "Capture interface"},
+      {label: "-Y FILTER", desc: "Display filter (Wireshark syntax)"},
+      {label: "-r FILE", desc: "Read from pcap file"}
+    ],
+    examples: [
+      "sudo tshark -i eth0 -Y 'dns && ip.src==192.168.1.20'",
+      "tshark -r dns.pcap -Y 'dns && dns.flags.rcode != 0'"
+    ],
+    output:
+`$ tshark -r dns.pcap -Y "dns"
+1   0.000000 192.168.1.20 -> 8.8.8.8  DNS  Standard query A example.com
+2   0.010512 8.8.8.8      -> 192.168.1.20 DNS  Standard query response A 93.184.216.34`
+  },
+  {
+    name: "dig",
+    purpose: "DNS queries; test resolution, TTLs, and authoritative servers.",
+    tags: ["dns", "lookup", "ns"],
+    flags: [
+      {label: "+short", desc: "Short, clean answers"},
+      {label: "@SERVER", desc: "Query a specific DNS server"},
+      {label: "ANY/NS/MX", desc: "Record types"}
+    ],
+    examples: [
+      "dig +short example.com",
+      "dig @8.8.8.8 example.com A",
+      "dig example.com NS"
+    ],
+    output:
+`$ dig +short example.com
+93.184.216.34`
+  },
+  {
+    name: "host",
+    purpose: "Simple DNS lookup utility; quick forward/reverse checks.",
+    tags: ["dns", "lookup"],
+    flags: [
+      {label: "-t TYPE", desc: "Record type"},
+      {label: "IP", desc: "Reverse lookup by IP"}
+    ],
+    examples: [
+      "host example.com",
+      "host 8.8.8.8"
+    ],
+    output:
+`$ host 8.8.8.8
+8.8.8.8.in-addr.arpa domain name pointer dns.google.`
+  },
+  {
+    name: "arp",
+    purpose: "View and manipulate ARP cache (IPv4 neighbor mapping).",
+    tags: ["arp", "neighbors"],
+    flags: [
+      {label: "-n", desc: "Numeric output"},
+      {label: "-a", desc: "Show all entries"}
+    ],
+    examples: [
+      "arp -n",
+      "arp -a"
+    ],
+    output:
+`$ arp -n
+Address          HWtype  HWaddress          Flags Mask   Iface
+192.168.1.1      ether   cc:cc:cc:cc:cc:cc  C            eth0`
+  },
+  {
+    name: "arp-scan",
+    purpose: "Discover devices on local network by ARP probing.",
+    tags: ["discovery", "lan", "arp"],
+    flags: [
+      {label: "--localnet", desc: "Scan the local subnet"},
+      {label: "-I IFACE", desc: "Specify interface"}
+    ],
+    examples: [
+      "sudo arp-scan --localnet",
+      "sudo arp-scan -I eth0 192.168.1.0/24"
+    ],
+    output:
+`$ sudo arp-scan --localnet
+192.168.1.1   cc:cc:cc:cc:cc:cc  Cisco
+192.168.1.20  52:54:00:12:34:56  QEMU`
+  },
+  {
+    name: "iw",
+    purpose: "Wireless configuration and diagnostics (modern iwconfig).",
+    tags: ["wifi", "wireless", "interfaces"],
+    flags: [
+      {label: "dev", desc: "List wireless devices"},
+      {label: "link", desc: "Show current Wi‑Fi link status"},
+      {label: "scan", desc: "Scan for nearby SSIDs"}
+    ],
+    examples: [
+      "iw dev",
+      "iw dev wlan0 link",
+      "sudo iw dev wlan0 scan | less"
+    ],
+    output:
+`$ iw dev wlan0 link
+Connected to 34:12:98:ab:cd:ef (on wlan0)
+SSID: LabWiFi
+freq: 2412  tx bitrate: 144.4 MBit/s  signal: -58 dBm`
+  },
+  {
+    name: "nmcli",
+    purpose: "Manage NetworkManager connections and devices via CLI.",
+    tags: ["networkmanager", "wifi", "interfaces"],
+    flags: [
+      {label: "device status", desc: "List devices and state"},
+      {label: "con show", desc: "Show connections"},
+      {label: "dev wifi list", desc: "Scan Wi‑Fi networks"}
+    ],
+    examples: [
+      "nmcli device status",
+      "nmcli dev wifi list",
+      "sudo nmcli con up id LabWiFi"
+    ],
+    output:
+`$ nmcli device status
+DEVICE  TYPE      STATE      CONNECTION
+eth0    ethernet  connected  Wired connection 1
+wlan0   wifi      disconnected  --`
+  },
+  {
+    name: "iperf3",
+    purpose: "Measure throughput between two hosts (client/server).",
+    tags: ["speed", "bandwidth", "performance"],
+    flags: [
+      {label: "-s", desc: "Run as server"},
+      {label: "-c HOST", desc: "Run as client"},
+      {label: "-P N", desc: "Parallel streams"}
+    ],
+    examples: [
+      "iperf3 -s",
+      "iperf3 -c 192.168.1.10 -P 4"
+    ],
+    output:
+`$ iperf3 -c 192.168.1.10 -P 4
+Connecting to host 192.168.1.10, port 5201
+[SUM]   0.00-10.00 sec  1140 MBytes  954 Mbits/sec  sender`
+  },
+  {
+    name: "curl",
+    purpose: "HTTP(S) requests; verify endpoints and headers.",
+    tags: ["http", "https", "api"],
+    flags: [
+      {label: "-I", desc: "Fetch headers only"},
+      {label: "-v", desc: "Verbose transfer"},
+      {label: "-k", desc: "Allow insecure TLS"}
+    ],
+    examples: [
+      "curl -I https://example.com",
+      "curl -v http://localhost:8080/health"
+    ],
+    output:
+`$ curl -I https://example.com
+HTTP/2 200
+content-type: text/html; charset=UTF-8
+content-length: 1256`
+  },
+  {
+    name: "wget",
+    purpose: "Retrieve files via HTTP/HTTPS/FTP; test download path.",
+    tags: ["download", "http", "https"],
+    flags: [
+      {label: "--spider", desc: "Check existence only"},
+      {label: "--no-check-certificate", desc: "Ignore TLS errors"}
+    ],
+    examples: [
+      "wget --spider https://example.com/file.zip",
+      "wget http://mirror/iso/kali.iso"
+    ],
+    output:
+`$ wget --spider https://example.com/file.zip
+Spider mode enabled. Checking...
+HTTP/1.1 200 OK`
+  },
+  {
+    name: "nc",
+    purpose: "Netcat: test TCP/UDP connectivity; simple servers.",
+    tags: ["ports", "tcp", "udp", "debug"],
+    flags: [
+      {label: "-zv", desc: "Scan for open port (no data)"},
+      {label: "-l -p", desc: "Listen on port"},
+      {label: "-u", desc: "Use UDP"}
+    ],
+    examples: [
+      "nc -zv 192.168.1.1 22",
+      "nc -l -p 8080",
+      "echo 'ping' | nc -u -w1 192.168.1.10 9999"
+    ],
+    output:
+`$ nc -zv 192.168.1.1 22
+Connection to 192.168.1.1 22 port [tcp/ssh] succeeded!`
+  },
+  {
+    name: "ethtool",
+    purpose: "NIC settings and link diagnostics (speed/duplex).",
+    tags: ["ethernet", "link", "driver"],
+    flags: [
+      {label: "IFACE", desc: "Show interface info"},
+      {label: "-S IFACE", desc: "Driver statistics"},
+      {label: "-k IFACE", desc: "Features (offloads)"}
+    ],
+    examples: [
+      "sudo ethtool eth0",
+      "sudo ethtool -S eth0"
+    ],
+    output:
+`$ sudo ethtool eth0
+Speed: 1000Mb/s  Duplex: Full  Link detected: yes
+Port: Twisted Pair  PHYAD: 1  MDI-X: on`
+  },
+  {
+    name: "lsof -i",
+    purpose: "Show processes with network sockets; find who uses a port.",
+    tags: ["process", "ports", "sockets"],
+    flags: [
+      {label: "-i :PORT", desc: "Filter by port"},
+      {label: "-i TCP/UDP", desc: "Filter by protocol"}
+    ],
+    examples: [
+      "sudo lsof -i :22",
+      "sudo lsof -i TCP"
+    ],
+    output:
+`$ sudo lsof -i :22
+sshd   714 root  IPv4 TCP *:ssh (LISTEN)`
+  },
+  {
+    name: "systemctl",
+    purpose: "Check status of network services (e.g., NetworkManager).",
+    tags: ["services", "status", "startup"],
+    flags: [
+      {label: "status NAME", desc: "Service status"},
+      {label: "restart NAME", desc: "Restart service"}
+    ],
+    examples: [
+      "systemctl status NetworkManager",
+      "sudo systemctl restart NetworkManager"
+    ],
+    output:
+`$ systemctl status NetworkManager
+● NetworkManager.service - Network Manager
+   Active: active (running) since Thu 2025-12-11 12:00:00`
+  }
+];
+
+const TASKS = [
+  {
+    title: "Verify local interface configuration",
+    steps: [
+      "Check IP addresses and interface state.",
+      "Confirm default route exists.",
+      "Bring down/up an interface safely."
+    ],
+    try: [
+      "ip addr",
+      "ip route",
+      "sudo ip link set eth0 down && sudo ip link set eth0 up"
+    ],
+    hint: "Interfaces without an IP or in DOWN state won't route traffic. Ensure a default route points to your gateway."
+  },
+  {
+    title: "Diagnose DNS resolution failures",
+    steps: [
+      "Test connectivity to a known IP.",
+      "Query DNS server directly.",
+      "Capture DNS packets to confirm requests/replies."
+    ],
+    try: [
+      "ping -c 3 8.8.8.8",
+      "dig @8.8.8.8 example.com A",
+      "sudo tcpdump -i eth0 -n port 53"
+    ],
+    hint: "If ping to IP works but dig fails, suspect DNS server, firewall, or UDP/53 filtering."
+  },
+  {
+    title: "Find which process uses a port",
+    steps: [
+      "List listening sockets.",
+      "Get process owning the socket."
+    ],
+    try: [
+      "ss -tulpn",
+      "sudo lsof -i :8080"
+    ],
+    hint: "If a port is in use unexpectedly, stop the service or change its port."
+  },
+  {
+    title: "Map the path and detect packet loss",
+    steps: [
+      "Trace hops to destination.",
+      "Use mtr for loss and jitter by hop."
+    ],
+    try: [
+      "sudo traceroute -n 8.8.8.8",
+      "sudo mtr -rw -c 50 8.8.8.8"
+    ],
+    hint: "Consistent loss at an early hop indicates local or upstream issues."
+  },
+  {
+    title: "Discover devices on your LAN",
+    steps: [
+      "Scan local subnet via ARP.",
+      "Confirm neighbors in ARP cache."
+    ],
+    try: [
+      "sudo arp-scan --localnet",
+      "arp -n"
+    ],
+    hint: "Use results to identify unknown devices or verify your gateway's MAC."
+  },
+  {
+    title: "Test service reachability",
+    steps: [
+      "Probe port with netcat.",
+      "Fetch endpoint headers."
+    ],
+    try: [
+      "nc -zv 192.168.1.50 443",
+      "curl -I https://192.168.1.50"
+    ],
+    hint: "If port is closed, check firewall rules or service status."
+  },
+  {
+    title: "Check Wi‑Fi signal and SSID",
+    steps: [
+      "Inspect current Wi‑Fi link.",
+      "List available SSIDs."
+    ],
+    try: [
+      "iw dev wlan0 link",
+      "nmcli dev wifi list"
+    ],
+    hint: "Signal worse than −70 dBm often causes instability. Move closer or troubleshoot interference."
+  },
+  {
+    title: "Measure throughput to peer",
+    steps: [
+      "Start iperf3 server on one side.",
+      "Run client from Kali."
+    ],
+    try: [
+      "iperf3 -s",
+      "iperf3 -c 192.168.1.10 -P 4"
+    ],
+    hint: "Compare TCP vs UDP. Low throughput may indicate duplex mismatch or Wi‑Fi congestion."
+  },
+  {
+    title: "Capture and decode traffic",
+    steps: [
+      "Capture filtered packets.",
+      "Decode with tshark display filters."
+    ],
+    try: [
+      "sudo tcpdump -i eth0 -w dns.pcap udp port 53",
+      "tshark -r dns.pcap -Y 'dns && dns.flags.rcode != 0'"
+    ],
+    hint: "Use display filters to isolate errors (e.g., NXDOMAIN or timeouts)."
+  },
+  {
+    title: "Verify NIC link and speed",
+    steps: [
+      "Check link detection.",
+      "Inspect driver stats for errors."
+    ],
+    try: [
+      "sudo ethtool eth0",
+      "sudo ethtool -S eth0"
+    ],
+    hint: "High RX/TX errors suggest bad cabling or mismatched speed/duplex."
+  }
+];
+
+const HELP_RULES = [
+  {match: /dns|resolve|ns|mx|a record|timeout/i, suggest: ["dig", "tcpdump", "tshark", "host"]},
+  {match: /packet loss|loss|dropped|jitter/i, suggest: ["mtr", "traceroute", "ping"]},
+  {match: /slow|bandwidth|throughput|speed/i, suggest: ["iperf3", "ethtool", "mtr"]},
+  {match: /wifi|ssid|wireless|wlan/i, suggest: ["iw", "nmcli", "ip"]},
+  {match: /port|open|closed|listening|socket/i, suggest: ["ss", "nc", "nmap", "lsof -i"]},
+  {match: /route|gateway|default|path/i, suggest: ["ip route", "traceroute", "mtr"]},
+  {match: /discover|scan|lan|devices|neighbors/i, suggest: ["arp-scan", "arp", "nmap"]},
+  {match: /service|http|https|api|headers/i, suggest: ["curl", "wget", "ss"]},
+  {match: /interface|addr|link|down|up|mtu/i, suggest: ["ip", "ethtool", "nmcli"]},
+  {match: /process|who uses|which process/i, suggest: ["lsof -i", "ss"]}
+];
+
+let selectedIndex = null;
+
+function renderCommands() {
+  const list = document.getElementById('cmdList');
+  list.innerHTML = '';
+  COMMANDS.forEach((c, i) => {
+    const li = document.createElement('li');
+    li.className = 'cmd-item' + (selectedIndex === i ? ' active' : '');
+    li.innerHTML = `
+      <div>
+        <div class="cmd-name">${c.name}</div>
+        <div class="cmd-purpose">${c.purpose}</div>
+      </div>
+      <span class="tag">${c.tags.slice(0,2).join(' • ')}</span>
+    `;
+    li.addEventListener('click', () => selectCommand(i));
+    list.appendChild(li);
+  });
+}
+
+function selectCommand(i) {
+  selectedIndex = i;
+  renderCommands();
+  const c = COMMANDS[i];
+  const details = document.getElementById('cmdDetails');
+
+  const flagsHtml = c.flags.map(f => `<li><strong>${f.label}:</strong> ${f.desc}</li>`).join('');
+  const examplesHtml = c.examples.map(ex => `<div class="code">$ ${ex}</div>`).join('');
+
+  details.innerHTML = `
+    <div class="section">
+      <h3>Overview</h3>
+      <p>${c.purpose}</p>
+      <div class="inline-tags">${c.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+    </div>
+    <div class="grid-2">
+      <div class="section">
+        <h3>Common flags</h3>
+        <ul>${flagsHtml}</ul>
+      </div>
+      <div class="section">
+        <h3>When to use</h3>
+        <ul>
+          <li><strong>Diagnosis:</strong> Use when ${diagnosisLine(c)}</li>
+          <li><strong>Validation:</strong> Confirm configuration or connectivity quickly</li>
+          <li><strong>Escalation:</strong> Gather evidence (logs/pcaps) before changing settings</li>
+        </ul>
+      </div>
+    </div>
+    <div class="section">
+      <h3>Try these</h3>
+      ${examplesHtml}
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="runExample()">Run example</button>
+      <button class="btn" onclick="insertExamples()">Insert all examples to terminal</button>
+    </div>
+  `;
+}
+
+function diagnosisLine(c) {
+  const map = {
+    ip: "interfaces are down or missing IPs, or routes look wrong",
+    ping: "basic reachability or latency needs a quick check",
+    traceroute: "you suspect path issues or upstream routing problems",
+    mtr: "you need loss/jitter by hop over time",
+    ss: "you need to know which ports are listening or which sockets are open",
+    nmap: "you must discover open ports/services on a host or subnet you are authorized to scan",
+    tcpdump: "you need raw packet visibility to verify requests/responses",
+    tshark: "you want to decode and filter captured packets with protocol awareness",
+    dig: "DNS answers look wrong or resolution is timing out",
+    host: "you need a fast forward/reverse DNS check",
+    arp: "neighbor resolution might be stale or incorrect",
+    "arp-scan": "you want to discover local devices via ARP",
+    iw: "Wi‑Fi link quality, SSID, or channel needs inspection",
+    nmcli: "you manage connections or check device states via NetworkManager",
+    iperf3: "throughput between two points must be measured",
+    curl: "HTTP(S) endpoint behavior or headers need verification",
+    wget: "you need to check file reachability or download path",
+    nc: "you want a quick connectivity probe or ad‑hoc listener",
+    ethtool: "link speed/duplex or NIC errors might be the culprit",
+    "lsof -i": "a specific port is in use and you need the owning process",
+    systemctl: "a network service should be checked or restarted"
+  };
+  return map[c.name] || "there’s a basic network troubleshooting step to perform";
+}
+
+function runExample() {
+  if (selectedIndex == null) {
+    writeTerminal("No command selected. Choose one from the left.");
+    return;
+  }
+  const c = COMMANDS[selectedIndex];
+  writeTerminal(c.output);
+}
+
+function insertExamples() {
+  if (selectedIndex == null) {
+    writeTerminal("No command selected. Choose one from the left.");
+    return;
+  }
+  const c = COMMANDS[selectedIndex];
+  const all = c.examples.map(ex => `$ ${ex}`).join('\n');
+  writeTerminal(all);
+}
+
+function writeTerminal(text) {
+  const term = document.getElementById('terminal');
+  const prev = term.textContent.trim();
+  term.textContent = (prev ? prev + "\n\n" : "") + text;
+}
+
+function clearTerminal() {
+  document.getElementById('terminal').textContent = '';
+}
+
+function copyTerminal() {
+  const term = document.getElementById('terminal');
+  const text = term.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const old = term.textContent;
+    term.textContent = old + "\n\n# Copied output to clipboard.";
+    setTimeout(() => {
+      term.textContent = old;
+    }, 1000);
+  });
+}
+
+function renderTasks() {
+  const container = document.getElementById('tasks');
+  container.innerHTML = '';
+  TASKS.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.innerHTML = `
+      <h4>${t.title}</h4>
+      <ul>
+        ${t.steps.map(s => `<li><strong>Step:</strong> ${s}</li>`).join('')}
+      </ul>
+      <div><strong>Try:</strong></div>
+      ${t.try.map(cmd => `<div class="code">$ ${cmd}</div>`).join('')}
+      <div class="hint">${t.hint}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function helpSuggest() {
+  const input = document.getElementById('helpInput').value.trim();
+  const out = document.getElementById('helpOutput');
+  if (!input) { out.textContent = "Describe your issue (e.g., “DNS timeout”, “port open?”, “slow Wi‑Fi”)."; return; }
+  const matches = new Set();
+  HELP_RULES.forEach(r => {
+    if (input.match(r.match)) r.suggest.forEach(s => matches.add(s));
+  });
+  if (matches.size === 0) {
+    out.textContent = `No direct match. Try checking basics:\n- ip addr / ip route\n- ping a known IP\n- ss -tulpn for listening ports\nThen refine your description.`;
+    return;
+  }
+  const ranked = Array.from(matches);
+  const lines = ranked.map(s => {
+    const cmd = COMMANDS.find(c => c.name === s || (s.startsWith('ip ') && c.name === 'ip'));
+    const why = cmd ? diagnosisLine(cmd) : "useful for this scenario";
+    return `• ${s} — ${why}`;
+  }).join('\n');
+  out.textContent = `Suggested commands:\n${lines}\n\nTip: Click the command in the explorer to learn options and examples.`;
+}
+
+// Init
+renderCommands();
+renderTasks();
+document.getElementById('runBtn').addEventListener('click', runExample);
+document.getElementById('clearBtn').addEventListener('click', clearTerminal);
+document.getElementById('copyBtn').addEventListener('click', copyTerminal);
+document.getElementById('helpBtn').addEventListener('click', helpSuggest);
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CompTIA 1202 Troubleshooting Lab</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    h1, h2 { color: #2c3e50; }
+    .step { margin: 15px 0; padding: 10px; background: #ecf0f1; border-radius: 5px; }
+    .question { margin-top: 10px; }
+    .answer { display: none; margin-top: 5px; color: #27ae60; }
+    button { margin-top: 5px; }
+    .ticket { background: #fff; border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
+  </style>
+  <script>
+    function showAnswer(id) {
+      document.getElementById(id).style.display = 'block';
+    }
+  </script>
+</head>
+<body>
+  <h1>Interactive Lab: Tablet Running Slow</h1>
+  <p><strong>Scenario:</strong> An employee reports their tablet is running slow. As a help desk technician, you must troubleshoot, identify the cause, and document the resolution following CompTIA 220-1202 objectives.</p>
+
+  <h2>Step 1: Gather Information</h2>
+  <div class="step">
+    <p>You ask the employee: "When did the slowness start?" They respond: "After yesterday’s system update."</p>
+    <div class="question">
+      <p><em>What is your first troubleshooting step?</em></p>
+      <button onclick="showAnswer('ans1')">Show Suggested Answer</button>
+      <div id="ans1" class="answer">Document the symptoms and verify the issue. Ask clarifying questions about apps, battery, and update timing.</div>
+    </div>
+  </div>
+
+  <h2>Step 2: Establish a Theory</h2>
+  <div class="step">
+    <p>You suspect system services may be running slowly due to the update.</p>
+    <div class="question">
+      <p><em>Where would you check?</em></p>
+      <button onclick="showAnswer('ans2')">Show Suggested Answer</button>
+      <div id="ans2" class="answer">Check Task Manager or system monitoring tools for CPU, memory, and background services. Look for update-related processes consuming resources.</div>
+    </div>
+  </div>
+
+  <h2>Step 3: Test the Theory</h2>
+  <div class="step">
+    <p>You confirm that the update service is consuming high CPU and memory.</p>
+    <div class="question">
+      <p><em>What action should you take?</em></p>
+      <button onclick="showAnswer('ans3')">Show Suggested Answer</button>
+      <div id="ans3" class="answer">Allow the update to complete or restart the tablet. If necessary, stop/restart the update service safely.</div>
+    </div>
+  </div>
+
+  <h2>Step 4: Establish a Plan of Action</h2>
+  <div class="step">
+    <p>Plan: Restart the tablet, ensure updates finish, and optimize startup apps.</p>
+    <div class="question">
+      <p><em>What CompTIA objective does this align with?</em></p>
+      <button onclick="showAnswer('ans4')">Show Suggested Answer</button>
+      <div id="ans4" class="answer">CompTIA 220-1202 Objective: Troubleshoot common mobile OS and application issues, including performance problems.</div>
+    </div>
+  </div>
+
+  <h2>Step 5: Document the Ticket</h2>
+  <div class="ticket">
+    <h3>Help Desk Ticket</h3>
+    <p><strong>Issue:</strong> Tablet running slow after system update.</p>
+    <p><strong>Steps Taken:</strong> Verified symptoms, checked system services, identified update service consuming resources.</p>
+    <p><strong>Resolution:</strong> Restarted tablet, allowed update to complete, optimized startup apps.</p>
+    <p><strong>Status:</strong> Closed – Employee confirmed tablet performance improved.</p>
+  </div>
+
+  <h2>Step 6: Close the Ticket</h2>
+  <div class="step">
+    <p>Always confirm with the employee that the issue is resolved before closing the ticket.</p>
+    <div class="question">
+      <p><em>What should you include in closure notes?</em></p>
+      <button onclick="showAnswer('ans5')">Show Suggested Answer</button>
+      <div id="ans5" class="answer">Include resolution steps, confirmation from the employee, and any preventive recommendations.</div>
+    </div>
+  </div>
+
+  <h2>Directions</h2>
+  <ul>
+    <li>Read each step carefully.</li>
+    <li>Click "Show Suggested Answer" to reveal guidance.</li>
+    <li>Compare your thought process with the suggested troubleshooting steps.</li>
+    <li>Review the sample help desk ticket for proper documentation format.</li>
+    <li>Practice writing your own closure notes to reinforce documentation skills.</li>
+  </ul>
+</body>
+</html>

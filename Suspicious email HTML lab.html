@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Security Lab - CompTIA 220-1202</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+    header { background: #2c3e50; color: #fff; padding: 20px; }
+    h1 { margin: 0; }
+    .container { display: flex; }
+    .inbox { width: 30%; background: #fff; border-right: 1px solid #ccc; }
+    .inbox h2 { padding: 10px; margin: 0; background: #eee; }
+    .email { padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; }
+    .email:hover { background: #f9f9f9; }
+    .details { flex: 1; padding: 20px; }
+    .actions { margin-top: 20px; }
+    select, button { padding: 8px; margin-right: 10px; }
+    .feedback { margin-top: 20px; padding: 10px; border-radius: 5px; }
+    .correct { background: #d4edda; color: #155724; }
+    .incorrect { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Interactive Email Security Lab</h1>
+    <p>CompTIA A+ 220-1202 Objectives: Identify threats, apply remediation, quarantine, report, and recognize safe emails.</p>
+  </header>
+  <div class="container">
+    <div class="inbox">
+      <h2>Inbox</h2>
+      <div class="email" onclick="showEmail(0)">Invoice Due - Action Required</div>
+      <div class="email" onclick="showEmail(1)">FedEx Delivery Notice</div>
+      <div class="email" onclick="showEmail(2)">HR Admin - Verify Payroll Info</div>
+      <div class="email" onclick="showEmail(3)">HR - Winter Holiday Schedule</div>
+    </div>
+    <div class="details">
+      <h2 id="subject">Select an email to view</h2>
+      <p id="from"></p>
+      <p id="body"></p>
+      <div class="actions">
+        <label for="action">Choose action:</label>
+        <select id="action">
+          <option value="">-- Select --</option>
+          <option value="remediate">Remediate infected email</option>
+          <option value="quarantine">Quarantine email</option>
+          <option value="report">Report to IT</option>
+          <option value="safe">Safe HR info</option>
+        </select>
+        <button onclick="checkAnswer()">Submit</button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+    </div>
+  </div>
+
+<script>
+const emails = [
+  {
+    subject: "Invoice Due - Action Required",
+    from: "Billing Dept <billing@paypro-invoices.com>",
+    body: "Your payment is past due. Download your invoice from the secure portal.\nAttachment: InvoiceViewer.exe",
+    correct: "remediate",
+    rationale: "Executable attachment and urgency indicate infection. Disconnect, run AV scan, remediate."
+  },
+  {
+    subject: "FedEx Delivery Notice",
+    from: "FedEx <delivery@fedex-update.com>",
+    body: "Delivery failed. Print your label from the attached file.\nAttachment: FedEx_Label.docm",
+    correct: "quarantine",
+    rationale: "Macro-enabled attachment is suspicious. Quarantine for analysis, do not open."
+  },
+  {
+    subject: "HR Admin - Verify Payroll Info",
+    from: "HR Admin <hradmin@company-hr.com>",
+    body: "Please verify your username and password here: https://company-hr.com/login-validate",
+    correct: "report",
+    rationale: "Phishing attempt requesting credentials. Report to IT/security."
+  },
+  {
+    subject: "HR - Winter Holiday Schedule",
+    from: "Human Resources <hr@company.com>",
+    body: "Holiday closures: Dec 24–25, Dec 31–Jan 1. See intranet for details.",
+    correct: "safe",
+    rationale: "Legitimate HR info. No action required."
+  }
+];
+
+let currentEmail = null;
+
+function showEmail(index) {
+  currentEmail = emails[index];
+  document.getElementById("subject").innerText = currentEmail.subject;
+  document.getElementById("from").innerText = "From: " + currentEmail.from;
+  document.getElementById("body").innerText = currentEmail.body;
+  document.getElementById("feedback").innerText = "";
+  document.getElementById("feedback").className = "feedback";
+  document.getElementById("action").value = "";
+}
+
+function checkAnswer() {
+  const choice = document.getElementById("action").value;
+  if (!currentEmail) return;
+  if (choice === currentEmail.correct) {
+    document.getElementById("feedback").innerText = "Correct! " + currentEmail.rationale;
+    document.getElementById("feedback").className = "feedback correct";
+  } else {
+    document.getElementById("feedback").innerText = "Incorrect. " + currentEmail.rationale;
+    document.getElementById("feedback").className = "feedback incorrect";
+  }
+}
+</script>
+</body>
+</html>

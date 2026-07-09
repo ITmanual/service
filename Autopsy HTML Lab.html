@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Autopsy Case Creation – Interactive Lab</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#0d1117; color:#e6e6e6; margin:20px; }
+  h1, h2 { color:#58a6ff; }
+  .step { background:#161b22; border:1px solid #30363d; padding:15px; border-radius:8px; margin-bottom:12px; }
+  .step-header { cursor:pointer; font-size:1.1em; display:flex; justify-content:space-between; }
+  .step-content { display:none; margin-top:10px; }
+  .quiz { background:#0f172a; padding:10px; border-radius:6px; margin-top:10px; }
+  .correct { color:#4ade80; font-weight:bold; }
+  .incorrect { color:#f87171; font-weight:bold; }
+  input[type=text] { width:80%; padding:6px; margin-top:6px; border-radius:4px; border:1px solid #30363d; background:#0d1117; color:#e6e6e6; }
+  button { margin-top:8px; padding:6px 10px; background:#2563eb; color:white; border:none; border-radius:4px; cursor:pointer; }
+  button:hover { background:#1d4ed8; }
+</style>
+</head>
+<body>
+
+<h1>Interactive Lab: Creating a Case in Autopsy (Kali Linux)</h1>
+<p>You are a cyber investigator beginning a new forensic case. Follow each step, expand the panels, and complete the interactive checks.</p>
+
+<!-- STEP TEMPLATE FUNCTIONALITY -->
+<script>
+function toggleStep(el){
+  const content = el.nextElementSibling;
+  const symbol = el.querySelector("span:last-child");
+  if(content.style.display === "block"){
+    content.style.display = "none";
+    symbol.textContent = "+";
+  } else {
+    content.style.display = "block";
+    symbol.textContent = "−";
+  }
+}
+
+function showAnswer(id, text){
+  document.getElementById(id).innerHTML = text;
+}
+
+function validateCaseName(){
+  const val = document.getElementById("caseName").value.trim();
+  const out = document.getElementById("caseNameOut");
+  if(!val){
+    out.innerHTML = "<span class='incorrect'>Enter a case name first.</span>";
+    return;
+  }
+  const hasDate = /\d{4}[-_]\d{2}[-_]\d{2}/.test(val);
+  const hasDevice = /(laptop|server|usb|drive|desktop|mobile)/i.test(val);
+  if(hasDate && hasDevice){
+    out.innerHTML = "<span class='correct'>Great — this looks like a strong, descriptive case name.</span>";
+  } else {
+    out.innerHTML = "<span class='incorrect'>Consider adding a device type and date for clarity.</span>";
+  }
+}
+
+function validateDescription(){
+  const val = document.getElementById("desc").value.trim();
+  const out = document.getElementById("descOut");
+  if(val.length < 20){
+    out.innerHTML = "<span class='incorrect'>Add more detail — one full sentence is ideal.</span>";
+  } else {
+    out.innerHTML = "<span class='correct'>Good — this reads like a proper case description.</span>";
+  }
+}
+</script>
+
+<!-- STEP 1 -->
+<div class="step">
+  <div class="step-header" onclick="toggleStep(this)">
+    <span>Step 1 — Launch Autopsy in Kali Linux</span><span>+</span>
+  </div>
+  <div class="step-content">
+    <p>Open Autopsy using one of the following:</p>
+    <ul>
+      <li>Terminal: <code>autopsy</code></li>
+      <li>Menu: <strong>Applications → Forensics → Autopsy</strong></li>
+    </ul>
+
+    <div class="quiz">
+      <p><strong>Quick Check:</strong> Why should Autopsy be run in a forensic VM instead of the suspect machine?</p>
+      <button onclick="showAnswer('qc1','To avoid altering evidence and to keep analysis isolated in a controlled environment.')">Reveal Answer</button>
+      <p id="qc1"></p>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="step">
+  <div class="step-header" onclick="toggleStep(this)">
+    <span>Step 2 — Open the “Create New Case” Wizard</span><span>+</span>
+  </div>
+  <div class="step-content">
+    <p>Select <strong>Create New Case</strong> from the Autopsy home screen. You will see fields such as:</p>
+    <ul>
+      <li>Case Name</li>
+      <li>Base Directory</li>
+      <li>Description</li>
+      <li>Examiner</li>
+      <li>Case Number (optional)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="step">
+  <div class="step-header" onclick="toggleStep(this)">
+    <span>Step 3 — Case Name</span><span>+</span>
+  </div>
+  <div class="step-content">
+    <p><strong>Purpose:</strong> A short, descriptive label for the investigation.</p>
+    <p><strong>Good Format:</strong> <code>Dept-DeviceType-YYYY-MM-DD</code></p>
+
+    <div class="quiz">
+      <p><strong>Your Turn:</strong> Enter a case name for a phishing‑related laptop investigation.</p>
+      <input type="text" id="caseName" placeholder="Example: HR-Laptop-2026-02-23">
+      <button onclick="validateCaseName()">Check</button>
+      <p id="caseNameOut"></p>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="step">
+  <div class="step-header" onclick="toggleStep(this)">
+    <span>Step 4 — Base Directory</span><span>+</span>
+  </div>
+  <div class="step-content">
+    <p><strong>Purpose:</strong> The folder where Autopsy stores all case data.</p>
+    <p><strong>Recommended:</strong> <code>/cases</code> or a dedicated forensic storage path.</p>
+
+    <div class="quiz">
+      <p><strong>Which is the better base directory?</strong></p>
+      <button onclick="showAnswer('qc2','Correct — /cases is organized and dedicated for forensic work.')" class="correct">/cases</button>
+      <button onclick="showAnswer('qc2','Not ideal — Desktop paths are messy and not for forensic storage.')" class="incorrect">/home/user/Desktop/random</button>
+      <p id="qc2"></p>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="step">
+  <div class="step-header" onclick="toggleStep(this)">
+    <span>Step 5 — Description</span><span>+</span>
+  </div>
+  <div class="step-content">
+    <p><strong>Purpose:</strong> A one‑sentence summary of the incident or reason for analysis.</p>
+
+    <div class="quiz">
+      <p><strong>Your Turn:</strong> Write a description for a USB suspected of data exfiltration.</p>
+      <input type="text" id="desc" placeholder="Example: Analysis of USB drive suspected of containing exfiltrated HR files.">
+      <button onclick="validateDescription()">Check</button>
+      <p id="descOut"></p>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 6 -->
+<div class="step">
+  <div class="step-header" onclick="toggleStep(this)">
+    <span>Step 6 — Examiner & Case Number</span><span>+</span>
+  </div>
+  <div class="step-content">
+    <p><strong>Examiner:</strong> Your name or analyst ID.</p>
+    <p><strong>Case Number:</strong> Internal tracking ID (optional but recommended).</p>
+
+    <div class="quiz">
+      <p><strong>Which field identifies the person performing the analysis?</strong></p>
+      <button onclick="showAnswer('qc3','Correct — the Examiner field identifies the analyst.')" class="correct">Examiner</button>
+      <button onclick="showAnswer('qc3','Incorrect — Case Number is for tracking, not identity.')" class="incorrect">Case Number</button>
+      <p id="qc3"></p>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 7 -->
+<div class="step">
+  <div class="step-header" onclick="toggleStep(this)">
+    <span>Step 7 — Finalize the Case</span><span>+</span>
+  </div>
+  <div class="step-content">
+    <p>Review all fields and click <strong>Finish</strong>. Autopsy will create the case and prompt you to add a data source.</p>
+  </div>
+</div>
+
+</body>
+</html>

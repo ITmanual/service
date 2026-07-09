@@ -1,0 +1,215 @@
+<!-- FULL UPDATED LAB WITH SHOW COMMANDS + REFLECTION -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Switch Trunking, LACP, and VLAN Lab</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#0f172a; color:#e5e7eb; margin:0; }
+    header { background:#111827; padding:16px 24px; border-bottom:1px solid #1f2937; }
+    h1,h2,h3 { margin:0 0 8px 0; color:#f9fafb; }
+    main { display:flex; gap:16px; padding:16px 24px 32px 24px; }
+    .column { flex:1; background:#111827; border-radius:8px; padding:16px; border:1px solid #1f2937; max-height:calc(100vh - 120px); overflow-y:auto; }
+    .badge { padding:2px 8px; border-radius:999px; font-size:11px; background:#1d4ed8; color:#e5e7eb; }
+    textarea,select,button { font-family:monospace; font-size:13px; }
+    textarea { width:100%; min-height:120px; background:#020617; color:#e5e7eb; border:1px solid #374151; border-radius:4px; padding:8px; }
+    button { padding:6px 10px; border-radius:4px; border:none; cursor:pointer; background:#22c55e; color:#022c22; font-weight:600; }
+    button.secondary { background:#1d4ed8; color:#e5e7eb; }
+    .status { margin-top:8px; padding:6px 8px; border-radius:4px; font-size:13px; }
+    .status.ok { background:#022c22; color:#bbf7d0; border:1px solid #16a34a; }
+    .status.err { background:#450a0a; color:#fecaca; border:1px solid #b91c1c; }
+    .objective-done { color:#22c55e; }
+    .objective-pending { color:#f97316; }
+    .reflection-box { background:#020617; padding:10px; border-radius:6px; border:1px solid #374151; margin-bottom:10px; }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Interactive Switch Trunking, LACP, and VLAN Lab</h1>
+  <p style="font-size:13px;color:#9ca3af;">
+    Scenario-focused practice aligned with CompTIA Network+ (N10-008) switching, VLAN, trunking, and link aggregation objectives.
+  </p>
+</header>
+
+<main>
+  <!-- LEFT COLUMN -->
+  <section class="column">
+    <h2>Scenario & Topology</h2>
+    <p>You are the network technician for a small office. Your task is to configure:</p>
+    <ul>
+      <li>VLAN 20 for users and printers</li>
+      <li>Access ports for PC and printer</li>
+      <li>Trunk ports between switches</li>
+      <li>LACP (802.3ad) link aggregation</li>
+    </ul>
+
+    <h3>CompTIA Network+ Objectives</h3>
+    <ul>
+      <li><span class="badge">2.3</span> Configure VLANs, trunking, and link aggregation</li>
+      <li><span class="badge">3.1</span> Use appropriate commands to verify configuration</li>
+    </ul>
+
+    <h3>Reflection Questions</h3>
+    <div class="reflection-box">
+      <p><strong>1.</strong> Why must both switches agree on trunking mode and allowed VLANs?</p>
+      <textarea></textarea>
+    </div>
+    <div class="reflection-box">
+      <p><strong>2.</strong> What advantages does LACP provide over a single trunk link?</p>
+      <textarea></textarea>
+    </div>
+    <div class="reflection-box">
+      <p><strong>3.</strong> Why can PC1 reach Printer1 even though they are on different switches?</p>
+      <textarea></textarea>
+    </div>
+  </section>
+
+  <!-- RIGHT COLUMN -->
+  <section class="column">
+    <h2>Interactive Configuration Lab</h2>
+
+    <label><strong>Active Device:</strong></label><br />
+    <select id="switchSelect">
+      <option value="SW1">SW1</option>
+      <option value="SW2">SW2</option>
+    </select>
+
+    <!-- VLAN CONFIG -->
+    <h3>Step 1: Create VLAN 20</h3>
+    <textarea id="vlanConfig"></textarea>
+    <button onclick="checkVlan()">Check VLAN Config</button>
+    <div id="vlanStatus" class="status"></div>
+
+    <!-- ACCESS PORT CONFIG -->
+    <h3>Step 2: Assign Access Ports</h3>
+    <textarea id="accessConfig"></textarea>
+    <button onclick="checkAccess()">Check Access Config</button>
+    <div id="accessStatus" class="status"></div>
+
+    <!-- TRUNK + LACP CONFIG -->
+    <h3>Step 3: Configure Trunk + LACP</h3>
+    <textarea id="trunkConfig"></textarea>
+    <button onclick="checkTrunk()">Check Trunk Config</button>
+    <div id="trunkStatus" class="status"></div>
+
+    <!-- SHOW COMMAND SIMULATOR -->
+    <h3>Show Commands</h3>
+    <select id="showSelect">
+      <option value="vlan">show vlan brief</option>
+      <option value="trunk">show interfaces trunk</option>
+      <option value="lacp">show etherchannel summary</option>
+    </select>
+    <button onclick="runShow()">Run Command</button>
+    <textarea id="showOutput" style="min-height:150px;"></textarea>
+
+    <!-- CHECKLIST -->
+    <h3>Objective Checklist</h3>
+    <p id="objVlan" class="objective-pending">[ ] VLAN 20 created</p>
+    <p id="objAccess" class="objective-pending">[ ] Access ports assigned</p>
+    <p id="objTrunk" class="objective-pending">[ ] Trunk + LACP configured</p>
+
+    <button class="secondary" onclick="resetLab()">Reset Lab</button>
+  </section>
+</main>
+
+<script>
+  const state = { vlanOK:false, accessOK:false, trunkOK:false };
+
+  function updateChecklist() {
+    document.getElementById('objVlan').textContent = state.vlanOK ? "[X] VLAN 20 created" : "[ ] VLAN 20 created";
+    document.getElementById('objVlan').className = state.vlanOK ? "objective-done" : "objective-pending";
+
+    document.getElementById('objAccess').textContent = state.accessOK ? "[X] Access ports assigned" : "[ ] Access ports assigned";
+    document.getElementById('objAccess').className = state.accessOK ? "objective-done" : "objective-pending";
+
+    document.getElementById('objTrunk').textContent = state.trunkOK ? "[X] Trunk + LACP configured" : "[ ] Trunk + LACP configured";
+    document.getElementById('objTrunk').className = state.trunkOK ? "objective-done" : "objective-pending";
+  }
+
+  function setStatus(id, ok, msg) {
+    const el = document.getElementById(id);
+    el.className = "status " + (ok ? "ok" : "err");
+    el.textContent = msg;
+    updateChecklist();
+  }
+
+  function checkVlan() {
+    const txt = document.getElementById('vlanConfig').value.toLowerCase();
+    const ok = /vlan\s+20/.test(txt) && /name/.test(txt);
+    state.vlanOK = ok;
+    setStatus("vlanStatus", ok, ok ? "VLAN 20 appears correctly configured." : "Missing VLAN 20 or name.");
+  }
+
+  function checkAccess() {
+    const txt = document.getElementById('accessConfig').value.toLowerCase();
+    const sw = document.getElementById('switchSelect').value;
+    const intRegex = sw === "SW1" ? /fa0\/10/ : /fa0\/11/;
+    const ok = intRegex.test(txt) && /switchport mode access/.test(txt) && /switchport access vlan 20/.test(txt);
+    state.accessOK = ok;
+    setStatus("accessStatus", ok, ok ? "Access port assigned correctly." : "Access port config incomplete.");
+  }
+
+  function checkTrunk() {
+    const txt = document.getElementById('trunkConfig').value.toLowerCase();
+    const ok =
+      /interface range fa0\/1 - 2/.test(txt) &&
+      /channel-group 1 mode active/.test(txt) &&
+      /interface port-channel 1/.test(txt) &&
+      /switchport mode trunk/.test(txt) &&
+      /allowed vlan.*20/.test(txt);
+    state.trunkOK = ok;
+    setStatus("trunkStatus", ok, ok ? "Trunk + LACP config looks correct." : "Trunk/LACP config incomplete.");
+  }
+
+  function runShow() {
+    const cmd = document.getElementById('showSelect').value;
+    let output = "";
+
+    if (cmd === "vlan") {
+      output =
+`VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------
+1    default                          active    Fa0/1, Fa0/2
+20   USERS                            active    ${state.accessOK ? "Fa0/10, Fa0/11" : ""}
+`;
+    }
+
+    if (cmd === "trunk") {
+      output =
+`Port        Mode         Encapsulation  Status        Native vlan
+Po1         on           802.1q         trunking      1
+
+Port        Vlans allowed on trunk
+Po1         ${state.trunkOK ? "20" : "none"}
+
+Port        Vlans in spanning tree forwarding state
+Po1         ${state.trunkOK ? "20" : "none"}
+`;
+    }
+
+    if (cmd === "lacp") {
+      output =
+`Flags:  D - down  P - bundled in port-channel
+
+Group  Port-channel  Protocol    Ports
+------+------------- ----------  -------------------------
+1      Po1           LACP        ${state.trunkOK ? "Fa0/1(P) Fa0/2(P)" : "Fa0/1(D) Fa0/2(D)"}
+`;
+    }
+
+    document.getElementById('showOutput').value = output;
+  }
+
+  function resetLab() {
+    document.querySelectorAll("textarea").forEach(t => t.value = "");
+    document.querySelectorAll(".status").forEach(s => s.textContent = "");
+    state.vlanOK = state.accessOK = state.trunkOK = false;
+    updateChecklist();
+  }
+
+  updateChecklist();
+</script>
+
+</body>
+</html>

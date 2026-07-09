@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CompTIA 1202 Troubleshooting Lab</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    h1, h2 { color: #2c3e50; }
+    .step { margin: 15px 0; padding: 10px; background: #ecf0f1; border-radius: 5px; }
+    .feedback { margin-top: 10px; font-weight: bold; }
+    select { margin-top: 5px; }
+    .ticket { background: #fff; border: 1px solid #ccc; padding: 15px; margin-top: 20px; }
+  </style>
+  <script>
+    function checkAnswer(stepId) {
+      const select = document.getElementById("select" + stepId);
+      const feedback = document.getElementById("feedback" + stepId);
+      const choice = select.value;
+
+      let response = "";
+      switch(stepId) {
+        case 1:
+          if(choice === "Document symptoms") response = "✅ Correct: Always start by documenting symptoms and gathering information.";
+          else response = "❌ Not ideal: You must first document and clarify the issue before jumping to conclusions.";
+          break;
+        case 2:
+          if(choice === "Check system services") response = "✅ Correct: Reviewing system services helps confirm if updates are slowing performance.";
+          else response = "❌ Not the best step: Focus on system services to validate your theory.";
+          break;
+        case 3:
+          if(choice === "Restart tablet") response = "✅ Correct: Restarting allows updates to finish and clears temporary resource usage.";
+          else response = "❌ This may not resolve the issue. Restarting is the most effective next step.";
+          break;
+        case 4:
+          if(choice === "Document resolution") response = "✅ Correct: Documentation ensures the issue and fix are recorded for future reference.";
+          else response = "❌ Important but secondary. Documentation is required before closing the ticket.";
+          break;
+      }
+      feedback.textContent = response;
+    }
+  </script>
+</head>
+<body>
+  <h1>Interactive Lab: Tablet Running Slow</h1>
+  <p><strong>Scenario:</strong> An employee reports their tablet is running slow. As a help desk technician, you must troubleshoot, identify the cause, and document the resolution following CompTIA 220-1202 objectives.</p>
+
+  <h2>Step 1: Gather Information</h2>
+  <div class="step">
+    <p>The employee says: "My tablet started running slow after yesterday’s update."</p>
+    <label for="select1">Choose your first step:</label>
+    <select id="select1" onchange="checkAnswer(1)">
+      <option value="">--Select an option--</option>
+      <option value="Run antivirus">Run antivirus scan</option>
+      <option value="Replace tablet">Replace the tablet</option>
+      <option value="Document symptoms">Document symptoms and ask clarifying questions</option>
+      <option value="Ignore issue">Ignore the issue</option>
+    </select>
+    <div id="feedback1" class="feedback"></div>
+  </div>
+
+  <h2>Step 2: Establish a Theory</h2>
+  <div class="step">
+    <p>You suspect system services may be impacted by the update.</p>
+    <label for="select2">Where should you check?</label>
+    <select id="select2" onchange="checkAnswer(2)">
+      <option value="">--Select an option--</option>
+      <option value="Check battery">Check battery health</option>
+      <option value="Check system services">Check system services and resource usage</option>
+      <option value="Check WiFi">Check WiFi connection</option>
+      <option value="Check screen">Check screen brightness</option>
+    </select>
+    <div id="feedback2" class="feedback"></div>
+  </div>
+
+  <h2>Step 3: Test the Theory</h2>
+  <div class="step">
+    <p>You confirm the update service is consuming high CPU and memory.</p>
+    <label for="select3">What action should you take?</label>
+    <select id="select3" onchange="checkAnswer(3)">
+      <option value="">--Select an option--</option>
+      <option value="Uninstall apps">Uninstall random apps</option>
+      <option value="Restart tablet">Restart the tablet and allow updates to complete</option>
+      <option value="Replace battery">Replace the battery</option>
+      <option value="Ignore issue">Ignore the issue</option>
+    </select>
+    <div id="feedback3" class="feedback"></div>
+  </div>
+
+  <h2>Step 4: Document and Close Ticket</h2>
+  <div class="step">
+    <p>After resolution, you must document the fix.</p>
+    <label for="select4">What should you do before closing?</label>
+    <select id="select4" onchange="checkAnswer(4)">
+      <option value="">--Select an option--</option>
+      <option value="Delete ticket">Delete the ticket</option>
+      <option value="Document resolution">Document resolution and employee confirmation</option>
+      <option value="Ignore documentation">Ignore documentation</option>
+      <option value="Escalate issue">Escalate issue unnecessarily</option>
+    </select>
+    <div id="feedback4" class="feedback"></div>
+  </div>
+
+  <h2>Sample Help Desk Ticket</h2>
+  <div class="ticket">
+    <h3>Help Desk Ticket</h3>
+    <p><strong>Issue:</strong> Tablet running slow after system update.</p>
+    <p><strong>Steps Taken:</strong> Verified symptoms, checked system services, identified update service consuming resources.</p>
+    <p><strong>Resolution:</strong> Restarted tablet, allowed update to complete, optimized startup apps.</p>
+    <p><strong>Status:</strong> Closed – Employee confirmed tablet performance improved.</p>
+  </div>
+
+  <h2>Directions</h2>
+  <ul>
+    <li>Read each step carefully.</li>
+    <li>Use the dropdown to select your troubleshooting action.</li>
+    <li>Review the feedback to understand why your choice is correct or incorrect.</li>
+    <li>Study the sample help desk ticket for proper documentation format.</li>
+    <li>Practice writing your own closure notes to reinforce documentation skills.</li>
+  </ul>
+</body>
+</html>

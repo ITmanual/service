@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interactive Firewall Lab: Block Inbound & Outbound Ports 20 and 21 (Windows 11)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #e5e7eb;
+      --muted: #a7b0be;
+      --accent: #60a5fa;
+      --accent2: #34d399;
+      --danger: #ef4444;
+      --line: #1f2937;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial; margin: 0; }
+    header, main, footer { max-width: 1080px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 28px; margin: 8px 0 18px; }
+    h2 { font-size: 22px; margin: 18px 0 10px; }
+    h3 { font-size: 18px; margin: 16px 0 8px; }
+    p { color: var(--muted); margin: 8px 0 12px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+    .inline-img { width: 100%; border: 1px solid var(--line); border-radius: 10px; }
+    .steps { display: grid; gap: 12px; }
+    .step { background: #0b1220; border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+    .step h4 { margin: 0 0 8px; font-size: 16px; }
+    .btn { background: var(--accent); border: none; color: #072042; font-weight: 700; padding: 10px 14px; border-radius: 10px; cursor: pointer; }
+    .btn.secondary { background: #1f2937; color: var(--text); border: 1px solid var(--line); }
+    .btn-row { display: flex; gap: 10px; margin-top: 8px; }
+    .hidden { display: none; }
+    kbd, code { background: #091321; color: #cbd5e1; border: 1px solid #1b2433; border-radius: 6px; padding: 2px 6px; }
+    pre { background: #091321; border: 1px solid #1b2433; color: #e5e7eb; border-radius: 10px; padding: 14px; overflow: auto; }
+    .status { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 12px; margin-right: 6px; }
+    .status.ok { border-color: var(--accent2); color: var(--accent2); }
+    .status.stop { border-color: var(--danger); color: var(--danger); }
+    details { background: #0b1220; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+    summary { cursor: pointer; font-weight: 700; }
+    .callout { border-left: 4px solid var(--accent); padding-left: 12px; margin: 10px 0 14px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Interactive firewall lab: Block inbound and outbound FTP ports 20 & 21</h1>
+  <p>Use this guided, interactive lab to create Windows Defender Firewall rules that block both inbound and outbound TCP ports 20 and 21 on Windows 11. Follow the clickable steps, view graphics, and run verification commands directly.</p>
+  <div class="card">
+    <div class="grid">
+      <div>
+        <h3>Overview diagram</h3>
+        <!-- Replace src with your provided diagram URL -->
+        <img class="inline-img" src="diagram-ftp-block.png" alt="Diagram of blocked inbound/outbound FTP ports 20 & 21">
+        <p><span class="status.stop">Blocked</span> Inbound FTP (20/21) and Outbound FTP (20/21) are denied at the firewall.</p>
+      </div>
+      <div>
+        <h3>Prerequisites</h3>
+        <ul>
+          <li><strong>Admin rights:</strong> Run steps as an Administrator.</li>
+          <li><strong>Windows 11:</strong> UI shown is Windows 11; Windows 10 is similar.</li>
+          <li><strong>Impact:</strong> FTP clients/servers will not connect on ports 20/21.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Part 1: Create inbound block rule (ports 20 & 21)</h2>
+    <div class="steps">
+      <div class="step">
+        <h4>1) Open Windows Defender Firewall with Advanced Security</h4>
+        <img class="inline-img" src="img/windows-security-advanced.png" alt="Windows Security - Advanced settings highlighted">
+        <p>Start → type <kbd>Windows Security</kbd> → open → choose <kbd>Firewall & network protection</kbd> → click <kbd>Advanced settings</kbd>.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="toggle('inbound-2')">Next</button>
+          <button class="btn secondary" onclick="toggle('inbound-1-help')">Show help</button>
+        </div>
+        <div id="inbound-1-help" class="hidden callout">
+          <p><strong>Tip:</strong> You can also run <code>wf.msc</code> from Run (Win+R) to open the firewall console directly.</p>
+        </div>
+      </div>
+
+      <div id="inbound-2" class="step hidden">
+        <h4>2) Create a new inbound Port rule</h4>
+        <img class="inline-img" src="img/inbound-new-rule.png" alt="Inbound Rules - New Rule button highlighted">
+        <p>Left pane: <kbd>Inbound Rules</kbd> → right pane: <kbd>New Rule…</kbd> → select <kbd>Port</kbd> → <kbd>Next</kbd>.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="toggle('inbound-3')">Next</button>
+        </div>
+      </div>
+
+      <div id="inbound-3" class="step hidden">
+        <h4>3) Specify ports and block action</h4>
+        <img class="inline-img" src="img/port-dialog-20-21.png" alt="Port dialog with TCP and 20,21 entered">
+        <p>Choose <kbd>TCP</kbd> → <kbd>Specific local ports</kbd> → enter <code>20,21</code> → Next → select <kbd>Block the connection</kbd>.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="toggle('inbound-4')">Next</button>
+        </div>
+      </div>
+
+      <div id="inbound-4" class="step hidden">
+        <h4>4) Apply to profiles and name the rule</h4>
+        <img class="inline-img" src="img/profiles-all.png" alt="Profiles Domain, Private, Public selected">
+        <p>Select <kbd>Domain</kbd>, <kbd>Private</kbd>, <kbd>Public</kbd> → Next → name the rule <code>Block Inbound TCP 20-21 (FTP)</code> → Finish.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="toggle('outbound-1')">Go to Outbound</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Part 2: Create outbound block rule (ports 20 & 21)</h2>
+    <div class="steps">
+      <div id="outbound-1" class="step hidden">
+        <h4>1) New outbound Port rule</h4>
+        <img class="inline-img" src="img/outbound-new-rule.png" alt="Outbound Rules - New Rule button highlighted">
+        <p>Left pane: <kbd>Outbound Rules</kbd> → right pane: <kbd>New Rule…</kbd> → select <kbd>Port</kbd> → <kbd>Next</kbd>.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="toggle('outbound-2')">Next</button>
+        </div>
+      </div>
+
+      <div id="outbound-2" class="step hidden">
+        <h4>2) Specify ports and block action</h4>
+        <img class="inline-img" src="img/port-dialog-20-21-out.png" alt="Port dialog for remote ports 20,21">
+        <p>Choose <kbd>TCP</kbd> → <kbd>Specific remote ports</kbd> → enter <code>20,21</code> → Next → select <kbd>Block the connection</kbd>.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="toggle('outbound-3')">Next</button>
+        </div>
+      </div>
+
+      <div id="outbound-3" class="step hidden">
+        <h4>3) Apply to profiles and name the rule</h4>
+        <img class="inline-img" src="img/profiles-all.png" alt="Profiles Domain, Private, Public selected">
+        <p>Select profiles → Next → name the rule <code>Block Outbound TCP 20-21 (FTP)</code> → Finish.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="toggle('verify')">Verify</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="verify" class="card hidden">
+    <h2>Part 3: Verify rules</h2>
+    <details>
+      <summary>GUI verification</summary>
+      <p>Inbound Rules: ensure <code>Block Inbound TCP 20-21 (FTP)</code> is Enabled. Outbound Rules: ensure <code>Block Outbound TCP 20-21 (FTP)</code> is Enabled.</p>
+    </details>
+    <details>
+      <summary>PowerShell verification</summary>
+      <pre>
+Get-NetFirewallRule -DisplayName "Block Inbound TCP 20-21 (FTP)" | Format-Table DisplayName, Enabled, Direction, Action
+Get-NetFirewallRule -DisplayName "Block Outbound TCP 20-21 (FTP)" | Format-Table DisplayName, Enabled, Direction, Action
+
+# Inspect port filters
+Get-NetFirewallRule -DisplayName "Block Inbound TCP 20-21 (FTP)" | Get-NetFirewallPortFilter | Format-Table Protocol, LocalPort
+Get-NetFirewallRule -DisplayName "Block Outbound TCP 20-21 (FTP)" | Get-NetFirewallPortFilter | Format-Table Protocol, RemotePort
+      </pre>
+    </details>
+    <details>
+      <summary>Optional: functional tests</summary>
+      <pre>
+# PowerShell: test outbound FTP control/data (should fail)
+Test-NetConnection -ComputerName ftp.gnu.org -Port 21
+Test-NetConnection -ComputerName ftp.gnu.org -Port 20
+
+# If you host an FTP server locally: test inbound
+Test-NetConnection -ComputerName localhost -Port 21
+Test-NetConnection -ComputerName localhost -Port 20
+      </pre>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Part 4: Create rules with PowerShell (alternative)</h2>
+    <pre>
+# Run in elevated PowerShell
+New-NetFirewallRule `
+  -DisplayName "Block Inbound TCP 20-21 (FTP)" `
+  -Direction Inbound `
+  -Action Block `
+  -Protocol TCP `
+  -LocalPort 20,21 `
+  -Profile Domain,Private,Public `
+  -Enabled True
+
+New-NetFirewallRule `
+  -DisplayName "Block Outbound TCP 20-21 (FTP)" `
+  -Direction Outbound `
+  -Action Block `
+  -Protocol TCP `
+  -RemotePort 20,21 `
+  -Profile Domain,Private,Public `
+  -Enabled True
+    </pre>
+  </section>
+
+  <section class="card">
+    <h2>Part 5: Revert or adjust</h2>
+    <details>
+      <summary>Disable or enable rules (PowerShell)</summary>
+      <pre>
+Disable-NetFirewallRule -DisplayName "Block Inbound TCP 20-21 (FTP)"
+Disable-NetFirewallRule -DisplayName "Block Outbound TCP 20-21 (FTP)"
+
+Enable-NetFirewallRule -DisplayName "Block Inbound TCP 20-21 (FTP)"
+Enable-NetFirewallRule -DisplayName "Block Outbound TCP 20-21 (FTP)"
+      </pre>
+    </details>
+    <details>
+      <summary>Remove rules (PowerShell)</summary>
+      <pre>
+Remove-NetFirewallRule -DisplayName "Block Inbound TCP 20-21 (FTP)"
+Remove-NetFirewallRule -DisplayName "Block Outbound TCP 20-21 (FTP)"
+      </pre>
+    </details>
+    <div class="callout">
+      <p><strong>Scope & exceptions:</strong> Edit a rule → Scope tab to limit IP ranges; Program/Services tabs to constrain to specific executables or services.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>End of interactive lab — you have blocked inbound and outbound FTP ports 20 & 21 using Windows Defender Firewall on Windows 11.</p>
+</footer>
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+
+</body>
+</html>

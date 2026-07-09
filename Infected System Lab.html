@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CompTIA A+ 220-1202 Lab: Tracing Malware to Patient Zero</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a; --panel: #111827; --text: #e5e7eb; --muted: #94a3b8;
+      --accent: #22c55e; --warn: #f59e0b; --danger: #ef4444; --link: #60a5fa;
+    }
+    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+           background: var(--bg); color: var(--text); margin: 0; }
+    header, footer { padding: 16px 24px; background: #0b1220; border-bottom: 1px solid #1f2937; }
+    h1, h2, h3 { margin: 0 0 8px; }
+    main { padding: 24px; max-width: 1000px; margin: 0 auto; }
+    .card { background: var(--panel); border: 1px solid #1f2937; border-radius: 12px; padding: 18px; margin: 16px 0; }
+    .step { display: grid; grid-template-columns: 48px 1fr; gap: 16px; align-items: start; }
+    .num { width: 48px; height: 48px; border-radius: 10px; background: #0b1220; border: 1px solid #1f2937;
+           display: grid; place-items: center; font-weight: 700; color: var(--accent); }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    button { background: #0b1220; color: var(--text); border: 1px solid #1f2937; border-radius: 10px;
+             padding: 8px 12px; cursor: pointer; }
+    button:hover { border-color: var(--link); color: var(--link); }
+    .content { margin-top: 10px; display: none; }
+    .tips { color: var(--muted); font-size: 0.95rem; }
+    code, .cmd { background: #0b1220; border: 1px solid #1f2937; border-radius: 8px; padding: 8px; display: block; margin: 8px 0; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 8px; font-size: 0.85rem; margin-right: 8px; border: 1px solid #1f2937; }
+    .badge.obj { color: var(--accent); border-color: var(--accent); }
+    .badge.sec { color: var(--warn); border-color: var(--warn); }
+    .badge.ir { color: var(--danger); border-color: var(--danger); }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .check { display: flex; align-items: start; gap: 8px; margin: 6px 0; }
+    .check input { margin-top: 4px; }
+    .inline { display: inline-block; }
+    a { color: var(--link); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CompTIA A+ 220-1202 Lab: Trace Malware to Patient Zero</h1>
+    <div class="tips">Use Windows built-ins and disciplined notes to identify the original infected host and its malicious process.</div>
+  </header>
+  <main>
+
+    <section class="card">
+      <h2>Scenario brief</h2>
+      <p>Four of five PCs and one of three servers are exhibiting malware symptoms (pop-ups, high CPU, suspicious outbound traffic). Your job: determine which host was infected first (“patient zero”), identify the malicious process/persistence, and outline containment.</p>
+      <div class="grid">
+        <div><span class="badge obj">Objective: Malware detection</span></div>
+        <div><span class="badge sec">Objective: Security & SOHO removal</span></div>
+        <div><span class="badge ir">Objective: Troubleshoot & document</span></div>
+      </div>
+    </section>
+
+    <!-- STEP 1: Verify symptoms & baseline -->
+    <section class="card step">
+      <div class="num">1</div>
+      <div>
+        <h3>Verify symptoms and gather a baseline</h3>
+        <p>Start on two infected PCs and one clean PC. Confirm symptoms are truly malware-related and not misconfiguration or a heavy app. Capture timestamps and commonalities.</p>
+        <div class="actions">
+          <button onclick="toggle('s1a')">Hints</button>
+          <button onclick="toggle('s1b')">What to record</button>
+          <button onclick="toggle('s1c')">Why this matters</button>
+        </div>
+        <div id="s1a" class="content">
+          <div class="tips">
+            - Compare CPU, memory, disk, and network using Task Manager (Ctrl+Shift+Esc) → Processes and Performance.<br>
+            - Note unusual unsigned executables, random-named processes, or ones spawning repeatedly.<br>
+            - On the clean PC, collect a “normal” baseline for comparison.
+          </div>
+        </div>
+        <div id="s1b" class="content">
+          <ul>
+            <li class="check"><input type="checkbox"> <span><b>Hostnames:</b> Infected vs. clean endpoints.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Symptoms:</b> Pop-ups, slowdowns, network spikes, AV alerts.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Timestamps:</b> First observed time per host.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Process names:</b> Suspicious entries and resource impact.</span></li>
+          </ul>
+        </div>
+        <div id="s1c" class="content">
+          <div class="tips">CompTIA emphasizes verifying symptoms before action, ensuring you don’t misdiagnose normal behavior as malware.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: Identify malicious processes -->
+    <section class="card step">
+      <div class="num">2</div>
+      <div>
+        <h3>Identify malicious processes (Task Manager & Process details)</h3>
+        <p>Use Task Manager and built-in controls to zero in on malicious processes. Cross-check file locations, publisher signatures, and parent-child relationships.</p>
+        <div class="actions">
+          <button onclick="toggle('s2a')">Task Manager workflow</button>
+          <button onclick="toggle('s2b')">Command-line checks</button>
+          <button onclick="toggle('s2c')">Evidence to capture</button>
+        </div>
+        <div id="s2a" class="content">
+          <p><b>Steps:</b></p>
+          <ol>
+            <li><b>Open:</b> Task Manager → Processes; sort by <i>CPU</i>, <i>Network</i>, then <i>Disk</i>.</li>
+            <li><b>Inspect:</b> Right-click suspicious process → <i>Open file location</i> and <i>Properties → Digital Signatures</i>.</li>
+            <li><b>Track:</b> Go to <i>Details</i> tab; add columns for <i>Command line</i> and <i>Image path</i> (View → Select columns).</li>
+            <li><b>Parent:</b> Right-click process → <i>Go to service(s)</i> if applicable; note service associations.</li>
+          </ol>
+        </div>
+        <div id="s2b" class="content">
+          <p><b>Commands:</b></p>
+          <div class="cmd">wmic process get Name,ProcessId,CommandLine /format:list</div>
+          <div class="cmd">tasklist /v</div>
+          <div class="cmd">powershell "Get-Process | Select-Object Name,Id,Path,@{n='Cmd';e={$_.Path}}"</div>
+          <p class="tips">Look for executables in %TEMP%, user profile AppData\Roaming, or obscure subfolders under ProgramData.</p>
+        </div>
+        <div id="s2c" class="content">
+          <ul>
+            <li class="check"><input type="checkbox"> <span><b>Process name/ID:</b> Across multiple infected hosts.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Path:</b> Exact directory; note if nonstandard (e.g., Temp, AppData).</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Signature:</b> Missing or invalid publisher signature.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Parent/child:</b> Spawning patterns indicating persistence or dropper behavior.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: Check persistence mechanisms -->
+    <section class="card step">
+      <div class="num">3</div>
+      <div>
+        <h3>Locate persistence (Autoruns equivalents, services, scheduled tasks)</h3>
+        <p>Persistence reveals how malware survives reboots and often points to initial delivery. Inspect startup entries, services, and scheduled tasks tied to the suspicious process.</p>
+        <div class="actions">
+          <button onclick="toggle('s3a')">Registry & startup</button>
+          <button onclick="toggle('s3b')">Services & tasks</button>
+          <button onclick="toggle('s3c')">Browser & script hooks</button>
+        </div>
+        <div id="s3a" class="content">
+          <p><b>Startup locations:</b></p>
+          <ul>
+            <li><b>Registry (user):</b> HKCU\Software\Microsoft\Windows\CurrentVersion\Run</li>
+            <li><b>Registry (machine):</b> HKLM\Software\Microsoft\Windows\CurrentVersion\Run</li>
+            <li><b>Startup folders:</b> %AppData%\Microsoft\Windows\Start Menu\Programs\Startup</li>
+          </ul>
+          <div class="cmd">reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run</div>
+          <div class="cmd">reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run</div>
+        </div>
+        <div id="s3b" class="content">
+          <p><b>Services and scheduled tasks:</b></p>
+          <div class="cmd">services.msc</div>
+          <div class="cmd">taskschd.msc</div>
+          <ul>
+            <li class="check"><input type="checkbox"> <span><b>Unknown service:</b> Random name, relies on suspicious binary path.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Scheduled task:</b> Triggers at logon or hourly, executes the malicious program.</span></li>
+          </ul>
+        </div>
+        <div id="s3c" class="content">
+          <p><b>Browser & script persistence:</b></p>
+          <ul>
+            <li><b>Extensions:</b> Check Chromium-based and Edge extensions; remove unknown ones.</li>
+            <li><b>PowerShell profiles:</b> %UserProfile%\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1</li>
+            <li><b>Startup scripts:</b> Inspect for .vbs/.js in Startup folders.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: Event, Defender & network correlation -->
+    <section class="card step">
+      <div class="num">4</div>
+      <div>
+        <h3>Correlate events, AV detections, and network indicators</h3>
+        <p>Use Event Viewer and Windows Security logs to build a timeline. Identify the earliest host with detections, process executions, or blocked connections, then verify lateral movement indicators.</p>
+        <div class="actions">
+          <button onclick="toggle('s4a')">Event Viewer paths</button>
+          <button onclick="toggle('s4b')">Defender & firewall</button>
+          <button onclick="toggle('s4c')">Network artifacts</button>
+        </div>
+        <div id="s4a" class="content">
+          <p><b>Event Viewer:</b></p>
+          <ul>
+            <li><b>Windows Logs → System:</b> Service starts, driver loads, errors around infection time.</li>
+            <li><b>Windows Logs → Application:</b> Crashes or unexpected app events tied to suspicious process.</li>
+            <li><b>Applications and Services Logs → Microsoft → Windows → PowerShell:</b> Suspicious script invocations.</li>
+          </ul>
+        </div>
+        <div id="s4b" class="content">
+          <p><b>Windows Security (Defender):</b> Virus & threat protection → Protection history; export detections, note first-seen timestamps and file paths.</p>
+          <ul>
+            <li class="check"><input type="checkbox"> <span><b>Detection name:</b> Family or heuristic signature.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Action:</b> Quarantined/blocked/allowed (user override?).</span></li>
+          </ul>
+        </div>
+        <div id="s4c" class="content">
+          <p><b>Network clues:</b></p>
+          <ul>
+            <li><b>Task Manager → Performance → Open Resource Monitor:</b> Check suspicious outbound connections.</li>
+            <li><b>netstat:</b> <span class="cmd">netstat -ano</span> and map PIDs to processes from Step 2.</li>
+            <li><b>Earliest outbound host:</b> The device with first outbound C2 or distribution behavior is likely patient zero.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 5: Compare timelines to identify patient zero -->
+    <section class="card step">
+      <div class="num">5</div>
+      <div>
+        <h3>Build and compare host timelines to find patient zero</h3>
+        <p>Compile first-seen indicators per host (process execution, persistence creation, AV detection, outbound connections). The host with the earliest set of indicators, plus unique artifacts (e.g., installer or dropper), is your patient zero.</p>
+        <div class="actions">
+          <button onclick="toggle('s5a')">Timeline worksheet</button>
+          <button onclick="toggle('s5b')">Decision criteria</button>
+        </div>
+        <div id="s5a" class="content">
+          <table class="cmd" style="width:100%">
+            <tr><th>Host</th><th>First suspicious process</th><th>Persistence created</th><th>First AV detection</th><th>First outbound</th><th>Notes</th></tr>
+            <tr><td>PC-01</td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>PC-02</td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>SRV-01</td><td></td><td></td><td></td><td></td><td></td></tr>
+          </table>
+        </div>
+        <div id="s5b" class="content">
+          <ul>
+            <li class="check"><input type="checkbox"> <span><b>Earliest timestamp cluster:</b> Same suspicious binary appears first on one host.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Unique artifacts:</b> Presence of installer/dropped files not found elsewhere.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Propagation role:</b> Shares to others (e.g., SMB write events) or outbound distribution.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 6: Containment (high-level) -->
+    <section class="card step">
+      <div class="num">6</div>
+      <div>
+        <h3>Containment and documentation (do not remediate yet)</h3>
+        <p>Once patient zero and the malicious process are identified, isolate the host, preserve evidence, and document steps. Defer full cleanup until evidence is captured.</p>
+        <div class="actions">
+          <button onclick="toggle('s6a')">Immediate actions</button>
+          <button onclick="toggle('s6b')">Evidence checklist</button>
+        </div>
+        <div id="s6a" class="content">
+          <ul>
+            <li><b>Isolate:</b> Disconnect patient zero from the network (disable NIC or remove cable).</li>
+            <li><b>Snapshot:</b> Copy malicious binary, persistence entries, and logs to secured media.</li>
+            <li><b>Notify:</b> Record timeline and inform stakeholders per policy.</li>
+          </ul>
+        </div>
+        <div id="s6b" class="content">
+          <ul>
+            <li class="check"><input type="checkbox"> <span><b>Process details:</b> Name, PID, path, command line, signature info.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Persistence:</b> Registry run keys, services, scheduled tasks.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Events:</b> System/Application logs, Defender history, netstat mappings.</span></li>
+            <li class="check"><input type="checkbox"> <span><b>Propagation:</b> Shared folders touched, outbound destinations, timestamps.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Knowledge checks -->
+    <section class="card">
+      <h3>Knowledge checks</h3>
+      <p>Use these questions to validate understanding before remediation.</p>
+      <ul>
+        <li><b>Question:</b> Which Windows log category best shows service start anomalies around the infection time?</li>
+        <details><summary>Answer</summary><div class="tips">Windows Logs → System.</div></details>
+        <li><b>Question:</b> Where do common user-level startup entries reside in the registry?</li>
+        <details><summary>Answer</summary><div class="tips">HKCU\Software\Microsoft\Windows\CurrentVersion\Run.</div></details>
+        <li><b>Question:</b> What command maps active connections to process IDs?</li>
+        <details><summary>Answer</summary><div class="tips">netstat -ano (then correlate PID in Task Manager).</div></details>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h3>Remediation outline (post-evidence)</h3>
+      <p>After documentation, proceed with: isolate, remove persistence, terminate processes, run AV scan, verify, and re-enable network. Follow organizational policy.</p>
+      <ol>
+        <li><b>Kill & delete:</b> Stop malicious services/tasks; delete binaries and persistence entries.</li>
+        <li><b>AV full scan:</b> Windows Security → Virus & threat protection → Full scan.</li>
+        <li><b>Verify:</b> Reboot; confirm no autoruns recreate; netstat clean.</li>
+        <li><b>Unblock:</b> Reconnect; monitor for recurrence; patch and credential hygiene.</li>
+      </ol>
+    </section>
+
+  </main>
+  <footer>
+    <div class="tips">Document everything—objective mapping, timestamps, artifacts—so your findings support incident response and align to A+ 220-1202 expectations.</div>
+  </footer>
+
+  <script>
+    function toggle(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+  </script>
+</body>
+</html>

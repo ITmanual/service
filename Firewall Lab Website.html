@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Windows Firewall Lab: Block Inbound and Outbound Ports 20 & 21 (Windows 11)</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #e5e7eb; line-height: 1.6; margin: 0; padding: 0; }
+    header, section, footer { max-width: 960px; margin: auto; padding: 24px; }
+    h1, h2, h3 { color: #fff; }
+    .card { background: #111827; border-radius: 8px; padding: 16px; margin: 16px 0; }
+    code, pre { background: #0b1220; color: #cbd5e1; padding: 4px 6px; border-radius: 6px; }
+    pre { display: block; padding: 12px; overflow-x: auto; }
+    ol, ul { margin-left: 20px; }
+    li { margin: 8px 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Windows Firewall Lab: Block Inbound and Outbound Ports 20 & 21</h1>
+  <p>This lab demonstrates how to block inbound and outbound TCP ports 20 and 21 (FTP data and control) using Windows Defender Firewall on Windows 11. You’ll learn both GUI and PowerShell methods, verify the rules, and safely revert them.</p>
+</header>
+
+<section>
+  <h2>Lab Objectives</h2>
+  <ul>
+    <li>Create inbound block rules for TCP ports 20 and 21.</li>
+    <li>Create outbound block rules for TCP ports 20 and 21.</li>
+    <li>Verify rules via GUI and PowerShell.</li>
+    <li>Revert or disable rules safely.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Part 1: Block inbound TCP ports 20 & 21 (GUI)</h2>
+  <div class="card">
+    <ol>
+      <li>Open <kbd>Windows Security</kbd> → <kbd>Firewall & network protection</kbd> → <kbd>Advanced settings</kbd>.</li>
+      <li>Select <kbd>Inbound Rules</kbd> → <kbd>New Rule…</kbd>.</li>
+      <li>Choose <kbd>Port</kbd> → <kbd>Next</kbd>.</li>
+      <li>Select <kbd>TCP</kbd> → <kbd>Specific local ports</kbd> → enter <code>20,21</code> → <kbd>Next</kbd>.</li>
+      <li>Choose <kbd>Block the connection</kbd> → <kbd>Next</kbd>.</li>
+      <li>Select all profiles (Domain, Private, Public) → <kbd>Next</kbd>.</li>
+      <li>Name the rule <code>Block Inbound TCP 20-21 (FTP)</code> → <kbd>Finish</kbd>.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>Part 2: Block outbound TCP ports 20 & 21 (GUI)</h2>
+  <div class="card">
+    <ol>
+      <li>Select <kbd>Outbound Rules</kbd> → <kbd>New Rule…</kbd>.</li>
+      <li>Choose <kbd>Port</kbd> → <kbd>Next</kbd>.</li>
+      <li>Select <kbd>TCP</kbd> → <kbd>Specific remote ports</kbd> → enter <code>20,21</code> → <kbd>Next</kbd>.</li>
+      <li>Choose <kbd>Block the connection</kbd> → <kbd>Next</kbd>.</li>
+      <li>Select all profiles → <kbd>Next</kbd>.</li>
+      <li>Name the rule <code>Block Outbound TCP 20-21 (FTP)</code> → <kbd>Finish</kbd>.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>Part 3: Verify Rules</h2>
+  <div class="card">
+    <h3>GUI Verification</h3>
+    <ul>
+      <li>Check <kbd>Inbound Rules</kbd> for <code>Block Inbound TCP 20-21 (FTP)</code>.</li>
+      <li>Check <kbd>Outbound Rules</kbd> for <code>Block Outbound TCP 20-21 (FTP)</code>.</li>
+    </ul>
+    <h3>PowerShell Verification</h3>
+    <pre>
+Get-NetFirewallRule -DisplayName "Block Inbound TCP 20-21 (FTP)" | Format-Table DisplayName, Enabled, Direction, Action
+Get-NetFirewallRule -DisplayName "Block Outbound TCP 20-21 (FTP)" | Format-Table DisplayName, Enabled, Direction, Action
+    </pre>
+  </div>
+</section>
+
+<section>
+  <h2>Part 4: Create Rules with PowerShell</h2>
+  <div class="card">
+    <pre>
+# Block inbound TCP 20-21
+New-NetFirewallRule `
+  -DisplayName "Block Inbound TCP 20-21 (FTP)" `
+  -Direction Inbound `
+  -Action Block `
+  -Protocol TCP `
+  -LocalPort 20,21 `
+  -Profile Domain,Private,Public `
+  -Enabled True
+
+# Block outbound TCP 20-21
+New-NetFirewallRule `
+  -DisplayName "Block Outbound TCP 20-21 (FTP)" `
+  -Direction Outbound `
+  -Action Block `
+  -Protocol TCP `
+  -RemotePort 20,21 `
+  -Profile Domain,Private,Public `
+  -Enabled True
+    </pre>
+  </div>
+</section>
+
+<section>
+  <h2>Part 5: Reverting Rules</h2>
+  <div class="card">
+    <h3>Disable or Remove (PowerShell)</h3>
+    <pre>
+Disable-NetFirewallRule -DisplayName "Block Inbound TCP 20-21 (FTP)"
+Disable-NetFirewallRule -DisplayName "Block Outbound TCP 20-21 (FTP)"
+
+Remove-NetFirewallRule -DisplayName "Block Inbound TCP 20-21 (FTP)"
+Remove-NetFirewallRule -DisplayName "Block Outbound TCP 20-21 (FTP)"
+    </pre>
+  </div>
+</section>
+
+<footer>
+  <p>End of lab. You have successfully blocked inbound and outbound FTP ports (20 & 21) on Windows 11 using Windows Defender Firewall.</p>
+</footer>
+
+</body>
+</html>
+

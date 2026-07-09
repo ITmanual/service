@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Multi‑Protocol Routing Lab: RIP, RIPv2, OSPF, EIGRP & Administrative Distance</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.5; margin: 20px; }
+    h1, h2, h3 { color: #003366; }
+    code { background: #f4f4f4; padding: 2px 4px; }
+    pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    .task { border-left: 4px solid #003366; padding-left: 10px; margin: 15px 0; }
+    .note { background: #fff8e1; padding: 8px; border-left: 4px solid #ff9800; margin: 10px 0; }
+    .question { margin: 8px 0; }
+    ul { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<h1>Multi‑Protocol Routing Lab: RIP, RIPv2, OSPF, EIGRP & Administrative Distance</h1>
+
+<p>
+  In this lab, you will build a small routed network in Cisco Packet Tracer (or similar) and configure
+  RIP, RIPv2, OSPF, and EIGRP. You will then observe how administrative distance (AD) determines which
+  routing protocol “wins” when multiple protocols advertise the same destination network.
+</p>
+
+<div class="note">
+  <strong>Default Administrative Distances (Cisco):</strong>
+  <ul>
+    <li>Connected: 0</li>
+    <li>Static: 1</li>
+    <li>EIGRP internal: 90</li>
+    <li>OSPF: 110</li>
+    <li>RIP (v1/v2): 120</li>
+  </ul>
+</div>
+
+<h2>1. Topology Overview</h2>
+
+<p>Create the following logical topology in Packet Tracer:</p>
+
+<ul>
+  <li><strong>Routers:</strong> R1, R2, R3, R4</li>
+  <li><strong>Switches:</strong> SW1, SW2, SW3, SW4 (one per router)</li>
+  <li><strong>End Devices:</strong> PC1, PC2, PC3, PC4 (one per switch)</li>
+</ul>
+
+<h3>1.1 Physical / Logical Layout</h3>
+
+<ul>
+  <li>R1–R2 link</li>
+  <li>R2–R3 link</li>
+  <li>R3–R4 link</li>
+  <li>R4–R1 link (forms a square)</li>
+  <li>Each router connects to its own switch and PC</li>
+</ul>
+
+<h3>1.2 Suggested IP Addressing</h3>
+
+<ul>
+  <li><strong>LANs:</strong>
+    <ul>
+      <li>R1–SW1–PC1: 10.1.1.0/24</li>
+      <li>R2–SW2–PC2: 10.2.2.0/24</li>
+      <li>R3–SW3–PC3: 10.3.3.0/24</li>
+      <li>R4–SW4–PC4: 10.4.4.0/24</li>
+    </ul>
+  </li>
+  <li><strong>WAN Links (point‑to‑point /30):</strong>
+    <ul>
+      <li>R1–R2: 10.12.12.0/30</li>
+      <li>R2–R3: 10.23.23.0/30</li>
+      <li>R3–R4: 10.34.34.0/30</li>
+      <li>R4–R1: 10.41.41.0/30</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="task">
+  <h3>Task 1 – Build and Address the Topology</h3>
+  <ol>
+    <li>Place 4 routers, 4 switches, and 4 PCs in the workspace.</li>
+    <li>Cable the devices to match the topology described above.</li>
+    <li>Assign IP addresses to all router interfaces and PCs according to the addressing plan.</li>
+    <li>Verify basic connectivity on each link using <code>ping</code> between directly connected interfaces.</li>
+  </ol>
+</div>
+
+<h2>2. Phase 1 – RIP v1 vs RIPv2</h2>
+
+<div class="task">
+  <h3>Task 2 – Configure RIP v1 on All Routers</h3>
+  <p>On R1 (adjust networks as appropriate on R2–R4):</p>
+  <pre>
+R1(config)# router rip
+R1(config-router)# version 1
+R1(config-router)# network 10.0.0.0
+R1(config-router)# no auto-summary
+  </pre>
+  <ol>
+    <li>Configure RIP v1 on R1–R4 using the classful network <code>10.0.0.0</code>.</li>
+    <li>Use <code>show ip route</code> on each router and note how routes appear (no subnet masks in RIP v1 updates).</li>
+    <li>Test end‑to‑end connectivity between PCs. Note any issues or odd behavior.</li>
+  </ol>
+</div>
+
+<div class="task">
+  <h3>Task 3 – Migrate to RIPv2</h3>
+  <p>On each router:</p>
+  <pre>
+R1(config)# router rip
+R1(config-router)# version 2
+R1(config-router)# no auto-summary
+R1(config-router)# network 10.0.0.0
+  </pre>
+  <ol>
+    <li>Change RIP to version 2 on all routers.</li>
+    <li>Verify that routes now include subnet masks with <code>show ip route</code>.</li>
+    <li>Confirm full connectivity between all PCs using <code>ping</code>.</li>
+  </ol>
+</div>
+
+<div class="question">
+  <strong>Reflection:</strong> What limitation of RIP v1 does RIPv2 solve in this lab’s subnetted environment?
+</div>
+
+<h2>3. Phase 2 – OSPF (SPF) on the Left, RIP on the Right</h2>
+
+<p>
+  In this phase, you will run OSPF on the left side (R1–R2) and RIP on the right side (R3–R4), with R2–R3
+  acting as a redistribution boundary. OSPF uses the Shortest Path First (SPF) algorithm (Dijkstra) to
+  compute the best paths based on cost.
+</p>
+
+<div class="task">
+  <h3>Task 4 – Configure OSPF on R1 and R2</h3>
+  <p>On R1:</p>
+  <pre>
+R1(config)# router ospf 1
+R1(config-router)# router-id 1.1.1.1
+R1(config-router)# network 10.1.1.0 0.0.0.255 area 0
+R1(config-router)# network 10.12.12.0 0.0.0.3 area 0
+  </pre>
+  <p>On R2:</p>
+  <pre>
+R2(config)# router ospf 1
+R2(config-router)# router-id 2.2.2.2
+R2(config-router)# network 10.2.2.0 0.0.0.255 area 0
+R2(config-router)# network 10.12.12.0 0.0.0.3 area 0
+R2(config-router)# network 10.23.23.0 0.0.0.3 area 0
+  </pre>
+  <ol>
+    <li>Ensure OSPF neighbors form between R1 and R2 (<code>show ip ospf neighbor</code>).</li>
+    <li>Observe OSPF routes in the routing table (<code>show ip route ospf</code>).</li>
+  </ol>
+</div>
+
+<div class="task">
+  <h3>Task 5 – Configure RIP v2 on R3 and R4</h3>
+  <p>On R3:</p>
+  <pre>
+R3(config)# router rip
+R3(config-router)# version 2
+R3(config-router)# no auto-summary
+R3(config-router)# network 10.3.3.0
+R3(config-router)# network 10.23.23.0
+R3(config-router)# network 10.34.34.0
+  </pre>
+  <p>On R4:</p>
+  <pre>
+R4(config)# router rip
+R4(config-router)# version 2
+R4(config-router)# no auto-summary
+R4(config-router)# network 10.4.4.0
+R4(config-router)# network 10.34.34.0
+R4(config-router)# network 10.41.41.0
+  </pre>
+  <ol>
+    <li>Verify RIP neighbors and routes on R3 and R4 (<code>show ip route rip</code>).</li>
+  </ol>
+</div>
+
+<div class="task">
+  <h3>Task 6 – Redistribute OSPF into RIP and RIP into OSPF</h3>
+  <p>On R2 (OSPF → RIP):</p>
+  <pre>
+R2(config)# router rip
+R2(config-router)# redistribute ospf 1 metric 2
+  </pre>
+  <p>On R3 (RIP → OSPF):</p>
+  <pre>
+R3(config)# router ospf 1
+R3(config-router)# redistribute rip subnets
+  </pre>
+  <ol>
+    <li>Check R1’s routing table for networks behind R3/R4 and note the route source (O or R).</li>
+    <li>Check R4’s routing table for networks behind R1/R2 and note the route source.</li>
+  </ol>
+</div>
+
+<div class="question">
+  <strong>Reflection:</strong> When both OSPF and RIP advertise the same network, which protocol is chosen and why?
+</div>
+
+<h2>4. Phase 3 – Administrative Distance Experiments</h2>
+
+<div class="task">
+  <h3>Task 7 – Observe Default Administrative Distance</h3>
+  <ol>
+    <li>On R1, identify a network that is learned via both OSPF and RIP (for example, 10.4.4.0/24).</li>
+    <li>Use <code>show ip route</code> and record which protocol is installed in the routing table.</li>
+    <li>Explain how the default AD values (OSPF 110, RIP 120) influence this decision.</li>
+  </ol>
+</div>
+
+<div class="task">
+  <h3>Task 8 – Change Administrative Distance to Prefer RIP over OSPF</h3>
+  <p>On R1, increase OSPF’s AD so that RIP becomes more preferred:</p>
+  <pre>
+R1(config)# router ospf 1
+R1(config-router)# distance 130
+  </pre>
+  <ol>
+    <li>Re‑run <code>show ip route</code> on R1.</li>
+    <li>Confirm that the route source for the chosen network changes from OSPF (O) to RIP (R).</li>
+    <li>Describe how this could be used to create primary/backup paths in a real network.</li>
+  </ol>
+</div>
+
+<h2>5. Phase 4 – Replace RIP with EIGRP on the Right</h2>
+
+<p>
+  Now you will replace RIP on R3–R4 with EIGRP, while keeping OSPF on R1–R2. You will then compare how
+  EIGRP (AD 90) competes with OSPF (AD 110) when both advertise the same routes.
+</p>
+
+<div class="task">
+  <h3>Task 9 – Configure EIGRP on R3 and R4</h3>
+  <p>On R3:</p>
+  <pre>
+R3(config)# router eigrp 100
+R3(config-router)# network 10.3.3.0 0.0.0.255
+R3(config-router)# network 10.23.23.0 0.0.0.3
+R3(config-router)# network 10.34.34.0 0.0.0.3
+R3(config-router)# no auto-summary
+  </pre>
+  <p>On R4:</p>
+  <pre>
+R4(config)# router eigrp 100
+R4(config-router)# network 10.4.4.0 0.0.0.255
+R4(config-router)# network 10.34.34.0 0.0.0.3
+R4(config-router)# network 10.41.41.0 0.0.0.3
+R4(config-router)# no auto-summary
+  </pre>
+  <ol>
+    <li>Verify EIGRP neighbors and routes (<code>show ip eigrp neighbors</code>, <code>show ip route eigrp</code>).</li>
+  </ol>
+</div>
+
+<div class="task">
+  <h3>Task 10 – Redistribute OSPF ↔ EIGRP</h3>
+  <p>On R2 (OSPF → EIGRP):</p>
+  <pre>
+R2(config)# router eigrp 100
+R2(config-router)# redistribute ospf 1 metric 10000 100 255 1 1500
+  </pre>
+  <p>On R3 (EIGRP → OSPF):</p>
+  <pre>
+R3(config)# router ospf 1
+R3(config-router)# redistribute eigrp 100 subnets
+  </pre>
+  <ol>
+    <li>On R1 and R4, inspect the routing table for overlapping routes.</li>
+    <li>Identify which protocol is preferred when both OSPF and EIGRP advertise the same network.</li>
+  </ol>
+</div>
+
+<div class="question">
+  <strong>Reflection:</strong> Why does EIGRP usually win over OSPF in this mixed environment? How does administrative distance explain this?
+</div>
+
+<h2>6. Final Reflection Questions</h2>
+
+<ol>
+  <li>In your own words, what does “shortest path” mean in OSPF’s SPF algorithm? Is it always the fewest hops?</li>
+  <li>Give a specific example from this lab where administrative distance decided which route was installed.</li>
+  <li>If this were a real enterprise network, which routing protocol would you standardize on here, and why?</li>
+  <li>How could you use administrative distance to create controlled primary and backup paths between sites?</li>
+</ol>
+
+</body>
+</html>

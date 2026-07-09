@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CompTIA 1202 Lab - Screened Subnet</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 20px; }
+    .lab-container { background: #fff; padding: 20px; border-radius: 8px; max-width: 900px; margin: auto; }
+    h1 { color: #2c3e50; }
+    .menu, .scenario, .instructions { margin-top: 20px; }
+    input, select, button { margin: 5px; padding: 8px; }
+    .output { margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 5px; }
+    .highlight { background: #dff0d8; padding: 5px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="lab-container">
+    <h1>Interactive Lab: Creating a Screened Subnet (DMZ)</h1>
+    <p><strong>Objective:</strong> Configure a screened subnet to place a web server securely, following CompTIA Security+ 1202 objectives.</p>
+
+    <div class="scenario">
+      <h2>Scenario</h2>
+      <p>You are the administrator of the fictitious <strong>SecureNet XR500 Router</strong>. Your company needs to host a public web server. To protect the internal LAN, you must place the server in a <span class="highlight">DMZ (screened subnet)</span>.</p>
+    </div>
+
+    <div class="instructions">
+      <h2>Instructions</h2>
+      <ol>
+        <li>Log into the router with username <code>admin</code> and password <code>P@ssw0rd!</code>.</li>
+        <li>Create a new subnet called <strong>DMZ</strong> with network <code>192.168.20.0/24</code>.</li>
+        <li>Assign the web server IP <code>192.168.20.10</code> to the DMZ.</li>
+        <li>Configure firewall rules: Allow HTTP (80) and HTTPS (443) from WAN to DMZ, block LAN access.</li>
+      </ol>
+    </div>
+
+    <div class="menu">
+      <h2>Router Configuration</h2>
+      <label>Login Username: <input type="text" id="username"></label><br>
+      <label>Password: <input type="password" id="password"></label><br>
+      <button onclick="login()">Login</button>
+
+      <div id="config" style="display:none;">
+        <h3>Create DMZ Subnet</h3>
+        <label>Subnet Name: <input type="text" id="subnetName"></label><br>
+        <label>Network Address: <input type="text" id="networkAddress"></label><br>
+        <button onclick="createSubnet()">Create Subnet</button>
+
+        <h3>Assign Server</h3>
+        <label>Server IP: <input type="text" id="serverIP"></label><br>
+        <button onclick="assignServer()">Assign Server</button>
+
+        <h3>Firewall Rules</h3>
+        <label>Allow Ports (comma separated): <input type="text" id="ports"></label><br>
+        <button onclick="configureFirewall()">Configure Firewall</button>
+      </div>
+    </div>
+
+    <div class="output" id="output">
+      <p>Welcome! Please log in to begin.</p>
+    </div>
+  </div>
+
+  <script>
+    let loggedIn = false;
+    let subnetCreated = false;
+    let serverAssigned = false;
+
+    function login() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      if (user === "admin" && pass === "P@ssw0rd!") {
+        loggedIn = true;
+        document.getElementById('config').style.display = "block";
+        document.getElementById('output').innerHTML = "<p>Login successful! Proceed to create the DMZ subnet.</p>";
+      } else {
+        document.getElementById('output').innerHTML = "<p>Login failed. Try again.</p>";
+      }
+    }
+
+    function createSubnet() {
+      const name = document.getElementById('subnetName').value;
+      const net = document.getElementById('networkAddress').value;
+      if (name === "DMZ" && net === "192.168.20.0/24") {
+        subnetCreated = true;
+        document.getElementById('output').innerHTML = "<p>DMZ subnet created successfully! Now assign the server.</p>";
+      } else {
+        document.getElementById('output').innerHTML = "<p>Incorrect subnet info. Use DMZ and 192.168.20.0/24.</p>";
+      }
+    }
+
+    function assignServer() {
+      const ip = document.getElementById('serverIP').value;
+      if (subnetCreated && ip === "192.168.20.10") {
+        serverAssigned = true;
+        document.getElementById('output').innerHTML = "<p>Server assigned to DMZ. Configure firewall rules next.</p>";
+      } else {
+        document.getElementById('output').innerHTML = "<p>Enter correct server IP: 192.168.20.10.</p>";
+      }
+    }
+
+    function configureFirewall() {
+      const ports = document.getElementById('ports').value;
+      if (serverAssigned && ports.includes("80") && ports.includes("443")) {
+        document.getElementById('output').innerHTML = "<p><strong>Firewall configured:</strong> HTTP/HTTPS allowed to DMZ, LAN protected. <span class='highlight'>Lab Complete!</span></p>";
+      } else {
+        document.getElementById('output').innerHTML = "<p>Firewall misconfigured. Allow ports 80 and 443 only.</p>";
+      }
+    }
+  </script>
+</body>
+</html>

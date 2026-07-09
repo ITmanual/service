@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SNMP Configuration Interactive Lab – CompTIA Network+ N10‑009</title>
+
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+    h1, h2, h3 { color: #003366; }
+    .card {
+        background: #fff; padding: 18px; margin-bottom: 15px;
+        border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    button {
+        background: #e6f2ff; border: 1px solid #0078d4;
+        padding: 6px 12px; border-radius: 4px; cursor: pointer;
+        margin-top: 8px; margin-bottom: 8px;
+    }
+    .hidden { display: none; }
+    pre {
+        background: #222; color: #eee; padding: 12px;
+        border-radius: 4px; overflow-x: auto;
+    }
+    ul { margin-top: 6px; }
+    .objective { border-left: 4px solid #0078d4; }
+    .note { border-left: 4px solid #ffa500; }
+    .warning { border-left: 4px solid #cc0000; }
+</style>
+
+<script>
+function toggle(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle("hidden");
+}
+</script>
+</head>
+
+<body>
+
+<h1>SNMP Configuration Interactive Lab</h1>
+<h2>CompTIA Network+ N10‑009 – Network Monitoring & Management</h2>
+
+<div class="card objective">
+    <h3>Lab Overview</h3>
+    <p>You are the network technician for a small organization. Leadership wants real‑time visibility into device health, interface status, and performance metrics. Your task is to configure SNMP on a router and switch so a monitoring server can collect data and generate alerts.</p>
+
+    <p><strong>Network+ N10‑009 Objectives Covered:</strong></p>
+    <ul>
+        <li>Monitoring & Metrics (SNMP polling, traps, OIDs)</li>
+        <li>Network Management Protocols (SNMPv1/v2c/v3 differences)</li>
+        <li>Ports & Protocols (UDP 161/162)</li>
+        <li>Security Concepts (authentication, encryption, least privilege)</li>
+    </ul>
+
+    <button onclick="toggle('why')">Why am I doing this?</button>
+    <div id="why" class="hidden">
+        <p>SNMP is one of the most testable monitoring protocols on the Network+ exam. You’ll see questions about:</p>
+        <ul>
+            <li>Which port SNMP uses</li>
+            <li>Difference between polling and traps</li>
+            <li>Why SNMPv3 is preferred for security</li>
+            <li>How community strings work</li>
+        </ul>
+        <p>This lab connects those exam concepts to real device configuration.</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Lab Topology</h3>
+    <ul>
+        <li><strong>SNMP Manager:</strong> 192.168.10.50</li>
+        <li><strong>Router R1:</strong> 192.168.10.1</li>
+        <li><strong>Switch S1:</strong> 192.168.10.2</li>
+    </ul>
+    <p>The SNMP Manager must have IP reachability to both devices.</p>
+</div>
+
+<div class="card">
+    <h3>Step 1 – Review SNMP Concepts</h3>
+    <p>Before configuring, recall these key terms:</p>
+    <ul>
+        <li><strong>SNMP Manager:</strong> Polls devices and receives traps.</li>
+        <li><strong>SNMP Agent:</strong> Runs on the device and exposes OIDs.</li>
+        <li><strong>MIB:</strong> Database of objects the manager can query.</li>
+        <li><strong>OIDs:</strong> Numeric identifiers for metrics (CPU, interfaces, etc.).</li>
+        <li><strong>Traps:</strong> Alerts sent from device to manager.</li>
+    </ul>
+
+    <button onclick="toggle('step1quiz')">Quick Check</button>
+    <div id="step1quiz" class="hidden">
+        <p><strong>Q1:</strong> Which SNMP component stores OIDs?</p>
+        <p><em>A:</em> The SNMP agent using the device’s MIB.</p>
+
+        <p><strong>Q2:</strong> Which port does SNMP polling use?</p>
+        <p><em>A:</em> UDP 161.</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Step 2 – Configure SNMPv2c on Router R1</h3>
+    <p><strong>Task:</strong> Configure a read‑only community string <code>NETPLUS-RO</code> and basic SNMP identity information.</p>
+
+<pre>
+R1(config)# snmp-server community NETPLUS-RO RO
+R1(config)# snmp-server location Main-Closet
+R1(config)# snmp-server contact netadmin@example.com
+</pre>
+
+    <button onclick="toggle('step2why')">Why this matters (N10‑009)</button>
+    <div id="step2why" class="hidden">
+        <ul>
+            <li>Community strings act like passwords in SNMPv2c.</li>
+            <li>“RO” prevents unauthorized configuration changes.</li>
+            <li>Location/contact fields support documentation and monitoring tools.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Step 3 – Configure SNMP Traps</h3>
+    <p><strong>Task:</strong> Send traps to the SNMP Manager at <code>192.168.10.50</code>.</p>
+
+<pre>
+R1(config)# snmp-server enable traps
+R1(config)# snmp-server host 192.168.10.50 version 2c NETPLUS-RO
+</pre>
+
+    <button onclick="toggle('step3why')">Why this matters</button>
+    <div id="step3why" class="hidden">
+        <ul>
+            <li>Polling = manager asks for data.</li>
+            <li>Traps = device sends alerts automatically.</li>
+            <li>Traps use UDP 162 (common exam question).</li>
+        </ul>
+    </div>
+
+    <button onclick="toggle('step3activity')">Mini Activity</button>
+    <div id="step3activity" class="hidden">
+        <p>Shut down an interface and observe if the manager receives a trap:</p>
+<pre>
+R1(config)# interface g0/1
+R1(config-if)# shutdown
+</pre>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Step 4 – Configure SNMP on Switch S1</h3>
+    <p>Use the same community string and trap destination for consistency.</p>
+
+<pre>
+S1(config)# snmp-server community NETPLUS-RO RO
+S1(config)# snmp-server location IDF-1
+S1(config)# snmp-server contact switch-admin@example.com
+S1(config)# snmp-server enable traps
+S1(config)# snmp-server host 192.168.10.50 version 2c NETPLUS-RO
+</pre>
+
+    <button onclick="toggle('step4why')">Why this matters</button>
+    <div id="step4why" class="hidden">
+        <p>Monitoring tools expect consistent SNMP configuration across devices. This reduces errors and simplifies management.</p>
+    </div>
+</div>
+
+<div class="card warning">
+    <h3>Step 5 – SNMPv2c vs SNMPv3 (Security Focus)</h3>
+    <p>SNMPv2c sends community strings in clear text. SNMPv3 adds authentication and encryption.</p>
+
+<pre>
+R1(config)# snmp-server group NETPLUS-GRP v3 priv
+R1(config)# snmp-server user netplus-user NETPLUS-GRP v3 \
+  auth sha StrongAuthPass1 priv aes 128 StrongPrivPass1
+R1(config)# snmp-server host 192.168.10.50 version 3 priv netplus-user
+</pre>
+
+    <button onclick="toggle('step5why')">Why this matters</button>
+    <div id="step5why" class="hidden">
+        <ul>
+            <li>SNMPv3 is the correct answer when security is required.</li>
+            <li>Keywords: auth, priv, encryption, integrity.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card note">
+    <h3>Step 6 – Verify SNMP Operation</h3>
+    <p>From the SNMP Manager:</p>
+
+<pre>
+snmpwalk -v2c -c NETPLUS-RO 192.168.10.1 system
+snmpwalk -v2c -c NETPLUS-RO 192.168.10.2 ifDescr
+</pre>
+
+    <button onclick="toggle('step6why')">Why this matters</button>
+    <div id="step6why" class="hidden">
+        <ul>
+            <li>Verification is a required skill on the exam.</li>
+            <li>Common failures: wrong community string, blocked UDP ports, version mismatch.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Reflection Questions</h3>
+    <button onclick="toggle('reflect')">Show Reflection Prompts</button>
+    <div id="reflect" class="hidden">
+        <p><strong>R1:</strong> Why does a company use SNMP?</p>
+        <p><strong>R2:</strong> List three SNMP facts likely to appear on the Network+ exam.</p>
+        <p><strong>R3:</strong> How does SNMPv3 improve security?</p>
+        <p><strong>R4:</strong> What would you check if SNMP stops working?</p>
+    </div>
+</div>
+
+</body>
+</html>
