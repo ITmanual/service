@@ -1,0 +1,779 @@
+Subnetting and CIDR (Classless Inter-Domain Routing) can be intimidating at first. The transition from pure binary math to real-world network deployment is where many networking students get stuck.
+
+To bridge this gap, let's break down the theory using your example: **`192.168.0.1/25`**. After the explanation, you'll find a complete, copy-pasteable, interactive HTML laboratory specifically designed to walk students through this calculation step-by-step.
+
+---
+
+## 1. How CIDR Subnetting Works (The Math)
+
+When you see `/25`, it means **the first 25 bits of the 32-bit IP address belong to the Network**. The remaining bits belong to the **Hosts** (individual devices).
+
+### Step A: Finding the Bit Positions
+
+We know an IPv4 address has 32 bits divided into 4 octets. Let's look at how `/25` distributes across those octets:
+
+$$\begin{aligned} \text{Octet 1:} \quad & 8 \text{ bits} \quad (\text{Cumulative: } 8) \\ \text{Octet 2:} \quad & 8 \text{ bits} \quad (\text{Cumulative: } 16) \\ \text{Octet 3:} \quad & 8 \text{ bits} \quad (\text{Cumulative: } 24) \\ \text{Octet 4:} \quad & \mathbf{1 \text{ bit}} \quad (\text{Cumulative: } 25) \end{aligned}$$
+
+The **4th octet** is our "active" octet because the subnet boundary cuts right through it.
+
+* **Network Bits (Leftover in 4th octet):** 1 bit ($25 - 24$)
+* **Host Bits (Remaining):** 7 bits ($32 - 25$)
+
+### Step B: Calculating the Subnet Mask
+
+Since we have 1 network bit in the 4th octet, its binary representation is:
+
+
+$$\mathbf{1}0000000_2 = 128_{10}$$
+
+
+This makes our Subnet Mask: **`255.255.255.128`**.
+
+### Step C: How Many LANs (Subnets) Can We Create?
+
+If we started with a standard Class C network (`/24`), we had 0 network bits in the 4th octet.
+By moving to `/25`, we "borrowed" **1 bit** from the host portion.
+
+$$\text{Number of LANs (Subnets)} = 2^{\text{borrowed bits}} = 2^1 = \mathbf{2 \text{ LANs}}$$
+
+### Step D: Available IP Addresses per LAN
+
+The number of available host addresses in any subnet is determined by the remaining host bits ($h$):
+
+$$\text{Total Addresses} = 2^h = 2^7 = 128$$
+
+$$\text{Usable Hosts} = 2^h - 2 = 128 - 2 = \mathbf{126 \text{ usable IPs}}$$
+
+> **Why subtract 2?** Every subnet reserves two special addresses:
+> 1. **Network Address:** The first address (all host bits set to `0`). Used to identify the subnet itself.
+> 2. **Broadcast Address:** The last address (all host bits set to `1`). Used to send data to all devices on the subnet.
+> 
+> 
+
+### Step E: Identifying Subnet Ranges
+
+Our block size is **128** (which is $256 - 128$ from the mask). Our 2 LANs break down like this:
+
+| LAN | Network Address | First Usable IP | Last Usable IP | Broadcast Address |
+| --- | --- | --- | --- | --- |
+| **LAN 1** | **`192.168.0.0`** | `192.168.0.1` | `192.168.0.126` | `192.168.0.127` |
+| **LAN 2** | **`192.168.0.128`** | `192.168.0.129` | `192.168.0.254` | `192.168.0.255` |
+
+Since our target IP is **`192.168.0.1`**, it resides on **LAN 1**. Its Subnet Network Address is **`192.168.0.0`**.
+
+---
+
+## 2. Interactive CIDR & Subnetting Lab (HTML)
+
+This expanded version of the lab adds a fully interactive **CIDR Calculator & Subnet Explorer** tab. Students can type in any IP address and CIDR block, immediately visualize the borrowed subnetting bits, and click through each created LAN to see its network, broadcast, and usable IP ranges.
+
+Save this code as an `.html` file (e.g., `cidr_subnet_lab.html`) and open it in any web browser:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive IP, CIDR & Subnetting Lab</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --accent: #38bdf8;
+            --accent-success: #4ade80;
+            --accent-warning: #fbbf24;
+            --accent-error: #f87171;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background-color: rgba(56, 189, 248, 0.1);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom: 3px solid var(--accent);
+            background-color: rgba(56, 189, 248, 0.05);
+        }
+
+        /* Tab Content Panel */
+        .tab-panel {
+            display: none;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instructions {
+            background-color: rgba(15, 23, 42, 0.6);
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+
+        /* Form Controls */
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background-color: rgba(15, 23, 42, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        input[type="text"], input[type="number"], select {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-family: monospace;
+            outline: none;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            max-width: 250px;
+        }
+
+        input[type="number"] {
+            width: 90px;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            font-weight: bold;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background-color: #7dd3fc;
+        }
+
+        /* Subnet Visual Grid Elements */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .metric-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .metric-val {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--accent-success);
+            font-family: monospace;
+        }
+
+        /* Bit Visualization map */
+        .bit-map-container {
+            background-color: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+        }
+
+        .bit-map-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        .binary-string {
+            display: flex;
+            gap: 15px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            min-width: 600px;
+        }
+
+        .octet-chunk {
+            display: flex;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .bit-char {
+            width: 14px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .bit-char.net {
+            color: var(--accent);
+        }
+
+        .bit-char.subnet-borrowed {
+            color: var(--accent-warning);
+            border-bottom: 2px solid var(--accent-warning);
+        }
+
+        .bit-char.host {
+            color: var(--text-muted);
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        /* LAN Table & list */
+        .lan-explorer {
+            margin-top: 25px;
+        }
+
+        .lan-table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-family: monospace;
+        }
+
+        th {
+            background-color: rgba(15, 23, 42, 0.6);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        tr.active-subnet {
+            background-color: rgba(74, 222, 128, 0.1);
+            border-left: 4px solid var(--accent-success);
+        }
+
+        /* Older lab elements style conservation */
+        .octet-row {
+            background-color: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .octet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .bit-board {
+            display: grid;
+            grid-template-columns: repeat(8, minmax(60px, 1fr));
+            gap: 10px;
+        }
+
+        .bit-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 4px;
+        }
+
+        .weight-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .bit-toggle {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            background-color: var(--bg-primary);
+            color: var(--text-muted);
+            font-family: monospace;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bit-toggle.active {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Subnetting & CIDR Explorer</h1>
+        <p>Interactive laboratory to bridge the gap between binary, subnets, and LAN configurations</p>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('cidr-panel')">CIDR & Subnet Designer</button>
+        <button class="tab-btn" onclick="switchTab('ipv4-panel')">Decimal-to-Binary Board</button>
+    </div>
+
+    <!-- CIDR Subnetting Tab Panel -->
+    <div id="cidr-panel" class="tab-panel active">
+        <h2>CIDR Subnet Constructor</h2>
+        <div class="instructions">
+            <strong>The Lab Mission:</strong> Input an IP Address and select a CIDR subnet mask prefix (e.g. <code>/25</code>). Our simulator will calculate bit structures, display your borrowed bits, count how many independent LANs you can construct, and plot out every individual network range!
+        </div>
+
+        <!-- Input controls -->
+        <div class="input-group">
+            <div>
+                <label for="cidr-ip">Base IP Address:</label>
+                <input type="text" id="cidr-ip" value="192.168.0.1" style="max-width: 180px;">
+            </div>
+            <div>
+                <label for="cidr-prefix">CIDR Mask Prefix:</label>
+                <select id="cidr-prefix">
+                    <!-- Class C Range focus for optimal visualization -->
+                    <option value="24">/24 (255.255.255.0)</option>
+                    <option value="25" selected>/25 (255.255.255.128)</option>
+                    <option value="26">/26 (255.255.255.192)</option>
+                    <option value="27">/27 (255.255.255.224)</option>
+                    <option value="28">/28 (255.255.255.240)</option>
+                    <option value="29">/29 (255.255.255.248)</option>
+                    <option value="30">/30 (255.255.255.252)</option>
+                </select>
+            </div>
+            <button class="btn" style="margin-top: 20px;" onclick="calculateSubnetting()">Calculate Network</button>
+        </div>
+
+        <!-- Dynamic Output cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Subnet Mask</div>
+                <div class="metric-val" id="out-mask">255.255.255.128</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Subnets (LANs)</div>
+                <div class="metric-val" id="out-subnets">2</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Usable Hosts / LAN</div>
+                <div class="metric-val" id="out-hosts">126</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Host Bits Remaining</div>
+                <div class="metric-val" id="out-bits">7 Bits</div>
+            </div>
+        </div>
+
+        <!-- Bit-Level visualization map -->
+        <div class="bit-map-container">
+            <div class="bit-map-title">Mask Bit Allocation Visualizer</div>
+            <div class="binary-string" id="binary-visualizer">
+                <!-- Javascript will draw bits here -->
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: var(--accent);"></div>
+                    <span>Classful Network Bits</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: var(--accent-warning);"></div>
+                    <span>Borrowed Subnet Bits (Creating LANs)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: var(--text-muted);"></div>
+                    <span>Host Bits (IP assignments)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAN Range table listings -->
+        <div class="lan-explorer">
+            <h3>Calculated Subnets (LANs)</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px;">
+                The row highlighted in <span style="color: var(--accent-success); font-weight: bold;">Green</span> is the subnet where your inputted IP address currently resides.
+            </p>
+            <div class="lan-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>LAN #</th>
+                            <th>Network Address</th>
+                            <th>Usable IP Range</th>
+                            <th>Broadcast Address</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lan-table-body">
+                        <!-- Javascript generates LAN rows dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Binary Conversion Tab Panel -->
+    <div id="ipv4-panel" class="tab-panel">
+        <h2>Octet Binary Constructor</h2>
+        <div class="instructions">
+            Need a refresher on translating decimals? Change the IP address below to break down each individual octet and practice toggle bits to complete your calculations.
+        </div>
+
+        <div class="input-group">
+            <label for="ipv4-input">IPv4 Address:</label>
+            <input type="text" id="ipv4-input" value="192.168.0.1" placeholder="e.g. 192.168.0.1">
+            <button class="btn" onclick="loadIPv4()">Analyze Address</button>
+        </div>
+
+        <div id="ipv4-octets-container">
+            <!-- Dynamic elements load here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab Switching Logic
+    function switchTab(panelId) {
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(panelId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // IP Parsing Utility
+    function parseIp(ipStr) {
+        const parts = ipStr.split('.');
+        if (parts.length !== 4) return null;
+        const nums = parts.map(p => parseInt(p, 10));
+        for (let n of nums) {
+            if (isNaN(n) || n < 0 || n > 255) return null;
+        }
+        return nums;
+    }
+
+    // --- Subnet calculation Engine ---
+    function calculateSubnetting() {
+        const ipInput = document.getElementById('cidr-ip').value.trim();
+        const prefix = parseInt(document.getElementById('cidr-prefix').value, 10);
+        const ipArray = parseIp(ipInput);
+
+        if (!ipArray) {
+            alert("Please enter a valid IPv4 address (e.g. 192.168.0.1)");
+            return;
+        }
+
+        // Calculate bits
+        const hostBits = 32 - prefix;
+        const classfulBase = 24; // Focusing on Class C for clear laboratory representation
+        const borrowedBits = prefix - classfulBase; 
+        
+        const numSubnets = Math.pow(2, borrowedBits);
+        const totalHosts = Math.pow(2, hostBits);
+        const usableHosts = totalHosts - 2;
+
+        // Generate Subnet Mask
+        let maskArray = [0, 0, 0, 0];
+        for (let i = 0; i < 32; i++) {
+            if (i < prefix) {
+                const octetIdx = Math.floor(i / 8);
+                const bitIdx = 7 - (i % 8);
+                maskArray[octetIdx] += Math.pow(2, bitIdx);
+            }
+        }
+        document.getElementById('out-mask').innerText = maskArray.join('.');
+        document.getElementById('out-subnets').innerText = numSubnets;
+        document.getElementById('out-hosts').innerText = usableHosts;
+        document.getElementById('out-bits').innerText = `${hostBits} Bits`;
+
+        // Render Binary Visualizer
+        renderBinaryVisualizer(prefix, borrowedBits);
+
+        // Calculate LAN Ranges (specifically targeting 4th octet block sizes)
+        const blockSize = Math.pow(2, hostBits);
+        const baseNetworkOctets = [...ipArray];
+        baseNetworkOctets[3] = 0; // zero out 4th octet to find base network boundaries
+
+        const activeOctetTarget = ipArray[3];
+        const tbody = document.getElementById('lan-table-body');
+        tbody.innerHTML = '';
+
+        for (let i = 0; i < numSubnets; i++) {
+            const subnetStart = i * blockSize;
+            const subnetEnd = subnetStart + blockSize - 1;
+
+            const netAddress = `${baseNetworkOctets[0]}.${baseNetworkOctets[1]}.${baseNetworkOctets[2]}.${subnetStart}`;
+            const firstUsable = `${baseNetworkOctets[0]}.${baseNetworkOctets[1]}.${baseNetworkOctets[2]}.${subnetStart + 1}`;
+            const lastUsable = `${baseNetworkOctets[0]}.${baseNetworkOctets[1]}.${baseNetworkOctets[2]}.${subnetEnd - 1}`;
+            const broadcast = `${baseNetworkOctets[0]}.${baseNetworkOctets[1]}.${baseNetworkOctets[2]}.${subnetEnd}`;
+
+            const isCurrentSubnet = (activeOctetTarget >= subnetStart && activeOctetTarget <= subnetEnd);
+
+            const row = document.createElement('tr');
+            if (isCurrentSubnet) {
+                row.className = 'active-subnet';
+            }
+
+            row.innerHTML = `
+                <td>LAN ${i + 1} ${isCurrentSubnet ? '⭐' : ''}</td>
+                <td><strong>${netAddress}</strong></td>
+                <td>${firstUsable} - ${lastUsable}</td>
+                <td>${broadcast}</td>
+            `;
+            tbody.appendChild(row);
+        }
+    }
+
+    function renderBinaryVisualizer(prefix, borrowedBits) {
+        const visualizer = document.getElementById('binary-visualizer');
+        visualizer.innerHTML = '';
+
+        let bitCounter = 0;
+        for (let octet = 0; octet < 4; octet++) {
+            const chunk = document.createElement('div');
+            chunk.className = 'octet-chunk';
+
+            let chunkHtml = '';
+            for (let bit = 0; bit < 8; bit++) {
+                let bitType = 'host';
+                if (bitCounter < 24) {
+                    bitType = 'net';
+                } else if (bitCounter < prefix) {
+                    bitType = 'subnet-borrowed';
+                }
+                
+                // Show bits representing subnet mask (1 for network/subnet, 0 for host)
+                const bitVal = bitCounter < prefix ? '1' : '0';
+                chunkHtml += `<span class="bit-char ${bitType}">${bitVal}</span>`;
+                bitCounter++;
+            }
+            chunk.innerHTML = chunkHtml;
+            visualizer.appendChild(chunk);
+        }
+    }
+
+    // --- Decimal-to-Binary Conversion tab logic ---
+    const bitWeights = [128, 64, 32, 16, 8, 4, 2, 1];
+    let currentIPv4Octets = [192, 168, 0, 1];
+    let userOctetStates = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]];
+
+    function loadIPv4() {
+        const inputVal = document.getElementById('ipv4-input').value.trim();
+        const parsed = parseIp(inputVal);
+        if (!parsed) {
+            alert("Please enter a valid IPv4 address.");
+            return;
+        }
+        currentIPv4Octets = parsed;
+        userOctetStates = [[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]];
+        renderIPv4Board();
+    }
+
+    function toggleBit(octetIdx, bitIdx) {
+        userOctetStates[octetIdx][bitIdx] = userOctetStates[octetIdx][bitIdx] === 1 ? 0 : 1;
+        renderIPv4Board();
+    }
+
+    function calculateSum(states) {
+        return states.reduce((sum, currentBit, idx) => sum + (currentBit * bitWeights[idx]), 0);
+    }
+
+    function renderIPv4Board() {
+        const container = document.getElementById('ipv4-octets-container');
+        container.innerHTML = '';
+
+        currentIPv4Octets.forEach((targetDec, octetIdx) => {
+            const currentSum = calculateSum(userOctetStates[octetIdx]);
+            const isMatch = currentSum === targetDec;
+
+            const octetRow = document.createElement('div');
+            octetRow.className = 'octet-row';
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'octet-header';
+            headerDiv.innerHTML = `
+                <div class="octet-title">Octet ${octetIdx + 1}: <span style="color:var(--accent)">${targetDec}</span> | Sum: <span style="font-family:monospace">${currentSum}</span></div>
+                <span class="status-badge" style="background-color:${isMatch ? 'var(--accent-success)' : 'var(--accent-warning)'}; color:#000; padding:4px 10px; border-radius:12px; font-weight:bold; font-size:0.85rem;">
+                    ${isMatch ? 'Matched!' : 'Matching...'}
+                </span>
+            `;
+            octetRow.appendChild(headerDiv);
+
+            const board = document.createElement('div');
+            board.className = 'bit-board';
+
+            bitWeights.forEach((weight, bitIdx) => {
+                const isActive = userOctetStates[octetIdx][bitIdx] === 1;
+                const column = document.createElement('div');
+                column.className = 'bit-column';
+                column.innerHTML = `
+                    <span class="weight-label">${weight}</span>
+                    <button class="bit-toggle ${isActive ? 'active' : ''}" onclick="toggleBit(${octetIdx}, ${bitIdx})">${userOctetStates[octetIdx][bitIdx]}</button>
+                `;
+                board.appendChild(column);
+            });
+
+            octetRow.appendChild(board);
+            container.appendChild(octetRow);
+        });
+    }
+
+    // Initialize calculations on boot
+    calculateSubnetting();
+    renderIPv4Board();
+</script>
+
+</body>
+</html>
+
+```
