@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompTIA Network+ N10-009: Guided L2 Switching Lab</title>
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-terminal: #090d16;
+      --accent: #38bdf8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --purple: #a855f7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Navigation Tabs */
+    .nav-tabs { display: flex; background-color: #020617; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      padding: 1rem 1.5rem; background: none; border: none; color: var(--text-muted);
+      font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn:hover { color: var(--text-main); background-color: rgba(255,255,255,0.02); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background-color: var(--bg-card); }
+
+    /* Content Layout */
+    .tab-content { flex: 1; display: none; padding: 1.25rem; overflow-y: auto; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 1rem; }
+
+    /* Guide & Task Banner */
+    .guide-banner {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--accent); border-radius: 8px; padding: 1rem 1.25rem;
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    }
+    .guide-info { flex: 1; }
+    .guide-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); font-weight: 700; margin-bottom: 0.25rem; }
+    .guide-desc { font-size: 1rem; color: var(--text-main); font-weight: 600; }
+    .guide-code {
+      background-color: var(--bg-terminal); border: 1px solid var(--border); padding: 0.4rem 0.8rem;
+      border-radius: 4px; font-family: monospace; color: #4ade80; font-weight: bold; margin-top: 0.25rem; display: inline-block;
+    }
+    .step-badge {
+      background-color: var(--accent); color: #020617; font-weight: 800;
+      padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; white-space: nowrap;
+    }
+
+    /* Topology Diagram */
+    .topology-container {
+      background-color: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1rem; display: flex;
+      justify-content: space-around; align-items: center;
+    }
+    .switch-node {
+      background: #020617; border: 2px solid var(--accent); border-radius: 8px;
+      padding: 0.75rem 1.5rem; text-align: center; width: 180px;
+    }
+    .switch-node h4 { color: var(--accent); margin-bottom: 0.25rem; }
+    .link-group { display: flex; flex-direction: column; gap: 6px; flex: 1; margin: 0 2rem; }
+    .link-line {
+      height: 6px; background-color: var(--border); border-radius: 3px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 10px; font-size: 0.75rem; color: #cbd5e1; transition: all 0.3s;
+    }
+    .link-line.active { background-color: var(--green); }
+    .link-line.blocking { background-color: var(--amber); }
+    .link-line.bundled { border: 2px dashed var(--accent); background-color: #0284c7; }
+
+    /* Dual Terminal Layout */
+    .terminal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; flex: 1; min-height: 280px; }
+    .terminal-card {
+      background-color: var(--bg-terminal); border: 1px solid var(--border);
+      border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .terminal-card.active-target { border-color: var(--green); box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
+    .terminal-header {
+      background-color: #1e293b; padding: 0.5rem 1rem; font-size: 0.85rem;
+      font-weight: bold; color: var(--text-muted); display: flex; justify-content: space-between;
+    }
+    .terminal-body {
+      flex: 1; padding: 0.75rem; font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem; overflow-y: auto; color: #4ade80; white-space: pre-wrap;
+    }
+    .terminal-input-line { display: flex; padding: 0.5rem 1rem; background-color: #020617; border-top: 1px solid var(--border); }
+    .prompt { color: var(--accent); font-family: monospace; font-size: 0.85rem; margin-right: 0.5rem; line-height: 1.5rem; }
+    .terminal-input {
+      flex: 1; background: transparent; border: none; color: var(--text-main);
+      font-family: monospace; font-size: 0.85rem; outline: none;
+    }
+
+    /* Theory and Objective Sections */
+    .objective-box {
+      background-color: var(--bg-card); border-left: 4px solid var(--accent);
+      padding: 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem;
+    }
+    .objective-box h3 { color: var(--accent); margin-bottom: 0.5rem; font-size: 1.1rem; }
+    .objective-box ul { margin-left: 1.5rem; line-height: 1.6; font-size: 0.95rem; }
+
+    /* Celebration Overlay Animation */
+    .celebration-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(2, 6, 23, 0.92); display: none; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 100;
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    .celebration-card {
+      background: var(--bg-card); border: 2px solid var(--green); border-radius: 16px;
+      padding: 3rem; text-align: center; max-width: 550px;
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.4); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .boom-title {
+      font-size: 3rem; font-weight: 900; background: linear-gradient(to right, #22c55e, #38bdf8, #a855f7);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem;
+      animation: pulse 1.5s infinite;
+    }
+    .celebration-desc { font-size: 1.1rem; color: var(--text-main); margin-bottom: 2rem; line-height: 1.5; }
+    .restart-btn {
+      background-color: var(--green); color: #020617; font-weight: bold; border: none;
+      padding: 0.8rem 2rem; font-size: 1rem; border-radius: 8px; cursor: pointer; transition: transform 0.2s;
+    }
+    .restart-btn:hover { transform: scale(1.05); }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn { from { transform: scale(0.8); } to { transform: scale(1); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+    .badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background-color: var(--border); }
+    .badge-primary { background-color: #0284c7; color: white; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('lab')">Interactive Guided Lab</button>
+    <button class="tab-btn" onclick="switchTab('objectives')">CompTIA N10-009 Mapping</button>
+  </nav>
+
+  <!-- TAB 1: INTERACTIVE CLI LAB -->
+  <div id="tab-lab" class="tab-content active">
+    
+    <!-- Step-by-Step Task Banner -->
+    <div class="guide-banner">
+      <div class="guide-info">
+        <div class="guide-title" id="step-title">Step 1 of 5: Spanning Tree Mode</div>
+        <div class="guide-desc" id="step-desc">Configure Switch-A to use Rapid Spanning Tree (RSTP/FSTP).</div>
+        <div class="guide-code" id="step-code">Target: Switch-A | Command: spanning-tree mode rstp</div>
+      </div>
+      <div class="step-badge" id="step-progress">Step 1 / 5</div>
+    </div>
+
+    <!-- Topology Dashboard -->
+    <div class="topology-container">
+      <div class="switch-node">
+        <h4>Switch-A</h4>
+        <span class="badge badge-primary" id="swA-role">Root Bridge (STP)</span>
+      </div>
+
+      <div class="link-group">
+        <div id="link-eth1" class="link-line active">
+          <span>Eth1/1</span>
+          <span id="eth1-status">FORWARDING</span>
+          <span>Eth1/1</span>
+        </div>
+        <div id="link-eth2" class="link-line blocking">
+          <span>Eth1/2</span>
+          <span id="eth2-status">BLOCKING (STP)</span>
+          <span>Eth1/2</span>
+        </div>
+      </div>
+
+      <div class="switch-node">
+        <h4>Switch-B</h4>
+        <span class="badge" id="swB-role">Non-Root Bridge</span>
+      </div>
+    </div>
+
+    <!-- Dual Terminal Display -->
+    <div class="terminal-grid">
+      <!-- Switch A Terminal -->
+      <div class="terminal-card active-target" id="swA-card">
+        <div class="terminal-header">
+          <span>SWITCH-A (Console)</span>
+          <span id="swA-mode">RSTP Mode Pending</span>
+        </div>
+        <div class="terminal-body" id="swA-term">Switch-A# Entering guided setup...
+Enter required commands to proceed to next steps.</div>
+        <div class="terminal-input-line">
+          <span class="prompt">Switch-A#</span>
+          <input type="text" class="terminal-input" id="swA-input" onkeydown="handleCli(event, 'swA')" placeholder="Type target command..." />
+        </div>
+      </div>
+
+      <!-- Switch B Terminal -->
+      <div class="terminal-card" id="swB-card">
+        <div class="terminal-header">
+          <span>SWITCH-B (Console)</span>
+          <span id="swB-mode">Standard Mode</span>
+        </div>
+        <div class="terminal-body" id="swB-term">Switch-B# Awaiting Switch-A configuration steps...</div>
+        <div class="terminal-input-line">
+          <span class="prompt">Switch-B#</span>
+          <input type="text" class="terminal-input" id="swB-input" onkeydown="handleCli(event, 'swB')" placeholder="Locked..." disabled />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: COMPTIA NETWORK+ OBJECTIVES -->
+  <div id="tab-objectives" class="tab-content">
+    <div class="objective-box">
+      <h3>CompTIA Network+ (N10-009) Alignment</h3>
+      <p>This guided lab covers key Layer 2 concepts from <strong>Domain 2.0 (Network Implementation)</strong> and <strong>Domain 5.0 (Network Troubleshooting)</strong>.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div style="background-color: var(--bg-card); padding: 1.25rem; border-radius: 8px;">
+        <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Domain 2.2: L2 Switching</h4>
+        <ul style="line-height: 1.6; font-size: 0.9rem; margin-left: 1.2rem;">
+          <li><strong>STP vs. RSTP (FSTP):</strong> Standard STP (802.1D) convergence takes 30-50s. Rapid-STP / Fast STP (802.1w) converges in under 6 seconds.</li>
+          <li><strong>Link Aggregation (LACP):</strong> Bundles multiple links into a single logical channel (Port-Channel) for higher bandwidth and fault tolerance.</li>
+          <li><strong>Root Bridge Selection:</strong> Configured via bridge priority (e.g., lower values like 4096 take priority).</li>
+        </ul>
+      </div>
+
+      <div style="background-color: var(--bg-card); padding: 1.25rem; border-radius: 8px;">
+        <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Domain 5.3: Troubleshooting</h4>
+        <ul style="line-height: 1.6; font-size: 0.9rem; margin-left: 1.2rem;">
+          <li><strong>Switching Loops:</strong> Prevented dynamically by STP blocking redundant paths.</li>
+          <li><strong>LACP Mode Mismatches:</strong> Ensure LACP `active` mode is configured symmetrically on connected peers to create Port-Channels.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- CELEBRATION OVERLAY -->
+  <div class="celebration-overlay" id="celebration">
+    <div class="celebration-card">
+      <div class="boom-title">💥 BOOM! YOU DID IT! 💥</div>
+      <p class="celebration-desc">
+        Congratulations! You successfully configured <strong>Rapid Spanning Tree Protocol (RSTP/FSTP)</strong>, modified <strong>STP Root Bridge Priorities</strong>, and established an active <strong>802.3ad LACP EtherChannel</strong> between both switches!
+      </p>
+      <button class="restart-btn" onclick="restartLab()">Restart Guided Lab</button>
+    </div>
+  </div>
+
+  <script>
+    /* GUIDED LAB STEP ENGINE */
+    const labSteps = [
+      {
+        step: 1,
+        targetSw: 'swA',
+        title: 'Step 1 of 5: Enable Rapid-STP (FSTP) on Switch-A',
+        desc: 'Upgrade Switch-A from standard 802.1D STP to Rapid Spanning Tree Protocol (802.1w) for faster convergence.',
+        requiredCmd: 'spanning-tree mode rstp',
+        successMsg: '% STP mode changed to Rapid Spanning Tree Protocol (RSTP/FSTP).'
+      },
+      {
+        step: 2,
+        targetSw: 'swB',
+        title: 'Step 2 of 5: Enable Rapid-STP (FSTP) on Switch-B',
+        desc: 'Match Switch-B spanning-tree configuration mode to match Switch-A.',
+        requiredCmd: 'spanning-tree mode rstp',
+        successMsg: '% STP mode changed to Rapid Spanning Tree Protocol (RSTP/FSTP).'
+      },
+      {
+        step: 3,
+        targetSw: 'swA',
+        title: 'Step 3 of 5: Set Switch-A as Root Bridge Priority',
+        desc: 'Lower Switch-A bridge priority to 4096 to explicitly make it the Root Bridge.',
+        requiredCmd: 'spanning-tree priority 4096',
+        successMsg: '% Switch-A Bridge Priority set to 4096 (Root Bridge confirmed).'
+      },
+      {
+        step: 4,
+        targetSw: 'swA',
+        title: 'Step 4 of 5: Configure LACP Port-Channel on Switch-A',
+        desc: 'Bundle interfaces Eth1/1 and Eth1/2 into LACP Channel-Group 1.',
+        requiredCmd: 'channel-group 1 mode active',
+        successMsg: '% Interface range Eth1/1-2 assigned to LACP Port-Channel 1.'
+      },
+      {
+        step: 5,
+        targetSw: 'swB',
+        title: 'Step 5 of 5: Configure LACP Port-Channel on Switch-B',
+        desc: 'Bundle interfaces Eth1/1 and Eth1/2 on Switch-B to establish the LACP link aggregation.',
+        requiredCmd: 'channel-group 1 mode active',
+        successMsg: '% Interface range Eth1/1-2 assigned to LACP Port-Channel 1. Link Aggregation Operational!'
+      }
+    ];
+
+    let currentStepIdx = 0;
+
+    const switches = {
+      swA: { priority: 32768, rstp: false, lacp: false },
+      swB: { priority: 32768, rstp: false, lacp: false }
+    };
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+
+    function updateStepUI() {
+      if (currentStepIdx >= labSteps.length) {
+        showCelebration();
+        return;
+      }
+
+      const step = labSteps[currentStepIdx];
+      document.getElementById('step-title').innerText = step.title;
+      document.getElementById('step-desc').innerText = step.desc;
+      document.getElementById('step-code').innerText = `Target: ${step.targetSw === 'swA' ? 'Switch-A' : 'Switch-B'} | Command: ${step.requiredCmd}`;
+      document.getElementById('step-progress').innerText = `Step ${step.step} / ${labSteps.length}`;
+
+      // Update terminal target highlighting & input access
+      if (step.targetSw === 'swA') {
+        document.getElementById('swA-card').classList.add('active-target');
+        document.getElementById('swB-card').classList.remove('active-target');
+        document.getElementById('swA-input').disabled = false;
+        document.getElementById('swB-input').disabled = true;
+        document.getElementById('swA-input').focus();
+        document.getElementById('swB-input').placeholder = "Locked (Complete Switch-A step first)...";
+        document.getElementById('swA-input').placeholder = "Type target command...";
+      } else {
+        document.getElementById('swB-card').classList.add('active-target');
+        document.getElementById('swA-card').classList.remove('active-target');
+        document.getElementById('swB-input').disabled = false;
+        document.getElementById('swA-input').disabled = true;
+        document.getElementById('swB-input').focus();
+        document.getElementById('swA-input').placeholder = "Locked (Complete Switch-B step first)...";
+        document.getElementById('swB-input').placeholder = "Type target command...";
+      }
+    }
+
+    function handleCli(e, swId) {
+      if (e.key === 'Enter') {
+        const inputElem = document.getElementById(`${swId}-input`);
+        const termElem = document.getElementById(`${swId}-term`);
+        const command = inputElem.value.trim().toLowerCase();
+
+        if (command === '') return;
+
+        termElem.innerText += `\n${swId === 'swA' ? 'Switch-A' : 'Switch-B'}# ${inputElem.value.trim()}`;
+        
+        const currentStep = labSteps[currentStepIdx];
+
+        // Check if command matches target step
+        if (swId === currentStep.targetSw && command === currentStep.requiredCmd.toLowerCase()) {
+          termElem.innerText += `\n${currentStep.successMsg}\n`;
+          applyStepEffects(currentStepIdx);
+          currentStepIdx++;
+          updateStepUI();
+        } else {
+          termElem.innerText += `\n% Incorrect command for this step. Expected: '${currentStep.requiredCmd}'\n`;
+        }
+
+        termElem.scrollTop = termElem.scrollHeight;
+        inputElem.value = '';
+      }
+    }
+
+    function applyStepEffects(stepIdx) {
+      const link1 = document.getElementById('link-eth1');
+      const link2 = document.getElementById('link-eth2');
+      const status1 = document.getElementById('eth1-status');
+      const status2 = document.getElementById('eth2-status');
+
+      if (stepIdx === 0) {
+        switches.swA.rstp = true;
+        document.getElementById('swA-mode').innerText = "RSTP Active";
+      } else if (stepIdx === 1) {
+        switches.swB.rstp = true;
+        document.getElementById('swB-mode').innerText = "RSTP Active";
+      } else if (stepIdx === 2) {
+        switches.swA.priority = 4096;
+        document.getElementById('swA-role').innerText = "Root Bridge (Pri: 4096)";
+      } else if (stepIdx === 3) {
+        switches.swA.lacp = true;
+      } else if (stepIdx === 4) {
+        switches.swB.lacp = true;
+        // Etherchannel Bundle Formed!
+        link1.className = "link-line active bundled";
+        link2.className = "link-line active bundled";
+        status1.innerText = "LACP BUNDLED (Po1)";
+        status2.innerText = "LACP BUNDLED (Po1)";
+      }
+    }
+
+    function showCelebration() {
+      document.getElementById('celebration').style.display = 'flex';
+    }
+
+    function restartLab() {
+      currentStepIdx = 0;
+      switches.swA = { priority: 32768, rstp: false, lacp: false };
+      switches.swB = { priority: 32768, rstp: false, lacp: false };
+
+      document.getElementById('celebration').style.display = 'none';
+      document.getElementById('swA-term').innerText = "Switch-A# Entering guided setup...\nEnter required commands to proceed to next steps.";
+      document.getElementById('swB-term').innerText = "Switch-B# Awaiting Switch-A configuration steps...";
+      document.getElementById('swA-mode').innerText = "RSTP Mode Pending";
+      document.getElementById('swB-mode').innerText = "Standard Mode";
+      document.getElementById('swA-role').innerText = "Root Bridge (STP)";
+      
+      const link1 = document.getElementById('link-eth1');
+      const link2 = document.getElementById('link-eth2');
+      link1.className = "link-line active";
+      link2.className = "link-line blocking";
+      document.getElementById('eth1-status').innerText = "FORWARDING";
+      document.getElementById('eth2-status').innerText = "BLOCKING (STP)";
+
+      updateStepUI();
+    }
+
+    // Initialize UI on startup
+    updateStepUI();
+  </script>
+</body>
+</html>
