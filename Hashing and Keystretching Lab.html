@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Credential Security Lab | Hashing, Salting & Key Stretching</title>
+  <style>
+    :root {
+      --canvas: #120f16;
+      --surface: #1d1722;
+      --surface-2: #271d2c;
+      --surface-3: #32233a;
+      --line: rgba(255, 255, 255, .12);
+      --ink: #fff8f4;
+      --muted: #cbbec7;
+      --dim: #978894;
+      --red: #ff4f5f;
+      --red-deep: #c92e49;
+      --gold: #ffd166;
+      --green: #75e6a5;
+      --cyan: #76e4e8;
+      --purple: #c49bff;
+      --shadow: 0 20px 48px rgba(0, 0, 0, .28);
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% -10%, rgba(255, 79, 95, .24), transparent 32rem),
+        radial-gradient(circle at 94% 12%, rgba(196, 155, 255, .16), transparent 28rem),
+        var(--canvas);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button, input { font: inherit; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform .18s ease, filter .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    button:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
+    button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    button:disabled { cursor: not-allowed; opacity: .56; }
+
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+
+    .hero {
+      padding: 58px 0 34px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 14px;
+      color: var(--gold);
+      font-size: .79rem;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 0 5px rgba(255, 79, 95, .15);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 940px;
+      margin-bottom: 15px;
+      font-size: clamp(2.15rem, 6vw, 4.55rem);
+      line-height: 1.04;
+      letter-spacing: -.055em;
+    }
+
+    h1 .accent { color: var(--red); }
+
+    .hero p {
+      max-width: 800px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.5vw, 1.18rem);
+    }
+
+    .privacy-strip {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 26px;
+      padding: 14px 16px;
+      border: 1px solid rgba(117, 230, 165, .32);
+      border-radius: 14px;
+      color: #dfffee;
+      background: rgba(31, 119, 77, .17);
+    }
+
+    .privacy-strip strong { color: var(--green); }
+
+    main { padding: 32px 0 64px; }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 34px 0 16px;
+    }
+
+    .section-head h2 { margin: 0; font-size: clamp(1.45rem, 3vw, 2rem); letter-spacing: -.03em; }
+    .section-head p { max-width: 610px; margin: 0; color: var(--muted); }
+
+    .grid { display: grid; gap: 18px; }
+    .two-col { grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); }
+    .three-col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      padding: 23px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(42, 30, 49, .96), rgba(27, 21, 33, .96));
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 { margin-bottom: 6px; font-size: 1.18rem; }
+    .card > p { color: var(--muted); }
+
+    .step-tag, .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      border-radius: 999px;
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .step-tag {
+      padding: 5px 9px;
+      color: var(--gold);
+      background: rgba(255, 209, 102, .12);
+    }
+
+    .pill { padding: 5px 9px; color: var(--ink); background: var(--surface-3); letter-spacing: .04em; }
+    .pill.good { color: #082418; background: var(--green); }
+    .pill.warn { color: #361a00; background: var(--gold); }
+    .pill.danger { background: var(--red); }
+    .pill.neutral { color: var(--muted); background: rgba(255,255,255,.09); }
+
+    .form-stack { display: grid; gap: 15px; margin-top: 20px; }
+
+    label { display: grid; gap: 7px; color: #f1e7ed; font-weight: 700; font-size: .92rem; }
+    .label-detail { color: var(--dim); font-size: .79rem; font-weight: 500; }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid rgba(255,255,255,.17);
+      border-radius: 11px;
+      color: var(--ink);
+      background: rgba(7, 5, 9, .42);
+    }
+
+    input::placeholder { color: #8e7f8b; }
+
+    input[type="range"] { width: 100%; accent-color: var(--red); }
+
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 92px; }
+    .reveal {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      padding: 6px 9px;
+      border-radius: 8px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      background: transparent;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+    .reveal:hover:not(:disabled) { transform: translateY(-50%); color: var(--ink); background: rgba(255,255,255,.08); }
+
+    .button-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+    .primary, .secondary, .ghost {
+      min-height: 43px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-weight: 800;
+    }
+
+    .primary { color: #fff; background: linear-gradient(135deg, var(--red), #e63768); box-shadow: 0 8px 22px rgba(255,79,95,.22); }
+    .secondary { color: #160c10; background: var(--gold); }
+    .ghost { border: 1px solid rgba(255,255,255,.17); color: var(--ink); background: transparent; }
+
+    .fineprint { margin: 13px 0 0; color: var(--dim); font-size: .8rem; }
+
+    .work-factor {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px 15px;
+      align-items: center;
+      margin-top: 19px;
+      padding: 14px;
+      border: 1px solid rgba(196,155,255,.26);
+      border-radius: 12px;
+      background: rgba(196,155,255,.08);
+    }
+
+    .work-factor strong { color: var(--purple); }
+    .work-factor small { grid-column: 1 / -1; color: var(--muted); }
+
+    .stage-list { display: grid; gap: 9px; margin-top: 18px; }
+
+    .stage {
+      display: grid;
+      grid-template-columns: 29px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 11px;
+      min-height: 57px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 12px;
+      color: var(--dim);
+      background: rgba(0,0,0,.12);
+    }
+
+    .stage .number {
+      display: grid;
+      place-items: center;
+      width: 27px;
+      height: 27px;
+      border-radius: 50%;
+      color: var(--muted);
+      background: rgba(255,255,255,.08);
+      font-size: .8rem;
+      font-weight: 900;
+    }
+
+    .stage b { display: block; color: #d9ccd5; font-size: .9rem; }
+    .stage span { font-size: .78rem; }
+    .stage.active { border-color: rgba(255,209,102,.55); color: #fff1c7; background: rgba(255,209,102,.08); }
+    .stage.active .number { color: #391d00; background: var(--gold); }
+    .stage.done { border-color: rgba(117,230,165,.28); color: #d8ffe8; }
+    .stage.done .number { color: #062316; background: var(--green); }
+    .stage.failure { border-color: rgba(255,79,95,.42); color: #ffdadd; }
+    .stage.failure .number { background: var(--red); }
+
+    .terminal {
+      min-height: 230px;
+      margin-top: 18px;
+      padding: 15px;
+      overflow: auto;
+      border: 1px solid rgba(118,228,232,.18);
+      border-radius: 13px;
+      color: #dffeff;
+      background: #0e1015;
+      font: .82rem/1.62 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    .terminal .muted { color: #8fa9ad; }
+    .terminal .good { color: var(--green); }
+    .terminal .alert { color: #ffacb4; }
+    .terminal .key { color: var(--gold); }
+    .terminal .hash { color: var(--cyan); word-break: break-all; }
+
+    .database-card { min-height: 100%; }
+
+    .db-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .db-row {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: .87rem;
+    }
+    .db-row:last-of-type { border-bottom: 0; }
+    .db-label { color: var(--dim); font-weight: 800; }
+    .db-value { min-width: 0; color: #ecf9fa; overflow-wrap: anywhere; font-family: "SFMono-Regular", Consolas, monospace; }
+    .db-value.secret { color: var(--red); font-family: inherit; font-weight: 800; }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      min-height: 260px;
+      padding: 30px;
+      text-align: center;
+      color: var(--dim);
+      border: 1px dashed rgba(255,255,255,.18);
+      border-radius: 13px;
+      background: rgba(0,0,0,.09);
+    }
+
+    .status {
+      display: none;
+      margin-top: 16px;
+      padding: 13px 14px;
+      border-radius: 11px;
+      font-weight: 750;
+    }
+    .status.show { display: block; }
+    .status.good { color: #dffff0; border: 1px solid rgba(117,230,165,.4); background: rgba(26,134,81,.2); }
+    .status.bad { color: #ffe0e3; border: 1px solid rgba(255,79,95,.42); background: rgba(192,39,65,.2); }
+    .status.note { color: #fff2ca; border: 1px solid rgba(255,209,102,.42); background: rgba(154,105,5,.17); }
+
+    .compare-card { min-height: 100%; }
+
+    .compare-result {
+      min-height: 83px;
+      margin-top: 12px;
+      padding: 13px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px;
+      background: rgba(0,0,0,.14);
+    }
+    .compare-result h3 { margin: 0 0 5px; font-size: .95rem; }
+    .compare-result p { margin: 0 0 8px; color: var(--muted); font-size: .8rem; }
+    .compare-result code { display: block; color: var(--cyan); overflow-wrap: anywhere; font-size: .75rem; }
+    .compare-result .placeholder { color: var(--dim); font-family: inherit; }
+
+    .warning-note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-left: 4px solid var(--gold);
+      border-radius: 0 11px 11px 0;
+      color: #ffeec2;
+      background: rgba(255,209,102,.09);
+      font-size: .9rem;
+    }
+
+    .lesson-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px; }
+
+    .flow {
+      display: grid;
+      gap: 10px;
+      margin: 17px 0 0;
+    }
+
+    .flow-row { display: grid; grid-template-columns: 46px minmax(0,1fr); gap: 13px; align-items: start; }
+    .flow-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; color: #1e0d13; background: var(--red); font-weight: 950; }
+    .flow-row:nth-child(2) .flow-icon { background: var(--purple); }
+    .flow-row:nth-child(3) .flow-icon { background: var(--gold); }
+    .flow-row:nth-child(4) .flow-icon { background: var(--green); }
+    .flow-row h3 { margin: 1px 0 3px; font-size: 1rem; }
+    .flow-row p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+    .code-block {
+      margin: 16px 0 0;
+      padding: 15px;
+      overflow: auto;
+      border-radius: 13px;
+      color: #eaf4f5;
+      background: #0d0d13;
+      font: .82rem/1.7 "SFMono-Regular", Consolas, monospace;
+    }
+    .code-block .code-key { color: var(--purple); }
+    .code-block .code-fn { color: var(--gold); }
+    .code-block .code-comment { color: #82949a; }
+
+    .checklist { display: grid; gap: 12px; margin: 17px 0 0; padding: 0; list-style: none; }
+    .checklist li { position: relative; padding-left: 29px; color: var(--muted); }
+    .checklist li::before { content: "✓"; position: absolute; left: 0; top: 1px; display: grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; color: #042416; background: var(--green); font-size: .74rem; font-weight: 950; }
+
+    details {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(0,0,0,.09);
+    }
+    summary { padding: 13px 15px; cursor: pointer; color: #f6e8ef; font-weight: 800; }
+    details p { padding: 0 15px 14px; margin: 0; color: var(--muted); }
+
+    .footer-note { margin-top: 32px; color: var(--dim); font-size: .82rem; text-align: center; }
+
+    .spinner {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      margin-right: 7px;
+      vertical-align: -2px;
+      border: 2px solid rgba(255,255,255,.34);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .78s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 860px) {
+      .two-col, .three-col, .lesson-grid { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 7px; }
+    }
+
+    @media (max-width: 510px) {
+      .shell { width: min(100% - 22px, 1180px); }
+      .hero { padding-top: 35px; }
+      .card { padding: 17px; border-radius: 15px; }
+      .db-row { grid-template-columns: 1fr; gap: 3px; }
+      .work-factor { grid-template-columns: 1fr; }
+      .stage { grid-template-columns: 28px minmax(0,1fr); }
+      .stage .pill { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="shell">
+      <div class="eyebrow"><span class="live-dot"></span> Interactive Credential Security Lab</div>
+      <h1>See <span class="accent">hashing, salting,</span> and key stretching protect a login.</h1>
+      <p>Build a simulated account, inspect what the database can safely keep, and then watch the system verify a correct or incorrect password attempt step by step.</p>
+      <div class="privacy-strip" role="note">
+        <span aria-hidden="true">🔒</span>
+        <div><strong>Browser-only simulation.</strong> Nothing entered here leaves this page. The password is never written to the simulated database. Use made-up classroom credentials, not a real password.</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section aria-labelledby="setup-title">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Part 1 · Create an account</div>
+          <h2 id="setup-title">Turn a password into a stored verifier</h2>
+        </div>
+        <p>Registration happens once. The system generates a unique salt, runs the password through a slow password-hashing function, and saves only the information needed to check a future login.</p>
+      </div>
+
+      <div class="grid two-col">
+        <article class="card">
+          <span class="step-tag">Account registration</span>
+          <h3>Create a simulated account</h3>
+          <p>Use a made-up username and password. You will use the same pair in the login test below.</p>
+
+          <form id="registrationForm" class="form-stack" novalidate>
+            <label for="registerUsername">Username
+              <span class="label-detail">Usernames identify an account; they are not secrets.</span>
+              <input id="registerUsername" name="registerUsername" type="text" autocomplete="off" maxlength="48" placeholder="e.g., alex.security" required />
+            </label>
+            <label for="registerPassword">Password
+              <span class="label-detail">For this lab, use a made-up value. It stays in browser memory only while the lab is open.</span>
+              <span class="password-wrap">
+                <input id="registerPassword" name="registerPassword" type="password" autocomplete="new-password" minlength="4" placeholder="Make up a class password" required />
+                <button class="reveal" data-reveal="registerPassword" type="button" aria-label="Show registration password">Show</button>
+              </span>
+            </label>
+            <div class="work-factor">
+              <div><strong>PBKDF2 work factor:</strong> <span id="iterationValue">150,000</span> iterations</div>
+              <span class="pill neutral">Key stretching</span>
+              <input id="iterations" type="range" min="1000" max="600000" step="1000" value="150000" aria-label="PBKDF2 iterations" />
+              <small>More iterations mean each password guess costs more time. This setting is for demonstration; production policies should use a current, organization-approved password-hashing standard and work factor.</small>
+            </div>
+            <div class="button-row">
+              <button id="registerButton" class="primary" type="submit">Protect &amp; store account</button>
+              <button id="sampleButton" class="ghost" type="button">Load sample values</button>
+            </div>
+          </form>
+          <p class="fineprint">This lab uses the browser's Web Crypto API and PBKDF2-HMAC-SHA-256—not a plain SHA-256 password database.</p>
+          <div id="registrationStatus" class="status" aria-live="polite"></div>
+        </article>
+
+        <article class="card database-card" aria-labelledby="db-title">
+          <div class="db-header">
+            <div>
+              <span class="step-tag">Simulated database</span>
+              <h3 id="db-title">What gets stored?</h3>
+            </div>
+            <span id="dbPill" class="pill neutral">Empty</span>
+          </div>
+          <p>The record holds a password <em>verifier</em>, not the original password.</p>
+          <div id="databaseView" class="empty">Create an account to inspect the database record.</div>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="login-title">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Part 2 · Authenticate</div>
+          <h2 id="login-title">Watch the login verification happen</h2>
+        </div>
+        <p>The server never decrypts a saved password—there is no saved password to decrypt. It derives a new verifier from the attempt and compares the two values.</p>
+      </div>
+
+      <div class="grid two-col">
+        <article class="card">
+          <span class="step-tag">Login attempt</span>
+          <h3>Try to sign in</h3>
+          <p>First try the same credentials you registered. Then intentionally change one character in the password and see why the result fails.</p>
+          <form id="loginForm" class="form-stack" novalidate>
+            <label for="loginUsername">Username
+              <input id="loginUsername" name="loginUsername" type="text" autocomplete="off" maxlength="48" placeholder="Enter the stored username" required />
+            </label>
+            <label for="loginPassword">Password attempt
+              <span class="password-wrap">
+                <input id="loginPassword" name="loginPassword" type="password" autocomplete="current-password" minlength="1" placeholder="Enter a password attempt" required />
+                <button class="reveal" data-reveal="loginPassword" type="button" aria-label="Show login password">Show</button>
+              </span>
+            </label>
+            <div class="button-row">
+              <button id="loginButton" class="secondary" type="submit">Run login check</button>
+              <button id="wrongPasswordButton" class="ghost" type="button">Add one wrong character</button>
+            </div>
+          </form>
+          <div id="loginStatus" class="status" aria-live="polite"></div>
+        </article>
+
+        <article class="card" aria-labelledby="steps-title">
+          <span class="step-tag">System view</span>
+          <h3 id="steps-title">Authentication sequence</h3>
+          <div id="loginStages" class="stage-list" aria-live="polite">
+            <div class="stage" data-stage="1"><span class="number">1</span><div><b>Receive the login attempt</b><span>Username and password attempt arrive over a protected connection.</span></div><span class="pill neutral">Waiting</span></div>
+            <div class="stage" data-stage="2"><span class="number">2</span><div><b>Find the account record</b><span>The username locates the stored salt, algorithm, and verifier.</span></div><span class="pill neutral">Waiting</span></div>
+            <div class="stage" data-stage="3"><span class="number">3</span><div><b>Re-create the verifier</b><span>PBKDF2 uses the attempted password plus the record's salt and work factor.</span></div><span class="pill neutral">Waiting</span></div>
+            <div class="stage" data-stage="4"><span class="number">4</span><div><b>Compare two verifier values</b><span>Match = authenticate. Mismatch = deny.</span></div><span class="pill neutral">Waiting</span></div>
+          </div>
+          <div id="authTerminal" class="terminal" aria-label="Authentication activity log"><span class="muted">// System activity will appear here. Password text is intentionally never shown in this log.</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="compare-title">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Part 3 · Isolate the concepts</div>
+          <h2 id="compare-title">Why use all three controls?</h2>
+        </div>
+        <p>Use one made-up phrase to compare a plain hash, two unique salts, and a stretched password verifier. The values are deliberately shortened on screen.</p>
+      </div>
+
+      <div class="grid three-col">
+        <article class="card compare-card">
+          <span class="pill danger">1 · Hash only</span>
+          <h3>Deterministic fingerprint</h3>
+          <p>The same input produces the same output every time. That property makes it useful for comparison—but plain, fast hashes are not enough for password storage.</p>
+          <div class="compare-result" id="plainHashResult"><h3>Plain SHA-256</h3><p>Waiting for a phrase.</p><code class="placeholder">—</code></div>
+        </article>
+        <article class="card compare-card">
+          <span class="pill warn">2 · Add a unique salt</span>
+          <h3>Same password, different verifier</h3>
+          <p>Each account receives a different random salt. The salt can be stored openly alongside the verifier.</p>
+          <div class="compare-result" id="saltAResult"><h3>Account A + salt A</h3><p>Waiting for a phrase.</p><code class="placeholder">—</code></div>
+          <div class="compare-result" id="saltBResult"><h3>Account B + salt B</h3><p>Waiting for a phrase.</p><code class="placeholder">—</code></div>
+        </article>
+        <article class="card compare-card">
+          <span class="pill good">3 · Stretch it</span>
+          <h3>Make each guess expensive</h3>
+          <p>A password KDF intentionally does more work. This makes high-volume offline guessing more costly if a database is stolen.</p>
+          <div class="compare-result" id="stretchedResult"><h3>PBKDF2 + salt A + work factor</h3><p>Waiting for a phrase.</p><code class="placeholder">—</code></div>
+        </article>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="grid two-col" style="align-items:end">
+          <div>
+            <span class="step-tag">Quick comparison</span>
+            <h3 style="margin-top:10px">Run the same phrase through each approach</h3>
+            <p>Nothing is stored from this exercise. It is simply a visual comparison of the resulting values.</p>
+            <label for="comparisonPassword">Made-up comparison phrase
+              <span class="password-wrap" style="margin-top:7px">
+                <input id="comparisonPassword" type="password" autocomplete="off" value="same-class-password" />
+                <button class="reveal" data-reveal="comparisonPassword" type="button" aria-label="Show comparison phrase">Show</button>
+              </span>
+            </label>
+            <div class="button-row"><button id="compareButton" class="primary" type="button">Run comparison</button></div>
+          </div>
+          <aside class="warning-note"><strong>Important distinction:</strong> Hashing is one-way; encryption is designed to be reversible with a key. For passwords, the system should store a slow verifier and compare it later—never decrypt a password database.</aside>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="teach-title">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Instructor-ready recap</div>
+          <h2 id="teach-title">What students should be able to explain</h2>
+        </div>
+      </div>
+      <div class="lesson-grid">
+        <article class="card">
+          <h3>Credential flow, in plain language</h3>
+          <div class="flow">
+            <div class="flow-row"><div class="flow-icon">1</div><div><h3>The user creates a password</h3><p>The password is a secret. A secure system treats it as temporary input, not as something to keep in readable form.</p></div></div>
+            <div class="flow-row"><div class="flow-icon">2</div><div><h3>The system creates a random salt</h3><p>The salt is unique per account. It prevents two people using the same password from ending up with the same stored verifier.</p></div></div>
+            <div class="flow-row"><div class="flow-icon">3</div><div><h3>A slow KDF derives a verifier</h3><p>PBKDF2 combines the password, salt, and iteration count. The deliberate work factor increases the cost of password guessing.</p></div></div>
+            <div class="flow-row"><div class="flow-icon">4</div><div><h3>A later login repeats the derivation</h3><p>The system retrieves the salt and settings, derives a verifier from the attempt, and accepts only an equal result.</p></div></div>
+          </div>
+          <pre class="code-block"><span class="code-comment">// conceptual authentication logic</span>
+record = database.<span class="code-fn">findByUsername</span>(username)
+candidate = <span class="code-fn">PBKDF2</span>(passwordAttempt, record.salt, record.iterations)
+
+<span class="code-key">if</span> timingSafeEqual(candidate, record.verifier):
+    <span class="code-fn">allowLogin</span>()
+<span class="code-key">else</span>:
+    <span class="code-fn">denyLogin</span>()</pre>
+        </article>
+        <article class="card">
+          <h3>Key takeaways</h3>
+          <ul class="checklist">
+            <li>A hash is a one-way output used for comparison, not a password someone can reverse.</li>
+            <li>A salt is not a secret. Its job is uniqueness, not hiding.</li>
+            <li>Key stretching makes every offline password guess more expensive for an attacker.</li>
+            <li>The database stores the username, salt, algorithm/work factor, and verifier—not the original password.</li>
+            <li>Good password storage is only one control: pair it with TLS, MFA, rate limiting, monitoring, and secure reset processes.</li>
+          </ul>
+          <details>
+            <summary>Why does a correct login match if the password is not saved?</summary>
+            <p>Because the same password, salt, algorithm, and work factor create the same derived verifier. The login attempt is processed the same way as registration, then the two verifier values are compared.</p>
+          </details>
+          <details>
+            <summary>What does salting protect against?</summary>
+            <p>Unique salts stop shared password values from producing identical stored verifiers across accounts. They also make precomputed attack data far less reusable across a stolen database.</p>
+          </details>
+          <details>
+            <summary>What does key stretching not replace?</summary>
+            <p>It does not replace strong authentication design. Systems still need protections such as MFA, rate limiting, breach response, transport encryption, logging, and safe password recovery.</p>
+          </details>
+          <div class="button-row"><button id="resetButton" class="ghost" type="button">Reset this lab</button></div>
+        </article>
+      </div>
+    </section>
+
+    <p class="footer-note">Educational simulation only. In a real application, password verification must occur on a secured server using vetted libraries and current organizational security guidance.</p>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (selector) => document.querySelector(selector);
+      const encoder = new TextEncoder();
+      const database = new Map();
+      const state = { busy: false };
+
+      const registrationForm = $("#registrationForm");
+      const loginForm = $("#loginForm");
+      const registrationStatus = $("#registrationStatus");
+      const loginStatus = $("#loginStatus");
+      const databaseView = $("#databaseView");
+      const dbPill = $("#dbPill");
+      const terminal = $("#authTerminal");
+      const iterationSlider = $("#iterations");
+      const iterationValue = $("#iterationValue");
+
+      function hasWebCrypto() {
+        return Boolean(window.crypto && window.crypto.subtle && window.crypto.getRandomValues);
+      }
+
+      function escapeHTML(value) {
+        return String(value).replace(/[&<>'\"]/g, character => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;"
+        }[character]));
+      }
+
+      function bytesToHex(bytes) {
+        return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+      }
+
+      function bytesToBase64(bytes) {
+        let binary = "";
+        bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+        return btoa(binary);
+      }
+
+      function randomBytes(length = 16) {
+        const bytes = new Uint8Array(length);
+        crypto.getRandomValues(bytes);
+        return bytes;
+      }
+
+      async function sha256(text) {
+        const result = await crypto.subtle.digest("SHA-256", encoder.encode(text));
+        return new Uint8Array(result);
+      }
+
+      async function pbkdf2(password, salt, iterations) {
+        const material = await crypto.subtle.importKey(
+          "raw",
+          encoder.encode(password),
+          { name: "PBKDF2" },
+          false,
+          ["deriveBits"]
+        );
+        const result = await crypto.subtle.deriveBits(
+          { name: "PBKDF2", hash: "SHA-256", salt, iterations },
+          material,
+          256
+        );
+        return new Uint8Array(result);
+      }
+
+      function truncate(value, start = 18, end = 14) {
+        return value.length > start + end + 1 ? `${value.slice(0, start)}…${value.slice(-end)}` : value;
+      }
+
+      function sleep(milliseconds) {
+        return new Promise(resolve => window.setTimeout(resolve, milliseconds));
+      }
+
+      function setStatus(element, type, message) {
+        element.className = `status show ${type}`;
+        element.innerHTML = message;
+      }
+
+      function clearStatus(element) {
+        element.className = "status";
+        element.textContent = "";
+      }
+
+      function setBusy(busy) {
+        state.busy = busy;
+        ["#registerButton", "#sampleButton", "#loginButton", "#wrongPasswordButton", "#compareButton", "#resetButton"].forEach(selector => {
+          const button = $(selector);
+          if (button) button.disabled = busy;
+        });
+      }
+
+      function stage(number, status, label) {
+        const element = $(`[data-stage="${number}"]`);
+        if (!element) return;
+        element.classList.remove("active", "done", "failure");
+        if (status) element.classList.add(status);
+        const pill = element.querySelector(".pill");
+        pill.className = "pill";
+        if (status === "active") pill.classList.add("warn");
+        else if (status === "done") pill.classList.add("good");
+        else if (status === "failure") pill.classList.add("danger");
+        else pill.classList.add("neutral");
+        pill.textContent = label || (status === "done" ? "Done" : "Waiting");
+      }
+
+      function resetStages() {
+        [1, 2, 3, 4].forEach(number => stage(number, "", "Waiting"));
+      }
+
+      function log(message, tone = "") {
+        const line = document.createElement("div");
+        line.className = tone;
+        line.innerHTML = message;
+        terminal.appendChild(line);
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+
+      function resetTerminal() {
+        terminal.innerHTML = '<span class="muted">// System activity will appear here. Password text is intentionally never shown in this log.</span>';
+      }
+
+      function renderDatabase(record) {
+        if (!record) {
+          databaseView.className = "empty";
+          databaseView.textContent = "Create an account to inspect the database record.";
+          dbPill.className = "pill neutral";
+          dbPill.textContent = "Empty";
+          return;
+        }
+
+        databaseView.className = "";
+        databaseView.innerHTML = `
+          <div class="db-row"><span class="db-label">username</span><span class="db-value">${escapeHTML(record.username)}</span></div>
+          <div class="db-row"><span class="db-label">password</span><span class="db-value secret">NOT STORED</span></div>
+          <div class="db-row"><span class="db-label">algorithm</span><span class="db-value">PBKDF2-HMAC-SHA-256</span></div>
+          <div class="db-row"><span class="db-label">iterations</span><span class="db-value">${record.iterations.toLocaleString()}</span></div>
+          <div class="db-row"><span class="db-label">salt</span><span class="db-value">${record.saltBase64}</span></div>
+          <div class="db-row"><span class="db-label">verifier</span><span class="db-value">${record.verifierHex}</span></div>
+          <p class="fineprint" style="margin-top:15px"><strong style="color:var(--green)">✓ Safe to store:</strong> salt, algorithm, work factor, and verifier. <strong style="color:var(--red)">✕ Never stored:</strong> original password.</p>`;
+        dbPill.className = "pill good";
+        dbPill.textContent = "1 record";
+      }
+
+      function validateAccountInput(username, password) {
+        if (!username.trim()) return "Enter a username first.";
+        if (password.length < 4) return "Use at least four characters for this classroom simulation.";
+        return "";
+      }
+
+      function showCryptoError(target) {
+        setStatus(target, "bad", "This browser does not expose the Web Crypto API needed for the live hashing demo. Open this file in a current desktop browser.");
+      }
+
+      async function registerAccount(event) {
+        event.preventDefault();
+        if (state.busy) return;
+        if (!hasWebCrypto()) return showCryptoError(registrationStatus);
+
+        const username = $("#registerUsername").value.trim();
+        const password = $("#registerPassword").value;
+        const message = validateAccountInput(username, password);
+        if (message) return setStatus(registrationStatus, "note", message);
+
+        setBusy(true);
+        clearStatus(registrationStatus);
+        const iterations = Number(iterationSlider.value);
+        const salt = randomBytes(16);
+        const startedAt = performance.now();
+        setStatus(registrationStatus, "note", '<span class="spinner"></span>Generating a unique salt and deriving the password verifier…');
+
+        try {
+          const verifierBytes = await pbkdf2(password, salt, iterations);
+          const elapsed = Math.max(1, Math.round(performance.now() - startedAt));
+          const record = {
+            username,
+            salt,
+            saltBase64: bytesToBase64(salt),
+            verifierHex: bytesToHex(verifierBytes),
+            verifierBytes,
+            iterations
+          };
+          database.set(username.toLowerCase(), record);
+          renderDatabase(record);
+          $("#loginUsername").value = username;
+          $("#loginPassword").value = "";
+          resetStages();
+          resetTerminal();
+          setStatus(registrationStatus, "good", `Account protected. PBKDF2 derived a 256-bit verifier in <strong>${elapsed} ms</strong>. The password itself was discarded instead of being saved.`);
+        } catch (error) {
+          setStatus(registrationStatus, "bad", "The browser could not derive the password verifier. Try a smaller work factor or a current browser.");
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function authenticate(event) {
+        event.preventDefault();
+        if (state.busy) return;
+        if (!hasWebCrypto()) return showCryptoError(loginStatus);
+
+        const username = $("#loginUsername").value.trim();
+        const password = $("#loginPassword").value;
+        if (!username || !password) return setStatus(loginStatus, "note", "Enter a username and password attempt first.");
+
+        setBusy(true);
+        clearStatus(loginStatus);
+        resetStages();
+        resetTerminal();
+
+        try {
+          stage(1, "active", "Receiving");
+          log('<span class="key">[1]</span> Received login attempt for username: <strong>' + escapeHTML(username) + '</strong>');
+          log('<span class="muted">    Password characters received: ' + password.length + ' (text intentionally hidden)</span>');
+          await sleep(430);
+          stage(1, "done", "Done");
+
+          stage(2, "active", "Looking up");
+          const record = database.get(username.toLowerCase());
+          if (!record) {
+            log('<span class="key">[2]</span> Account lookup returned no matching record.', "alert");
+            stage(2, "failure", "Not found");
+            stage(3, "", "Skipped");
+            stage(4, "failure", "Denied");
+            setStatus(loginStatus, "bad", "Access denied. No simulated record exists for that username. Create the account first or use its exact username.");
+            return;
+          }
+          log('<span class="key">[2]</span> Found record: salt + PBKDF2 settings + stored verifier.');
+          log('<span class="muted">    Salt: ' + escapeHTML(truncate(record.saltBase64, 15, 10)) + ' · Iterations: ' + record.iterations.toLocaleString() + '</span>');
+          await sleep(430);
+          stage(2, "done", "Found");
+
+          stage(3, "active", "Deriving");
+          log('<span class="key">[3]</span> Re-deriving candidate verifier with PBKDF2-HMAC-SHA-256…');
+          const startedAt = performance.now();
+          const candidateBytes = await pbkdf2(password, record.salt, record.iterations);
+          const elapsed = Math.max(1, Math.round(performance.now() - startedAt));
+          const candidateHex = bytesToHex(candidateBytes);
+          log('<span class="muted">    ' + record.iterations.toLocaleString() + ' rounds completed in ' + elapsed + ' ms.</span>');
+          log('<span class="muted">    Candidate verifier: </span><span class="hash">' + escapeHTML(truncate(candidateHex, 22, 18)) + '</span>');
+          await sleep(280);
+          stage(3, "done", "Done");
+
+          stage(4, "active", "Comparing");
+          log('<span class="key">[4]</span> Comparing candidate verifier to stored verifier…');
+          await sleep(380);
+          const matches = timingSafeEqual(candidateBytes, record.verifierBytes);
+          if (matches) {
+            stage(4, "done", "Match");
+            log('<span class="good">    MATCH → authenticate the user. The original password was never retrieved.</span>');
+            setStatus(loginStatus, "good", "<strong>Access granted.</strong> The attempt produced the same verifier as the stored record.");
+          } else {
+            stage(4, "failure", "Mismatch");
+            log('<span class="alert">    MISMATCH → deny the login attempt. One changed character creates a different verifier.</span>');
+            setStatus(loginStatus, "bad", "<strong>Access denied.</strong> The attempt did not reproduce the stored verifier.");
+          }
+        } catch (error) {
+          setStatus(loginStatus, "bad", "The browser could not complete this authentication check. Try a smaller work factor or a current browser.");
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      function timingSafeEqual(left, right) {
+        if (left.length !== right.length) return false;
+        let result = 0;
+        for (let index = 0; index < left.length; index += 1) result |= left[index] ^ right[index];
+        return result === 0;
+      }
+
+      function renderComparisonResult(id, title, explanation, value) {
+        $(id).innerHTML = `<h3>${escapeHTML(title)}</h3><p>${escapeHTML(explanation)}</p><code>${escapeHTML(truncate(value, 28, 22))}</code>`;
+      }
+
+      async function compareConcepts() {
+        if (state.busy) return;
+        if (!hasWebCrypto()) return showCryptoError(registrationStatus);
+        const phrase = $("#comparisonPassword").value;
+        if (!phrase) return setStatus(registrationStatus, "note", "Enter a made-up comparison phrase first.");
+
+        setBusy(true);
+        const button = $("#compareButton");
+        const original = button.innerHTML;
+        button.innerHTML = '<span class="spinner"></span>Calculating';
+        try {
+          const saltA = randomBytes(16);
+          const saltB = randomBytes(16);
+          const [plain, oneRoundA, oneRoundB, stretched] = await Promise.all([
+            sha256(phrase),
+            pbkdf2(phrase, saltA, 1),
+            pbkdf2(phrase, saltB, 1),
+            pbkdf2(phrase, saltA, Number(iterationSlider.value))
+          ]);
+          renderComparisonResult("#plainHashResult", "Plain SHA-256", "Same phrase → same fast hash every time.", bytesToHex(plain));
+          renderComparisonResult("#saltAResult", "Account A + salt A", "Salt A: " + truncate(bytesToBase64(saltA), 10, 7), bytesToHex(oneRoundA));
+          renderComparisonResult("#saltBResult", "Account B + salt B", "Salt B: " + truncate(bytesToBase64(saltB), 10, 7), bytesToHex(oneRoundB));
+          renderComparisonResult("#stretchedResult", "PBKDF2 + salt A + " + Number(iterationSlider.value).toLocaleString() + " iterations", "Same salt, but deliberately more work per guess.", bytesToHex(stretched));
+        } catch (error) {
+          setStatus(registrationStatus, "bad", "The comparison could not run in this browser.");
+        } finally {
+          button.innerHTML = original;
+          setBusy(false);
+        }
+      }
+
+      function loadSample() {
+        $("#registerUsername").value = "casey.lab";
+        $("#registerPassword").value = "PracticeOnly!47";
+        setStatus(registrationStatus, "note", "Sample values loaded. Select <strong>Protect &amp; store account</strong> to begin the registration walkthrough.");
+        $("#registerPassword").focus();
+      }
+
+      function addWrongCharacter() {
+        const password = $("#loginPassword");
+        password.value = password.value ? `${password.value}x` : "wrong-attempt-x";
+        password.focus();
+      }
+
+      function resetLab() {
+        if (state.busy) return;
+        database.clear();
+        registrationForm.reset();
+        loginForm.reset();
+        iterationSlider.value = "150000";
+        iterationValue.textContent = Number(iterationSlider.value).toLocaleString();
+        $("#comparisonPassword").value = "same-class-password";
+        clearStatus(registrationStatus);
+        clearStatus(loginStatus);
+        resetStages();
+        resetTerminal();
+        renderDatabase(null);
+        ["#plainHashResult", "#saltAResult", "#saltBResult", "#stretchedResult"].forEach(id => {
+          const element = $(id);
+          const title = element.querySelector("h3").textContent;
+          element.innerHTML = `<h3>${escapeHTML(title)}</h3><p>Waiting for a phrase.</p><code class="placeholder">—</code>`;
+        });
+        $("#registerUsername").focus();
+      }
+
+      registrationForm.addEventListener("submit", registerAccount);
+      loginForm.addEventListener("submit", authenticate);
+      $("#sampleButton").addEventListener("click", loadSample);
+      $("#wrongPasswordButton").addEventListener("click", addWrongCharacter);
+      $("#compareButton").addEventListener("click", compareConcepts);
+      $("#resetButton").addEventListener("click", resetLab);
+      iterationSlider.addEventListener("input", () => {
+        iterationValue.textContent = Number(iterationSlider.value).toLocaleString();
+      });
+
+      document.querySelectorAll("[data-reveal]").forEach(button => {
+        button.addEventListener("click", () => {
+          const input = document.getElementById(button.dataset.reveal);
+          const show = input.type === "password";
+          input.type = show ? "text" : "password";
+          button.textContent = show ? "Hide" : "Show";
+          button.setAttribute("aria-label", `${show ? "Hide" : "Show"} password`);
+        });
+      });
+
+      if (!hasWebCrypto()) showCryptoError(registrationStatus);
+    })();
+  </script>
+</body>
+</html>
