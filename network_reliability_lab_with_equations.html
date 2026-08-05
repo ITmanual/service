@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Network Reliability & Disaster Recovery Lab</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            color: var(--accent-cyan);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .grid {
+                grid-template-columns: 420px 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            background: #475569;
+            border-radius: 3px;
+            outline: none;
+            accent-color: var(--accent-cyan);
+        }
+
+        input[type="number"] {
+            width: 100px;
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--accent-cyan);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Metric Dashboard Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-blue);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent-blue);
+        }
+
+        .metric-card.green::before { background-color: var(--accent-green); }
+        .metric-card.red::before { background-color: var(--accent-red); }
+        .metric-card.cyan::before { background-color: var(--accent-cyan); }
+        .metric-card.amber::before { background-color: var(--accent-amber); }
+
+        .metric-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .metric-sub {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        .badge.pass {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+        }
+
+        .badge.fail {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        /* System Status Visualizer */
+        .status-box {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .uptime-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: var(--accent-red);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .uptime-bar-fill {
+            height: 100%;
+            background-color: var(--accent-green);
+            transition: width 0.3s ease;
+        }
+
+        /* SLA Comparison Tables */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .info-section {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .info-card {
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .info-card h4 {
+            color: var(--accent-cyan);
+            margin-bottom: 6px;
+            font-size: 1rem;
+        }
+
+        .info-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .financial-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(239, 68, 68, 0.1) 100%);
+            border: 1px solid var(--accent-amber);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .financial-title {
+            color: var(--accent-amber);
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cost-val {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        /* Reference Equations Section */
+        .equations-panel {
+            margin-top: 24px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .equation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .equation-card {
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .equation-card h4 {
+            color: var(--accent-cyan);
+            font-size: 1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .formula-box {
+            background-color: #1e293b;
+            border: 1px dashed var(--accent-blue);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: #38bdf8;
+            margin: 8px 0;
+            font-size: 0.95rem;
+        }
+
+        .equation-card p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🌐 Enterprise Network Reliability & Recovery Lab</h1>
+        <p>Interactive Sandbox: Compute MTBF, MTTR, RTO, and RPO metrics and see real-time customer impact.</p>
+    </header>
+
+    <div class="grid">
+        <!-- Control Panel Inputs -->
+        <div class="panel">
+            <div class="panel-title">
+                ⚙️ Network Parameters
+            </div>
+
+            <div class="form-group">
+                <label for="operatingHours">Total Operating Window (Hours)</label>
+                <div class="input-row">
+                    <input type="range" id="operatingHoursRange" min="1000" max="8760" value="8760" step="10">
+                    <input type="number" id="operatingHours" value="8760">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="incidentCount">Total Incidents / Outages</label>
+                <div class="input-row">
+                    <input type="range" id="incidentCountRange" min="1" max="50" value="4" step="1">
+                    <input type="number" id="incidentCount" value="4">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="totalDowntime">Total Downtime (Hours)</label>
+                <div class="input-row">
+                    <input type="range" id="totalDowntimeRange" min="0.5" max="200" value="10" step="0.5">
+                    <input type="number" id="totalDowntime" value="10" step="0.5">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="hourlyCost">Business Revenue Loss ($ / Hour)</label>
+                <div class="input-row">
+                    <input type="range" id="hourlyCostRange" min="1000" max="100000" value="25000" step="1000">
+                    <input type="number" id="hourlyCost" value="25000" step="1000">
+                </div>
+            </div>
+
+            <div class="panel-title" style="margin-top: 30px;">
+                🎯 SLA Targets vs Actuals
+            </div>
+
+            <div class="form-group">
+                <label for="rtoTarget">RTO Target SLA (Max Outage Duration - Hrs)</label>
+                <div class="input-row">
+                    <input type="range" id="rtoTargetRange" min="0.5" max="24" value="4" step="0.5">
+                    <input type="number" id="rtoTarget" value="4" step="0.5">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="rtoActual">Worst Incident Recovery Time (Actual - Hrs)</label>
+                <div class="input-row">
+                    <input type="range" id="rtoActualRange" min="0.5" max="24" value="3.5" step="0.5">
+                    <input type="number" id="rtoActual" value="3.5" step="0.5">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="rpoTarget">RPO Target SLA (Max Data Loss Window - Hrs)</label>
+                <div class="input-row">
+                    <input type="range" id="rpoTargetRange" min="0.1" max="12" value="1" step="0.1">
+                    <input type="number" id="rpoTarget" value="1" step="0.1">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="rpoActual">Actual Data Loss Incurred (Hrs)</label>
+                <div class="input-row">
+                    <input type="range" id="rpoActualRange" min="0.1" max="12" value="0.5" step="0.1">
+                    <input type="number" id="rpoActual" value="0.5" step="0.1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Outputs -->
+        <div class="panel">
+            <div class="panel-title">
+                📊 Real-Time Reliability Metrics
+            </div>
+
+            <!-- Key Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card cyan">
+                    <div class="metric-title">MTBF (Mean Time Between Failures)</div>
+                    <div class="metric-value" id="mtbfVal">2187.5 hrs</div>
+                    <div class="metric-sub">Average uptime per cycle</div>
+                </div>
+
+                <div class="metric-card amber">
+                    <div class="metric-title">MTTR (Mean Time To Repair)</div>
+                    <div class="metric-value" id="mttrVal">2.50 hrs</div>
+                    <div class="metric-sub">Average outage resolution time</div>
+                </div>
+
+                <div class="metric-card" id="rtoCard">
+                    <div class="metric-title">RTO Compliance</div>
+                    <div class="metric-value" id="rtoVal">3.5 / 4.0 hrs</div>
+                    <div id="rtoBadge" class="badge pass">SLA MET</div>
+                </div>
+
+                <div class="metric-card" id="rpoCard">
+                    <div class="metric-title">RPO Compliance</div>
+                    <div class="metric-value" id="rpoVal">0.5 / 1.0 hrs</div>
+                    <div id="rpoBadge" class="badge pass">SLA MET</div>
+                </div>
+            </div>
+
+            <!-- System Uptime Visual Bar -->
+            <div class="status-box">
+                <div class="status-header">
+                    <span style="font-weight: 600;">Overall Network Availability Uptime</span>
+                    <span id="availabilityVal" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-green);">99.886%</span>
+                </div>
+                <div class="uptime-bar-container">
+                    <div class="uptime-bar-fill" id="uptimeBar" style="width: 99.886%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.8rem; color: var(--text-secondary);">
+                    <span>Uptime: <strong id="uptimeHours" style="color: #fff;">8750 hrs</strong></span>
+                    <span>Downtime: <strong id="downtimeHours" style="color: var(--accent-red);">10 hrs</strong></span>
+                </div>
+            </div>
+
+            <!-- Financial Impact -->
+            <div class="financial-card">
+                <div class="financial-title">
+                    ⚠️ Total Downtime Financial Loss
+                </div>
+                <div class="cost-val" id="financialLoss">$250,000</div>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 4px;">
+                    Impact based on network revenue stream loss of <strong id="hourlyRateDisplay">$25,000</strong>/hr.
+                </p>
+            </div>
+
+            <!-- SLA Standard Comparison -->
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Uptime Target</th>
+                        <th>Allowed Downtime / Year</th>
+                        <th>Current Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>99% ("Two Nines")</td>
+                        <td>87.6 hours</td>
+                        <td id="nines99">--</td>
+                    </tr>
+                    <tr>
+                        <td>99.9% ("Three Nines")</td>
+                        <td>8.76 hours</td>
+                        <td id="nines999">--</td>
+                    </tr>
+                    <tr>
+                        <td>99.99% ("Four Nines")</td>
+                        <td>52.6 minutes</td>
+                        <td id="nines9999">--</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Educational Metrics Definitions -->
+            <div class="info-section">
+                <div class="info-card">
+                    <h4>🔄 MTBF & MTTR</h4>
+                    <p><strong>MTBF</strong> measures hardware/system reliability over time. Higher is better.<br>
+                    <strong>MTTR</strong> measures team response and repair speed. Lower is better.</p>
+                </div>
+                <div class="info-card">
+                    <h4>⏱️ RTO & RPO</h4>
+                    <p><strong>RTO</strong> (Time): How quickly systems must recover after disaster.<br>
+                    <strong>RPO</strong> (Data): Maximum tolerable age of unbacked-up data loss.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equations & Formulas Reference Panel -->
+    <div class="equations-panel">
+        <div class="panel-title">
+            📐 Reliability Equations & Metric Formula Reference
+        </div>
+        <div class="equation-grid">
+            <div class="equation-card">
+                <h4>MTBF (Mean Time Between Failures)</h4>
+                <div class="formula-box">MTBF = (Total Operational Time - Total Downtime) ÷ Number of Failures</div>
+                <p>Calculates average duration a component or system runs reliably without failing.</p>
+            </div>
+
+            <div class="equation-card">
+                <h4>MTTR (Mean Time to Repair)</h4>
+                <div class="formula-box">MTTR = Total Downtime ÷ Number of Failures</div>
+                <p>Measures operational efficiency and the speed at which engineers diagnose and restore service.</p>
+            </div>
+
+            <div class="equation-card">
+                <h4>System Availability Uptime (%)</h4>
+                <div class="formula-box">Availability % = [(Total Operational Time - Total Downtime) ÷ Total Operational Time] × 100</div>
+                <p>Determines overall percentage of time network resources remain accessible to end users.</p>
+            </div>
+
+            <div class="equation-card">
+                <h4>RTO (Recovery Time Objective)</h4>
+                <div class="formula-box">RTO Compliance = Actual Incident Downtime ≤ Targeted SLA Limit</div>
+                <p>Target duration set by Business SLAs defining the maximum allowable time systems can remain down.</p>
+            </div>
+
+            <div class="equation-card">
+                <h4>RPO (Recovery Point Objective)</h4>
+                <div class="formula-box">RPO Compliance = Actual Data Loss Window ≤ Targeted SLA Limit</div>
+                <p>Maximum acceptable amount of data lost, determined by backup/replication frequency.</p>
+            </div>
+
+            <div class="equation-card">
+                <h4>Total Revenue Financial Loss</h4>
+                <div class="formula-box">Financial Loss = Total Outage Downtime (Hours) × Business Cost Rate ($ / Hour)</div>
+                <p>Quantifies financial impact imposed on operations and revenue streams during periods of downtime.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Elements Setup
+    const inputs = {
+        operatingHours: document.getElementById('operatingHours'),
+        operatingHoursRange: document.getElementById('operatingHoursRange'),
+        incidentCount: document.getElementById('incidentCount'),
+        incidentCountRange: document.getElementById('incidentCountRange'),
+        totalDowntime: document.getElementById('totalDowntime'),
+        totalDowntimeRange: document.getElementById('totalDowntimeRange'),
+        hourlyCost: document.getElementById('hourlyCost'),
+        hourlyCostRange: document.getElementById('hourlyCostRange'),
+        rtoTarget: document.getElementById('rtoTarget'),
+        rtoTargetRange: document.getElementById('rtoTargetRange'),
+        rtoActual: document.getElementById('rtoActual'),
+        rtoActualRange: document.getElementById('rtoActualRange'),
+        rpoTarget: document.getElementById('rpoTarget'),
+        rpoTargetRange: document.getElementById('rpoTargetRange'),
+        rpoActual: document.getElementById('rpoActual'),
+        rpoActualRange: document.getElementById('rpoActualRange')
+    };
+
+    // Link Range and Input Controls
+    Object.keys(inputs).forEach(key => {
+        if (!key.endsWith('Range')) {
+            const range = inputs[key + 'Range'];
+            const input = inputs[key];
+            if (range && input) {
+                range.addEventListener('input', (e) => {
+                    input.value = e.target.value;
+                    calculateMetrics();
+                });
+                input.addEventListener('input', (e) => {
+                    range.value = e.target.value;
+                    calculateMetrics();
+                });
+            }
+        }
+    });
+
+    function calculateMetrics() {
+        const totalOps = parseFloat(inputs.operatingHours.value) || 0;
+        const incidents = parseFloat(inputs.incidentCount.value) || 1;
+        const downtime = parseFloat(inputs.totalDowntime.value) || 0;
+        const hourlyCost = parseFloat(inputs.hourlyCost.value) || 0;
+
+        const rtoTarget = parseFloat(inputs.rtoTarget.value) || 0;
+        const rtoActual = parseFloat(inputs.rtoActual.value) || 0;
+        const rpoTarget = parseFloat(inputs.rpoTarget.value) || 0;
+        const rpoActual = parseFloat(inputs.rpoActual.value) || 0;
+
+        // Calculations
+        const uptime = Math.max(0, totalOps - downtime);
+        const mtbf = incidents > 0 ? (uptime / incidents) : uptime;
+        const mttr = incidents > 0 ? (downtime / incidents) : 0;
+        const availabilityPct = totalOps > 0 ? ((uptime / totalOps) * 100) : 0;
+        const totalLoss = downtime * hourlyCost;
+
+        // Render MTBF & MTTR
+        document.getElementById('mtbfVal').textContent = mtbf.toFixed(1) + ' hrs';
+        document.getElementById('mttrVal').textContent = mttr.toFixed(2) + ' hrs';
+
+        // Render RTO
+        document.getElementById('rtoVal').textContent = `${rtoActual} / ${rtoTarget} hrs`;
+        const rtoBadge = document.getElementById('rtoBadge');
+        const rtoCard = document.getElementById('rtoCard');
+        if (rtoActual <= rtoTarget) {
+            rtoBadge.textContent = 'SLA MET';
+            rtoBadge.className = 'badge pass';
+            rtoCard.className = 'metric-card green';
+        } else {
+            rtoBadge.textContent = 'SLA BREACH';
+            rtoBadge.className = 'badge fail';
+            rtoCard.className = 'metric-card red';
+        }
+
+        // Render RPO
+        document.getElementById('rpoVal').textContent = `${rpoActual} / ${rpoTarget} hrs`;
+        const rpoBadge = document.getElementById('rpoBadge');
+        const rpoCard = document.getElementById('rpoCard');
+        if (rpoActual <= rpoTarget) {
+            rpoBadge.textContent = 'SLA MET';
+            rpoBadge.className = 'badge pass';
+            rpoCard.className = 'metric-card green';
+        } else {
+            rpoBadge.textContent = 'SLA BREACH';
+            rpoBadge.className = 'badge fail';
+            rpoCard.className = 'metric-card red';
+        }
+
+        // Render Availability
+        document.getElementById('availabilityVal').textContent = availabilityPct.toFixed(3) + '%';
+        document.getElementById('uptimeBar').style.width = Math.min(100, Math.max(0, availabilityPct)) + '%';
+        document.getElementById('uptimeHours').textContent = uptime.toFixed(1) + ' hrs';
+        document.getElementById('downtimeHours').textContent = downtime.toFixed(1) + ' hrs';
+
+        // Render Financial
+        document.getElementById('financialLoss').textContent = '$' + totalLoss.toLocaleString();
+        document.getElementById('hourlyRateDisplay').textContent = '$' + hourlyCost.toLocaleString();
+
+        // Nines Status
+        document.getElementById('nines99').innerHTML = downtime <= 87.6 ? '<span style="color:var(--accent-green)">✔ Met</span>' : '<span style="color:var(--accent-red)">✘ Failed</span>';
+        document.getElementById('nines999').innerHTML = downtime <= 8.76 ? '<span style="color:var(--accent-green)">✔ Met</span>' : '<span style="color:var(--accent-red)">✘ Failed</span>';
+        document.getElementById('nines9999').innerHTML = downtime <= 0.876 ? '<span style="color:var(--accent-green)">✔ Met</span>' : '<span style="color:var(--accent-red)">✘ Failed</span>';
+    }
+
+    // Run initial calculation
+    calculateMetrics();
+</script>
+</body>
+</html>
