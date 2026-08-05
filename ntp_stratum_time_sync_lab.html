@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTP Stratum Time Sync Interactive Sandbox Lab</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --accent-purple: #c084fc;
+            --accent-amber: #fbbf24;
+            --term-bg: #060911;
+            --term-text: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: #060911;
+            border-bottom: 1px solid var(--card-border);
+            padding: 0.85rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #0284c7, #4f46e5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .lab-container {
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 1.25rem;
+            padding: 1.25rem;
+            flex: 1;
+            max-width: 1750px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 1.1rem;
+        }
+
+        .panel-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topology-info {
+            font-size: 0.82rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        .topo-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .bg-s1 { background: rgba(192, 132, 252, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+        .bg-s2 { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+        .bg-s3 { background: rgba(74, 222, 128, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+
+        .checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .check-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--card-border);
+            transition: all 0.2s ease;
+        }
+
+        .check-item.active {
+            border-color: var(--accent-blue);
+            color: var(--text-main);
+            background: rgba(56, 189, 248, 0.08);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+        }
+
+        .check-item.completed {
+            color: var(--accent-green);
+            background: rgba(74, 222, 128, 0.08);
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .check-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        .check-item.active .checkbox {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .check-item.completed .checkbox {
+            background-color: var(--accent-green);
+            border-color: var(--accent-green);
+            color: #000;
+        }
+
+        .step-note {
+            font-size: 0.75rem;
+            line-height: 1.45;
+            color: #94a3b8;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 6px 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--card-border);
+            margin-top: 2px;
+        }
+
+        .check-item.active .step-note {
+            border-left-color: var(--accent-blue);
+            color: #cbd5e1;
+        }
+
+        .check-item.completed .step-note {
+            border-left-color: var(--accent-green);
+            color: #a7f3d0;
+        }
+
+        .cmd-hint-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .cmd-card {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .cmd-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--accent-amber);
+        }
+
+        .cmd-code {
+            font-family: monospace;
+            font-size: 0.73rem;
+            color: var(--text-main);
+            background: #060911;
+            padding: 4px 6px;
+            border-radius: 4px;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .cmd-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .btn-action {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: var(--accent-blue);
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-action:hover {
+            background: var(--accent-blue);
+            color: #000;
+        }
+
+        .btn-run {
+            background: rgba(74, 222, 128, 0.15);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            color: var(--accent-green);
+        }
+
+        .btn-run:hover {
+            background: var(--accent-green);
+            color: #000;
+        }
+
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 4px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-bottom-color: var(--card-bg);
+            color: var(--text-main);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .tab-btn.active .status-dot {
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        .terminal-container {
+            flex: 1;
+            background-color: var(--term-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 540px;
+        }
+
+        .terminal-header {
+            background: #181f2c;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .term-title {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            font-family: monospace;
+        }
+
+        .term-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .term-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .close { background: #ff5f56; }
+        .min { background: #ffbd2e; }
+        .max { background: #27c93f; }
+
+        .terminal-body {
+            flex: 1;
+            padding: 16px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.93rem;
+            color: var(--term-text);
+            overflow-y: auto;
+            max-height: 580px;
+            cursor: text;
+        }
+
+        .term-line {
+            margin-bottom: 6px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        .term-prompt {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .term-input-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .term-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.93rem;
+            flex: 1;
+        }
+
+        .success-text { color: var(--accent-green); }
+        .error-text { color: #f87171; }
+        .info-text { color: var(--accent-blue); }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-green);
+            box-shadow: 0 0 50px rgba(74, 222, 128, 0.3);
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 620px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .overlay.visible .modal {
+            transform: scale(1);
+        }
+
+        .badge-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+
+        .amazing-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #4ade80, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .amazing-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .results-card {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: left;
+            margin-bottom: 1.5rem;
+            font-size: 0.88rem;
+        }
+
+        .tree-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            font-family: monospace;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #0284c7, #4f46e5);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon">🕒</div>
+            <div>
+                <h1>NTP Stratum Time Sync Lab</h1>
+                <div class="subtitle">Windows Server & Client Interactive Configuration Sandbox</div>
+            </div>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+            Lab Status: <span id="lab-status-badge" style="color: var(--accent-amber);">In Progress (0/6)</span>
+        </div>
+    </header>
+
+    <div class="lab-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Logical Topology
+                </div>
+                <div class="topology-info">
+                    <p style="margin-bottom: 8px;">NTP Stratum Hierarchy Strategy:</p>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div><span class="topo-badge bg-s1">Stratum 1</span> <code>10.0.0.100</code> (Upstream Hardware Clock)</div>
+                        <div><span class="topo-badge bg-s2">Stratum 2</span> <code>192.168.1.10</code> (DC-01 Windows Server)</div>
+                        <div><span class="topo-badge bg-s3">Stratum 3</span> <code>192.168.1.50</code> (WORKSTATION-01 Client)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LAB PROGRESS CHECKLIST WITH DETAILED STEP EXPLANATIONS -->
+            <div class="panel">
+                <div class="panel-title">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Lab Progress Checklist & Step Explanations
+                </div>
+                <ul class="checklist">
+                    <!-- Step 1 -->
+                    <li class="check-item active" id="chk-step1">
+                        <div class="check-header">
+                            <div class="checkbox" id="cb-1">1</div>
+                            <div>[DC-01] Peer Server to Upstream <code>10.0.0.100</code></div>
+                        </div>
+                        <div class="step-note">
+                            <strong>Note:</strong> <code>/manualpeerlist:"10.0.0.100,0x9"</code> sets the upstream clock. Flag <code>0x9</code> enables SpecialInterval and NTP client mode. <code>/syncfromflags:manual</code> overrides AD hierarchy sync. <code>/reliable:YES</code> marks DC-01 as an authoritative time source for domain clients.
+                        </div>
+                    </li>
+
+                    <!-- Step 2 -->
+                    <li class="check-item" id="chk-step2">
+                        <div class="check-header">
+                            <div class="checkbox" id="cb-2">2</div>
+                            <div>[DC-01] Restart <code>w32time</code> Service</div>
+                        </div>
+                        <div class="step-note">
+                            <strong>Note:</strong> <code>net stop w32time && net start w32time</code> restarts the Windows Time service, forcing Windows to load the updated registry parameters and manual peer list.
+                        </div>
+                    </li>
+
+                    <!-- Step 3 -->
+                    <li class="check-item" id="chk-step3">
+                        <div class="check-header">
+                            <div class="checkbox" id="cb-3">3</div>
+                            <div>[DC-01] Force Resync on Server</div>
+                        </div>
+                        <div class="step-note">
+                            <strong>Note:</strong> <code>w32tm /resync</code> forces DC-01 to immediately synchronize its clock against <code>10.0.0.100</code>, establishing DC-01 as a synchronized <strong>Stratum 2</strong> server.
+                        </div>
+                    </li>
+
+                    <!-- Step 4 -->
+                    <li class="check-item" id="chk-step4">
+                        <div class="check-header">
+                            <div class="checkbox" id="cb-4">4</div>
+                            <div>[Client] Peer Workstation to DC-01 (<code>192.168.1.10</code>)</div>
+                        </div>
+                        <div class="step-note">
+                            <strong>Note:</strong> Configures WORKSTATION-01 to use DC-01 (<code>192.168.1.10</code>). Flag <code>0x8</code> sends standard NTP client requests. Notice <code>/reliable:YES</code> is omitted because workstations do not serve time to other network hosts.
+                        </div>
+                    </li>
+
+                    <!-- Step 5 -->
+                    <li class="check-item" id="chk-step5">
+                        <div class="check-header">
+                            <div class="checkbox" id="cb-5">5</div>
+                            <div>[Client] Restart <code>w32time</code> Service</div>
+                        </div>
+                        <div class="step-note">
+                            <strong>Note:</strong> Restarts the client's time service to apply the new peer setting pointing to DC-01.
+                        </div>
+                    </li>
+
+                    <!-- Step 6 -->
+                    <li class="check-item" id="chk-step6">
+                        <div class="check-header">
+                            <div class="checkbox" id="cb-6">6</div>
+                            <div>[Client] Resync & Verify Stratum 3 Status</div>
+                        </div>
+                        <div class="step-note">
+                            <strong>Note:</strong> <code>w32tm /resync</code> forces WORKSTATION-01 to pull time from DC-01. Running <code>w32tm /query /status</code> verifies <code>Stratum: 3</code> and confirms successful end-to-end network time synchronization!
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Interactive Command Launcher
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">
+                    Click <strong>Paste</strong> to send to CLI input, or <strong>Run</strong> to execute immediately! Press <code>[Tab]</code> in CLI for auto-complete.
+                </div>
+                <div class="cmd-hint-list">
+                    <div class="cmd-card">
+                        <div class="cmd-card-header">
+                            <span>Step 1: DC-01 Peer & Reliable Source</span>
+                        </div>
+                        <div class="cmd-code">w32tm /config /manualpeerlist:"10.0.0.100,0x9" /syncfromflags:manual /reliable:YES /update</div>
+                        <div class="cmd-actions">
+                            <button class="btn-action" onclick="pasteCmd('cmd1')">Paste to CLI</button>
+                            <button class="btn-action btn-run" onclick="runCmdDirect('dc01', 'cmd1')">Run on DC-01</button>
+                        </div>
+                    </div>
+
+                    <div class="cmd-card">
+                        <div class="cmd-card-header">
+                            <span>Steps 2 & 5: Restart Time Service</span>
+                        </div>
+                        <div class="cmd-code">net stop w32time && net start w32time</div>
+                        <div class="cmd-actions">
+                            <button class="btn-action" onclick="pasteCmd('cmd2')">Paste to CLI</button>
+                            <button class="btn-action btn-run" onclick="runCmdDirect(state.currentTab, 'cmd2')">Run Current</button>
+                        </div>
+                    </div>
+
+                    <div class="cmd-card">
+                        <div class="cmd-card-header">
+                            <span>Step 4: Client Peer Setup</span>
+                        </div>
+                        <div class="cmd-code">w32tm /config /manualpeerlist:"192.168.1.10,0x8" /syncfromflags:manual /update</div>
+                        <div class="cmd-actions">
+                            <button class="btn-action" onclick="pasteCmd('cmd3')">Paste to CLI</button>
+                            <button class="btn-action btn-run" onclick="runCmdDirect('ws01', 'cmd3')">Run on Client</button>
+                        </div>
+                    </div>
+
+                    <div class="cmd-card">
+                        <div class="cmd-card-header">
+                            <span>Steps 3 & 6: Force Clock Resync</span>
+                        </div>
+                        <div class="cmd-code">w32tm /resync</div>
+                        <div class="cmd-actions">
+                            <button class="btn-action" onclick="pasteCmd('cmd4')">Paste to CLI</button>
+                            <button class="btn-action btn-run" onclick="runCmdDirect(state.currentTab, 'cmd4')">Run Current</button>
+                        </div>
+                    </div>
+
+                    <div class="cmd-card">
+                        <div class="cmd-card-header">
+                            <span>Verification Query</span>
+                        </div>
+                        <div class="cmd-code">w32tm /query /status</div>
+                        <div class="cmd-actions">
+                            <button class="btn-action" onclick="pasteCmd('cmd5')">Paste to CLI</button>
+                            <button class="btn-action btn-run" onclick="runCmdDirect(state.currentTab, 'cmd5')">Run Current</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="tabs">
+                <button class="tab-btn active" id="tab-dc01" onclick="switchTab('dc01')">
+                    <span class="status-dot"></span>
+                    DC-01 (Windows Server - 192.168.1.10)
+                </button>
+                <button class="tab-btn" id="tab-ws01" onclick="switchTab('ws01')">
+                    <span class="status-dot"></span>
+                    WORKSTATION-01 (Client - 192.168.1.50)
+                </button>
+            </div>
+
+            <!-- Terminal DC-01 -->
+            <div class="terminal-container" id="term-dc01-container">
+                <div class="terminal-header">
+                    <div class="term-title">Administrator: Command Prompt - DC-01.corp.local (Server)</div>
+                    <div class="term-controls">
+                        <span class="term-btn min"></span>
+                        <span class="term-btn max"></span>
+                        <span class="term-btn close"></span>
+                    </div>
+                </div>
+                <div class="terminal-body" id="term-dc01-body" onclick="focusInput('dc01')">
+                    <div class="term-line">Microsoft Windows [Version 10.0.20348.1607]</div>
+                    <div class="term-line">(c) Microsoft Corporation. All rights reserved.</div>
+                    <div class="term-line">&nbsp;</div>
+                    <div class="term-line info-text">★ OBJECTIVE 1: Peer DC-01 to external Stratum 1 clock (10.0.0.100) and set /reliable:YES</div>
+                    <div class="term-line">&nbsp;</div>
+                    <div id="history-dc01"></div>
+                    <div class="term-input-line">
+                        <span class="term-prompt">C:\Windows\system32&gt;</span>
+                        <input type="text" class="term-input" id="input-dc01" autocomplete="off" spellcheck="false" placeholder="Type command or press [Tab] to auto-complete...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal WORKSTATION-01 -->
+            <div class="terminal-container" id="term-ws01-container" style="display: none;">
+                <div class="terminal-header">
+                    <div class="term-title">Administrator: Command Prompt - WORKSTATION-01 (Client)</div>
+                    <div class="term-controls">
+                        <span class="term-btn min"></span>
+                        <span class="term-btn max"></span>
+                        <span class="term-btn close"></span>
+                    </div>
+                </div>
+                <div class="terminal-body" id="term-ws01-body" onclick="focusInput('ws01')">
+                    <div class="term-line">Microsoft Windows [Version 10.0.19045.2965]</div>
+                    <div class="term-line">(c) Microsoft Corporation. All rights reserved.</div>
+                    <div class="term-line">&nbsp;</div>
+                    <div class="term-line info-text">★ OBJECTIVE 2: Configure WORKSTATION-01 to sync from Domain Controller DC-01 (192.168.1.10)</div>
+                    <div class="term-line">&nbsp;</div>
+                    <div id="history-ws01"></div>
+                    <div class="term-input-line">
+                        <span class="term-prompt">C:\Windows\system32&gt;</span>
+                        <input type="text" class="term-input" id="input-ws01" autocomplete="off" spellcheck="false" placeholder="Type command or press [Tab] to auto-complete...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Celebration Overlay Modal -->
+    <div class="overlay" id="success-overlay">
+        <canvas id="canvas"></canvas>
+        <div class="modal">
+            <div class="badge-icon">🏆</div>
+            <div class="amazing-title">YOU ARE AMAZING!</div>
+            <div class="amazing-subtitle">You have successfully configured and verified the NTP Stratum Time Synchronization Hierarchy!</div>
+            
+            <div class="results-card">
+                <div style="font-weight: bold; margin-bottom: 10px; color: var(--accent-blue);">Active Stratum Hierarchy Established:</div>
+                <div class="tree-line">
+                    <span class="topo-badge bg-s1">Stratum 1</span> 10.0.0.100 (Upstream Primary Clock)
+                </div>
+                <div class="tree-line" style="padding-left: 20px;">
+                    └── <span class="topo-badge bg-s2">Stratum 2</span> 192.168.1.10 (DC-01 Server - Reliable Source)
+                </div>
+                <div class="tree-line" style="padding-left: 45px;">
+                    └── <span class="topo-badge bg-s3">Stratum 3</span> 192.168.1.50 (WORKSTATION-01 Network Client)
+                </div>
+            </div>
+
+            <button class="btn-reset" onclick="resetLab()">Restart Lab Sandbox</button>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            currentTab: 'dc01',
+            step1Done: false, // Server manualpeerlist 10.0.0.100 + reliable:YES
+            step2Done: false, // Server restart w32time
+            step3Done: false, // Server resync
+            step4Done: false, // Client manualpeerlist 192.168.1.10
+            step5Done: false, // Client restart w32time
+            step6Done: false  // Client resync
+        };
+
+        const COMMAND_PRESETS = {
+            cmd1: 'w32tm /config /manualpeerlist:"10.0.0.100,0x9" /syncfromflags:manual /reliable:YES /update',
+            cmd2: 'net stop w32time && net start w32time',
+            cmd3: 'w32tm /config /manualpeerlist:"192.168.1.10,0x8" /syncfromflags:manual /update',
+            cmd4: 'w32tm /resync',
+            cmd5: 'w32tm /query /status'
+        };
+
+        function switchTab(tab) {
+            state.currentTab = tab;
+            document.getElementById('tab-dc01').classList.toggle('active', tab === 'dc01');
+            document.getElementById('tab-ws01').classList.toggle('active', tab === 'ws01');
+            document.getElementById('term-dc01-container').style.display = tab === 'dc01' ? 'flex' : 'none';
+            document.getElementById('term-ws01-container').style.display = tab === 'ws01' ? 'flex' : 'none';
+            focusInput(tab);
+        }
+
+        function focusInput(tab) {
+            setTimeout(() => {
+                const el = document.getElementById(`input-${tab}`);
+                if (el) el.focus();
+            }, 50);
+        }
+
+        function pasteCmd(presetKey) {
+            const cmdText = COMMAND_PRESETS[presetKey];
+            const activeTab = state.currentTab;
+            const input = document.getElementById(`input-${activeTab}`);
+            if (input && cmdText) {
+                input.value = cmdText;
+                input.focus();
+                input.setSelectionRange(cmdText.length, cmdText.length);
+            }
+        }
+
+        function runCmdDirect(targetTab, presetKey) {
+            if (state.currentTab !== targetTab) {
+                switchTab(targetTab);
+            }
+            const cmdText = COMMAND_PRESETS[presetKey];
+            const input = document.getElementById(`input-${targetTab}`);
+            if (input && cmdText) {
+                input.value = cmdText;
+                handleInputSubmit(targetTab);
+            }
+        }
+
+        function appendOutput(tab, text, type = 'normal') {
+            const history = document.getElementById(`history-${tab}`);
+            const div = document.createElement('div');
+            div.className = 'term-line';
+            if (type === 'prompt') {
+                div.innerHTML = `<span class="term-prompt">C:\\Windows\\system32&gt;</span> ${escapeHtml(text)}`;
+            } else {
+                if (type === 'success') div.classList.add('success-text');
+                if (type === 'error') div.classList.add('error-text');
+                if (type === 'info') div.classList.add('info-text');
+                div.textContent = text;
+            }
+            history.appendChild(div);
+            const body = document.getElementById(`term-${tab}-body`);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function handleInputSubmit(tab) {
+            const input = document.getElementById(`input-${tab}`);
+            if (!input) return;
+            const rawCmd = input.value.trim();
+            input.value = '';
+            if (!rawCmd) return;
+
+            appendOutput(tab, rawCmd, 'prompt');
+            processCommand(tab, rawCmd);
+        }
+
+        function handleTabAutoComplete(tab) {
+            const input = document.getElementById(`input-${tab}`);
+            if (!input) return;
+            const current = input.value.trim();
+
+            if (!current) {
+                // Auto-fill next recommended step command
+                if (tab === 'dc01') {
+                    if (!state.step1Done) input.value = COMMAND_PRESETS.cmd1;
+                    else if (!state.step2Done) input.value = COMMAND_PRESETS.cmd2;
+                    else input.value = COMMAND_PRESETS.cmd4;
+                } else {
+                    if (!state.step4Done) input.value = COMMAND_PRESETS.cmd3;
+                    else if (!state.step5Done) input.value = COMMAND_PRESETS.cmd2;
+                    else input.value = COMMAND_PRESETS.cmd4;
+                }
+            } else {
+                const matches = Object.values(COMMAND_PRESETS).filter(c => c.toLowerCase().startsWith(current.toLowerCase()));
+                if (matches.length > 0) {
+                    input.value = matches[0];
+                }
+            }
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        function normalizeCmd(cmd) {
+            return cmd.toLowerCase().replace(/"/g, "'").replace(/\s+/g, ' ');
+        }
+
+        function processCommand(tab, rawCmd) {
+            const cmd = normalizeCmd(rawCmd);
+
+            if (cmd === 'cls' || cmd === 'clear') {
+                document.getElementById(`history-${tab}`).innerHTML = '';
+                return;
+            }
+
+            if (cmd === 'help' || cmd === '?') {
+                appendOutput(tab, "Available NTP Lab Commands:\n" +
+                    "  w32tm /config /manualpeerlist:\"<ip>,<flags>\" /syncfromflags:manual [/reliable:YES] /update\n" +
+                    "  net stop w32time && net start w32time\n" +
+                    "  w32tm /resync\n" +
+                    "  w32tm /query /status\n" +
+                    "  ipconfig\n" +
+                    "  cls", 'info');
+                return;
+            }
+
+            if (cmd === 'ipconfig') {
+                if (tab === 'dc01') {
+                    appendOutput(tab, "Windows IP Configuration\n\nEthernet adapter Local Area Connection:\n   IPv4 Address. . . . . . . . . . . : 192.168.1.10\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 192.168.1.1");
+                } else {
+                    appendOutput(tab, "Windows IP Configuration\n\nEthernet adapter Local Area Connection:\n   IPv4 Address. . . . . . . . . . . : 192.168.1.50\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 192.168.1.1");
+                }
+                return;
+            }
+
+            // --- SERVER (DC-01) CLI PARSING ---
+            if (tab === 'dc01') {
+                if (cmd.includes('w32tm /config') && (cmd.includes('10.0.0.100') || cmd.includes('manualpeerlist'))) {
+                    if (cmd.includes('/reliable:yes')) {
+                        state.step1Done = true;
+                        updateChecklist();
+                        appendOutput(tab, "The command completed successfully.", 'success');
+                    } else {
+                        appendOutput(tab, "Warning: Configuration registered, but '/reliable:YES' was omitted. Domain Controllers must be set as reliable time servers so workstations accept them as a time source.", 'info');
+                        state.step1Done = true;
+                        updateChecklist();
+                    }
+                } 
+                else if (cmd === 'net stop w32time') {
+                    appendOutput(tab, "The Windows Time service is stopping..\nThe Windows Time service was stopped successfully.");
+                } 
+                else if (cmd === 'net start w32time') {
+                    if (state.step1Done) state.step2Done = true;
+                    updateChecklist();
+                    appendOutput(tab, "The Windows Time service is starting..\nThe Windows Time service was started successfully.");
+                } 
+                else if (cmd.includes('net stop w32time') && cmd.includes('net start w32time')) {
+                    if (state.step1Done) state.step2Done = true;
+                    updateChecklist();
+                    appendOutput(tab, "The Windows Time service is stopping..\nThe Windows Time service was stopped successfully.\nThe Windows Time service is starting..\nThe Windows Time service was started successfully.");
+                } 
+                else if (cmd === 'w32tm /resync') {
+                    if (state.step1Done && state.step2Done) {
+                        state.step3Done = true;
+                        updateChecklist();
+                        appendOutput(tab, "Sending resync command to local computer\nThe command completed successfully.", 'success');
+                    } else if (!state.step1Done) {
+                        appendOutput(tab, "Sending resync command to local computer\nResync failed: Peer list not configured yet. Run 'w32tm /config /manualpeerlist:\"10.0.0.100,0x9\" ...' first.", 'error');
+                    } else {
+                        appendOutput(tab, "Sending resync command to local computer\nResync failed: Service needs to be restarted to apply new peer settings. Run 'net stop w32time && net start w32time'.", 'error');
+                    }
+                } 
+                else if (cmd === 'w32tm /query /status') {
+                    if (state.step3Done) {
+                        appendOutput(tab, "Leap Indicator: 0(no warning)\nStratum: 2 (secondary reference)\nPrecision: -23 (119.209ns per tick)\nRoot Delay: 0.0241512s\nRoot Dispersion: 0.0310245s\nReferenceId: 0x0A000064 (10.0.0.100)\nLast Successful Sync Time: " + new Date().toLocaleString() + "\nSource: 10.0.0.100,0x9\nPoll Interval: 6 (64s)", 'info');
+                    } else {
+                        appendOutput(tab, "Leap Indicator: 3(last minute has 61 seconds)\nStratum: 0 (unspecified)\nSource: Free-running System Clock\nStatus: Pending configuration and resync.", 'info');
+                    }
+                } 
+                else {
+                    appendOutput(tab, `'${rawCmd}' is not recognized as an internal or external command. Use the helper buttons or type 'help'.`, 'error');
+                }
+            }
+
+            if (tab === 'ws01') {
+                if (cmd.includes('w32tm /config') && (cmd.includes('192.168.1.10') || cmd.includes('manualpeerlist'))) {
+                    if (!state.step3Done) {
+                        appendOutput(tab, "Note: Peer configured, but DC-01 (192.168.1.10) is not yet serving reliable time. Complete DC-01 setup first for resync to work!", 'info');
+                    } else {
+                        appendOutput(tab, "The command completed successfully.", 'success');
+                    }
+                    state.step4Done = true;
+                    updateChecklist();
+                } 
+                else if (cmd === 'net stop w32time') {
+                    appendOutput(tab, "The Windows Time service is stopping..\nThe Windows Time service was stopped successfully.");
+                } 
+                else if (cmd === 'net start w32time') {
+                    if (state.step4Done) state.step5Done = true;
+                    updateChecklist();
+                    appendOutput(tab, "The Windows Time service is starting..\nThe Windows Time service was started successfully.");
+                } 
+                else if (cmd.includes('net stop w32time') && cmd.includes('net start w32time')) {
+                    if (state.step4Done) state.step5Done = true;
+                    updateChecklist();
+                    appendOutput(tab, "The Windows Time service is stopping..\nThe Windows Time service was stopped successfully.\nThe Windows Time service is starting..\nThe Windows Time service was started successfully.");
+                } 
+                else if (cmd === 'w32tm /resync') {
+                    if (state.step4Done && state.step5Done && state.step3Done) {
+                        state.step6Done = true;
+                        updateChecklist();
+                        appendOutput(tab, "Sending resync command to local computer\nThe command completed successfully.", 'success');
+                        triggerSuccess();
+                    } else if (!state.step3Done) {
+                        appendOutput(tab, "Sending resync command to local computer\nResync failed: Server 192.168.1.10 is not advertising a reliable time source yet. Complete Server setup!", 'error');
+                    } else if (!state.step4Done) {
+                        appendOutput(tab, "Sending resync command to local computer\nResync failed: Peer list not configured. Run 'w32tm /config /manualpeerlist:\"192.168.1.10,0x8\" ...'", 'error');
+                    } else {
+                        appendOutput(tab, "Sending resync command to local computer\nResync failed: Restart the w32time service to load new peer settings.", 'error');
+                    }
+                } 
+                else if (cmd === 'w32tm /query /status') {
+                    if (state.step6Done) {
+                        appendOutput(tab, "Leap Indicator: 0(no warning)\nStratum: 3 (tertiary reference)\nPrecision: -23 (119.209ns per tick)\nRoot Delay: 0.0381023s\nRoot Dispersion: 0.0451290s\nReferenceId: 0xC0A8010A (192.168.1.10)\nLast Successful Sync Time: " + new Date().toLocaleString() + "\nSource: 192.168.1.10,0x8\nPoll Interval: 6 (64s)", 'info');
+                    } else {
+                        appendOutput(tab, "Leap Indicator: 3(last minute has 61 seconds)\nStratum: 0 (unspecified)\nSource: Local CMOS Clock\nStatus: Unsynchronized.", 'info');
+                    }
+                } 
+                else {
+                    appendOutput(tab, `'${rawCmd}' is not recognized as an internal or external command. Use the helper buttons or type 'help'.`, 'error');
+                }
+            }
+        }
+
+        function updateChecklist() {
+            const steps = [
+                { done: state.step1Done, el: 'chk-step1', cb: 'cb-1' },
+                { done: state.step2Done, el: 'chk-step2', cb: 'cb-2' },
+                { done: state.step3Done, el: 'chk-step3', cb: 'cb-3' },
+                { done: state.step4Done, el: 'chk-step4', cb: 'cb-4' },
+                { done: state.step5Done, el: 'chk-step5', cb: 'cb-5' },
+                { done: state.step6Done, el: 'chk-step6', cb: 'cb-6' }
+            ];
+
+            let completedCount = 0;
+            steps.forEach((s, idx) => {
+                const item = document.getElementById(s.el);
+                const cb = document.getElementById(s.cb);
+                if (s.done) {
+                    completedCount++;
+                    item.classList.add('completed');
+                    item.classList.remove('active');
+                    cb.textContent = '✓';
+                } else if (idx === 0 || steps[idx - 1].done) {
+                    item.classList.add('active');
+                    item.classList.remove('completed');
+                    cb.textContent = idx + 1;
+                } else {
+                    item.classList.remove('active', 'completed');
+                    cb.textContent = idx + 1;
+                }
+            });
+
+            const statusBadge = document.getElementById('lab-status-badge');
+            if (state.step6Done) {
+                statusBadge.textContent = 'Completed (6/6)';
+                statusBadge.style.color = 'var(--accent-green)';
+            } else {
+                statusBadge.textContent = `In Progress (${completedCount}/6)`;
+                statusBadge.style.color = 'var(--accent-amber)';
+            }
+        }
+
+        function triggerSuccess() {
+            setTimeout(() => {
+                document.getElementById('success-overlay').classList.add('visible');
+                startConfetti();
+            }, 500);
+        }
+
+        function resetLab() {
+            state.step1Done = false;
+            state.step2Done = false;
+            state.step3Done = false;
+            state.step4Done = false;
+            state.step5Done = false;
+            state.step6Done = false;
+
+            document.getElementById('history-dc01').innerHTML = '';
+            document.getElementById('history-ws01').innerHTML = '';
+            document.getElementById('success-overlay').classList.remove('visible');
+            
+            updateChecklist();
+            switchTab('dc01');
+        }
+
+        function startConfetti() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#4ade80', '#38bdf8', '#c084fc', '#fbbf24', '#f472b6'];
+
+            for (let i = 0; i < 140; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 3 + 2,
+                    speedX: Math.random() * 2 - 1,
+                    spin: Math.random() * 360
+                });
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    p.spin += 4;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.spin * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+
+                    if (p.y > canvas.height) {
+                        p.y = -10;
+                        p.x = Math.random() * canvas.width;
+                    }
+                });
+
+                if (document.getElementById('success-overlay').classList.contains('visible')) {
+                    requestAnimationFrame(render);
+                }
+            }
+            render();
+        }
+
+        window.onload = function() {
+            ['dc01', 'ws01'].forEach(tab => {
+                const input = document.getElementById(`input-${tab}`);
+                if (input) {
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleInputSubmit(tab);
+                        } else if (e.key === 'Tab') {
+                            e.preventDefault();
+                            handleTabAutoComplete(tab);
+                        }
+                    });
+                }
+            });
+
+            focusInput('dc01');
+        };
+    </script>
+</body>
+</html>
