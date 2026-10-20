@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Day 2 – Cables, Memory, Storage & RAID – Build & Diagnose Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #050816;
+      --panel: #06091a;
+      --accent: #38bdf8; /* cyan */
+      --accent-2: #a855f7; /* purple */
+      --accent-soft: rgba(56, 189, 248, 0.16);
+      --danger: #f97373;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --text: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #020617 0, #020617 35%, #000 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(to right, #020617, #0b1120, #020617);
+      gap: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    header .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    #gradeAllBtn {
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    #gradeAllBtn:hover {
+      background: rgba(56, 189, 248, 0.24);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.6);
+    }
+
+    #gradeAllBtn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    /* Sidebar / module nav */
+    #sidebar {
+      width: 260px;
+      max-width: 100%;
+      border-right: 1px solid var(--border);
+      background: radial-gradient(circle at top left, #020617 0, #030712 45%, #020617 100%);
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #sidebar-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .nav-hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    #moduleNav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .module-btn {
+      padding: 9px 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      transition: border 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    }
+
+    .module-btn-title {
+      font-weight: 600;
+    }
+
+    .module-btn-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .module-btn:hover {
+      border-color: var(--accent-soft);
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    .module-btn.active {
+      border-color: var(--accent);
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.25), #020617 70%);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35);
+    }
+
+    .module-score-pill {
+      margin-top: 3px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .module-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .module-dot.partial {
+      background: #fbbf24;
+    }
+
+    .module-dot.full {
+      background: #22c55e;
+    }
+
+    /* Content area */
+    #content {
+      flex: 1;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .instructions-card {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, #020617, #050816 60%, #020617);
+      padding: 12px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .instructions-main {
+      max-width: 620px;
+    }
+
+    .instructions-main strong {
+      font-weight: 700;
+    }
+
+    .instructions-steps {
+      font-size: 12px;
+      color: #d1d5db;
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+
+    .mode-pill {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .module {
+      display: none;
+      gap: 12px;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .module.active {
+      display: flex;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      min-height: 0;
+    }
+
+    @media (max-width: 960px) {
+      main {
+        flex-direction: column;
+      }
+      #sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .scenario-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .scenario-card {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--bg-alt);
+      padding: 12px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .scenario-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .scenario-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .scenario-tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: var(--muted);
+    }
+
+    .scenario-body {
+      font-size: 12px;
+      color: #d1d5db;
+      line-height: 1.5;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 8px 9px;
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--muted);
+      margin-top: 4px;
+      margin-bottom: 3px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35);
+      background: #020617;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .mini-btn {
+      margin-top: 4px;
+      align-self: flex-start;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    .mini-btn:hover {
+      background: rgba(30, 64, 175, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .mini-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-2);
+    }
+
+    .sim-output {
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px dashed rgba(55, 65, 81, 0.9);
+      padding: 7px 8px;
+      font-size: 11px;
+      color: #d1d5db;
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), #020617 70%);
+      white-space: pre-line;
+    }
+
+    .sim-output.placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .module-footer {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    /* Results overlay */
+    #resultsOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      padding: 16px;
+    }
+
+    #resultsModal {
+      max-width: 880px;
+      width: 100%;
+      max-height: 90vh;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid rgba(75, 85, 99, 0.95);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.7);
+      padding: 14px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #resultsHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #resultsHeader h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #resultsScore {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #resultsBody {
+      font-size: 12px;
+      color: #e5e7eb;
+      padding: 9px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: radial-gradient(circle at top left, rgba(168, 85, 247, 0.16), #020617 60%);
+      overflow-y: auto;
+    }
+
+    .result-section-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #e0f2fe;
+    }
+
+    .result-scenario {
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed rgba(55, 65, 81, 0.9);
+    }
+
+    .result-scenario:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .result-line {
+      margin-bottom: 2px;
+    }
+
+    .result-line span.label-inline {
+      color: var(--muted);
+    }
+
+    .result-line.good {
+      color: #22c55e;
+    }
+
+    .result-line.bad {
+      color: var(--danger);
+    }
+
+    .result-expl {
+      margin-top: 2px;
+      color: #e5e7eb;
+    }
+
+    #closeResults {
+      align-self: flex-end;
+      margin-top: 3px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    #closeResults:hover {
+      background: rgba(30, 64, 175, 0.9);
+      transform: translateY(-1px);
+    }
+
+    #closeResults:active {
+      transform: translateY(0);
+    }
+
+    .results-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: -3px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Build & Diagnose Console</h1>
+      <div class="subtitle">
+        Day 2 – Cables, RAM, Storage & RAID troubleshooting (CompTIA A+ core topics)
+      </div>
+    </div>
+    <button id="gradeAllBtn" type="button">Grade All Modules</button>
+  </header>
+
+  <main>
+    <!-- LEFT: Module navigation -->
+    <aside id="sidebar">
+      <div id="sidebar-title">Lab Modules</div>
+      <div class="nav-hint">
+        Move through each module, perform the mini “build” or “diagnosis,” then grade everything at once.
+      </div>
+      <div id="moduleNav">
+        <button class="module-btn active" data-module="cables">
+          <div class="module-btn-title">Cables & Connectors Lab</div>
+          <div class="module-btn-sub">Match cable types, connectors, and environments.</div>
+          <div class="module-score-pill">
+            <span class="module-dot" data-module-dot="cables"></span>
+            <span>0 / 6 pts</span>
+          </div>
+        </button>
+        <button class="module-btn" data-module="memory">
+          <div class="module-btn-title">Memory Planning Lab</div>
+          <div class="module-btn-sub">Choose RAM form factors, DDR gens, ECC & channels.</div>
+          <div class="module-score-pill">
+            <span class="module-dot" data-module-dot="memory"></span>
+            <span>0 / 6 pts</span>
+          </div>
+        </button>
+        <button class="module-btn" data-module="storage">
+          <div class="module-btn-title">Storage & RAID Lab</div>
+          <div class="module-btn-sub">Pick drives/RAID & diagnose failures.</div>
+          <div class="module-score-pill">
+            <span class="module-dot" data-module-dot="storage"></span>
+            <span>0 / 8 pts</span>
+          </div>
+        </button>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Content -->
+    <section id="content">
+      <div class="instructions-card">
+        <div class="instructions-main">
+          <strong>How this mini-lab works:</strong>
+          <div class="instructions-steps">
+            1) Select a module on the left.<br />
+            2) Read the scenario and use the controls to “build” or diagnose the configuration (cables, memory layout, or storage/RAID).<br />
+            3) Use the <em>Run Check</em> buttons in each module for hints, then click <strong>Grade All Modules</strong> to see your score and explanations.
+          </div>
+        </div>
+        <div class="mode-pill">Hands-on • No Drag & Drop</div>
+      </div>
+
+      <!-- MODULE: Cables -->
+      <section class="module active" data-module-content="cables">
+        <div class="scenario-grid">
+          <!-- C1 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">C1 – Office ceiling run to new workstation</div>
+              <span class="scenario-tag">Copper / Plenum</span>
+            </div>
+            <div class="scenario-body">
+              You’re wiring a new workstation in an open office. The run goes through an air-handling
+              space above the ceiling to a patch panel, and the user needs <strong>Gigabit Ethernet</strong>.
+              Building codes require safe cabling in ducts and plenum spaces.
+            </div>
+
+            <div class="control-row">
+              <div class="label">Cable Type</div>
+              <select id="c1_cable">
+                <option value="">-- Select cable type --</option>
+                <option value="cat5e_utp">Cat 5e UTP</option>
+                <option value="cat3_utp">Cat 3 UTP</option>
+                <option value="coax_rg6">Coaxial RG-6</option>
+                <option value="mm_fiber">Multimode fiber</option>
+              </select>
+              <div class="hint">Use copper that supports at least 1 Gbps on typical office runs.</div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Connector</div>
+              <select id="c1_conn">
+                <option value="">-- Select connector --</option>
+                <option value="rj45">RJ45</option>
+                <option value="rj11">RJ11</option>
+                <option value="f_type">F-type</option>
+                <option value="lc">LC</option>
+              </select>
+              <div class="hint">Think of the standard Ethernet plug on twisted-pair cabling.</div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Environment / Jacket</div>
+              <select id="c1_env">
+                <option value="">-- Select cable rating --</option>
+                <option value="standard_pvc">Standard PVC-rated jacket</option>
+                <option value="plenum">Plenum-rated cable</option>
+                <option value="direct_burial">Direct-burial outdoor cable</option>
+              </select>
+              <div class="hint">Air-handling spaces have stricter fire and smoke requirements.</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="c1">
+              <span class="mini-dot"></span> Run cable test
+            </button>
+            <div class="sim-output placeholder" id="c1_output">
+              Click "Run cable test" to see if this build would pass inspection and link speed tests.
+            </div>
+          </div>
+
+          <!-- C2 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">C2 – Fiber run between campus buildings</div>
+              <span class="scenario-tag">Fiber / Long-distance</span>
+            </div>
+            <div class="scenario-body">
+              You’re linking two buildings on a campus. The distance is just over <strong>2 kilometers</strong>,
+              and the network team wants <strong>minimal signal loss</strong> over time. Both switches
+              support standard fiber uplink modules.
+            </div>
+
+            <div class="control-row">
+              <div class="label">Fiber Type</div>
+              <select id="c2_type">
+                <option value="">-- Select fiber type --</option>
+                <option value="mm_fiber">Multimode fiber</option>
+                <option value="sm_fiber">Single-mode fiber</option>
+                <option value="cat6a_copper">Cat 6a UTP copper</option>
+                <option value="coax">Coaxial cable</option>
+              </select>
+              <div class="hint">Which fiber type is better for long-distance, low-loss runs?</div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Connector</div>
+              <select id="c2_conn">
+                <option value="">-- Select connector --</option>
+                <option value="st">ST</option>
+                <option value="sc">SC</option>
+                <option value="lc">LC</option>
+                <option value="rj45">RJ45</option>
+              </select>
+              <div class="hint">Look for a small form-factor connector commonly used in modern gear.</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="c2">
+              <span class="mini-dot"></span> Check link budget
+            </button>
+            <div class="sim-output placeholder" id="c2_output">
+              Click to simulate the optical link check for this building-to-building connection.
+            </div>
+          </div>
+
+          <!-- C3 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">C3 – VoIP phone + legacy line</div>
+              <span class="scenario-tag">Connectors</span>
+            </div>
+            <div class="scenario-body">
+              You’re deploying a VoIP phone that still needs a <strong>standard telephone line</strong>
+              for fax/backup. The user asks which connector that line uses so the correct wall jack can be installed.
+            </div>
+
+            <div class="control-row">
+              <div class="label">Connector for standard phone line</div>
+              <select id="c3_conn">
+                <option value="">-- Select connector --</option>
+                <option value="rj45">RJ45</option>
+                <option value="usb_c">USB-C</option>
+                <option value="molex">Molex</option>
+                <option value="rj11">RJ11</option>
+              </select>
+              <div class="hint">Think smaller telephone plug vs standard Ethernet plug.</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="c3">
+              <span class="mini-dot"></span> Test dial tone
+            </button>
+            <div class="sim-output placeholder" id="c3_output">
+              Click to simulate plugging the phone into the jack and checking for dial tone.
+            </div>
+          </div>
+        </div>
+
+        <div class="module-footer">
+          <span>Cables module: 6 points total (2 per scenario).</span>
+          <span>Use the "Run" buttons as a mini sanity check – grading happens from the top button.</span>
+        </div>
+      </section>
+
+      <!-- MODULE: Memory -->
+      <section class="module" data-module-content="memory">
+        <div class="scenario-grid">
+          <!-- M1 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">M1 – Upgrade a thin laptop</div>
+              <span class="scenario-tag">Form Factor</span>
+            </div>
+            <div class="scenario-body">
+              A thin-and-light laptop needs a memory upgrade. Inside, you see
+              <strong>small memory modules</strong>, not full-size desktop sticks. The
+              system board supports modern DDR4 memory but not ECC.
+            </div>
+
+            <div class="control-row">
+              <div class="label">RAM Form Factor</div>
+              <select id="m1_form">
+                <option value="">-- Select form factor --</option>
+                <option value="dimm">Standard DIMM</option>
+                <option value="sodimm">SODIMM</option>
+                <option value="ecc_dimm">ECC DIMM</option>
+                <option value="rimm">RIMM</option>
+              </select>
+              <div class="hint">Laptops use a smaller physical package than desktops.</div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">ECC Requirement</div>
+              <select id="m1_ecc">
+                <option value="">-- ECC or non-ECC? --</option>
+                <option value="non_ecc">Non-ECC RAM</option>
+                <option value="ecc">ECC RAM</option>
+              </select>
+              <div class="hint">Is error correction common in consumer laptops?</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="m1">
+              <span class="mini-dot"></span> Run memory compatibility check
+            </button>
+            <div class="sim-output placeholder" id="m1_output">
+              Click to see if the modules you chose would POST successfully in this laptop.
+            </div>
+          </div>
+
+          <!-- M2 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">M2 – Build a reliable database server</div>
+              <span class="scenario-tag">ECC / Channels</span>
+            </div>
+            <div class="scenario-body">
+              You’re building a database server for finance. The motherboard supports
+              <strong>ECC RAM</strong> and can run memory in single, dual, or quad-channel modes.
+              The customer cares about <strong>data integrity</strong> and solid performance.
+            </div>
+
+            <div class="control-row">
+              <div class="label">RAM Type</div>
+              <select id="m2_type">
+                <option value="">-- Select RAM type --</option>
+                <option value="non_ecc_ddr4">DDR4 non-ECC</option>
+                <option value="ecc_ddr4">ECC DDR4</option>
+                <option value="sodimm_ddr4">DDR4 SODIMM</option>
+              </select>
+              <div class="hint">Think about error detection/correction in critical systems.</div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Channel Configuration</div>
+              <select id="m2_channel">
+                <option value="">-- Select channel config --</option>
+                <option value="single">Single-channel</option>
+                <option value="dual">Dual-channel</option>
+                <option value="quad">Quad-channel</option>
+              </select>
+              <div class="hint">What configuration improves bandwidth and is common in servers/workstations?</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="m2">
+              <span class="mini-dot"></span> Simulate memory throughput
+            </button>
+            <div class="sim-output placeholder" id="m2_output">
+              Click to estimate the server’s theoretical memory throughput with your selections.
+            </div>
+          </div>
+
+          <!-- M3 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">M3 – Desktop dual-channel upgrade</div>
+              <span class="scenario-tag">DDR Gen / Benefit</span>
+            </div>
+            <div class="scenario-body">
+              A desktop currently has a single DDR3 module installed. The user wants a
+              <strong>newer platform</strong> with better performance and you’re moving them to
+              a DDR4-capable board with two matching modules.
+            </div>
+
+            <div class="control-row">
+              <div class="label">Memory Generation</div>
+              <select id="m3_gen">
+                <option value="">-- Select DDR generation --</option>
+                <option value="ddr2">DDR2</option>
+                <option value="ddr3">DDR3</option>
+                <option value="ddr4">DDR4</option>
+                <option value="ddr5">DDR5</option>
+              </select>
+              <div class="hint">Which generation offers better speeds and efficiency vs DDR3 on modern boards?</div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Main Performance Benefit</div>
+              <select id="m3_benefit">
+                <option value="">-- Select expected benefit --</option>
+                <option value="more_storage">More hard drive storage</option>
+                <option value="lower_cpu_speed">Lower CPU clock speed</option>
+                <option value="improved_bandwidth">Improved memory bandwidth & system performance</option>
+                <option value="automatic_ecc">Automatic ECC error correction</option>
+              </select>
+              <div class="hint">Think about what dual-channel memory is designed to improve.</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="m3">
+              <span class="mini-dot"></span> Run POST & bench
+            </button>
+            <div class="sim-output placeholder" id="m3_output">
+              Click to simulate POST and a quick benchmark with your memory choices.
+            </div>
+          </div>
+        </div>
+
+        <div class="module-footer">
+          <span>Memory module: 6 points total (2 per scenario).</span>
+          <span>Remember: DDR generations aren’t pin-compatible – board support matters.</span>
+        </div>
+      </section>
+
+      <!-- MODULE: Storage & RAID -->
+      <section class="module" data-module-content="storage">
+        <div class="scenario-grid">
+          <!-- S1 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">S1 – Video editing workstation drive choice</div>
+              <span class="scenario-tag">SSD / NVMe</span>
+            </div>
+            <div class="scenario-body">
+              A video editor needs very fast local storage for 4K footage. The motherboard has both
+              <strong>SATA ports</strong> and an <strong>M.2 PCIe slot</strong>. They want the
+              <strong>fastest possible single-drive performance</strong>.
+            </div>
+
+            <div class="control-row">
+              <div class="label">Drive Type</div>
+              <select id="s1_drive">
+                <option value="">-- Select drive --</option>
+                <option value="25_sata_ssd">2.5-inch SATA SSD</option>
+                <option value="msata_ssd">mSATA SSD (SATA interface)</option>
+                <option value="m2_nvme">M.2 NVMe SSD using PCIe</option>
+                <option value="35_hdd">3.5-inch 7200 RPM HDD</option>
+              </select>
+              <div class="hint">Which option uses PCIe lanes directly for maximum throughput?</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="s1">
+              <span class="mini-dot"></span> Simulate transfer speed
+            </button>
+            <div class="sim-output placeholder" id="s1_output">
+              Click to compare approximate transfer speeds for your chosen drive.
+            </div>
+          </div>
+
+          <!-- S2 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">S2 – RAID for performance + redundancy</div>
+              <span class="scenario-tag">RAID Levels</span>
+            </div>
+            <div class="scenario-body">
+              A small company wants a storage array that improves performance but also
+              <strong>keeps them running if a drive fails</strong>. They are willing to use at least
+              four drives to meet this goal.
+            </div>
+
+            <div class="control-row">
+              <div class="label">RAID Level</div>
+              <select id="s2_raid">
+                <option value="">-- Select RAID level --</option>
+                <option value="raid0">RAID 0</option>
+                <option value="raid1">RAID 1</option>
+                <option value="raid5">RAID 5</option>
+                <option value="raid10">RAID 10</option>
+              </select>
+              <div class="hint">Which level combines striping and mirroring for both speed and redundancy?</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="s2">
+              <span class="mini-dot"></span> Simulate drive failure
+            </button>
+            <div class="sim-output placeholder" id="s2_output">
+              Click to see how your chosen RAID level behaves when a drive fails.
+            </div>
+          </div>
+
+          <!-- S3 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">S3 – Grinding desktop drive</div>
+              <span class="scenario-tag">Failure Symptoms</span>
+            </div>
+            <div class="scenario-body">
+              A desktop user reports a <strong>grinding noise</strong> from the PC and very
+              <strong>slow file access</strong>. S.M.A.R.T. tools show growing reallocated sector counts
+              and warnings.
+            </div>
+
+            <div class="control-row">
+              <div class="label">Most Likely Cause</div>
+              <select id="s3_cause">
+                <option value="">-- Select cause --</option>
+                <option value="normal_raid">RAID array functioning normally</option>
+                <option value="ssd_trim">SSD TRIM operation running</option>
+                <option value="mechanical_failure">Mechanical failure of the hard drive</option>
+                <option value="firmware_update">Pending firmware update</option>
+              </select>
+              <div class="hint">Match the sound and S.M.A.R.T. warnings with the component type.</div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Best Next Action</div>
+              <select id="s3_action">
+                <option value="">-- Select action --</option>
+                <option value="ignore">Ignore the issue; wait and see</option>
+                <option value="replace_and_restore">Back up data, replace drive, and restore</option>
+                <option value="update_gpu">Update graphics drivers</option>
+                <option value="clean_optical">Clean the optical drive lens</option>
+              </select>
+              <div class="hint">Think about protecting data before the failure becomes total.</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="s3">
+              <span class="mini-dot"></span> Run S.M.A.R.T. deep scan
+            </button>
+            <div class="sim-output placeholder" id="s3_output">
+              Click to simulate a full S.M.A.R.T. scan and error log for this drive.
+            </div>
+          </div>
+
+          <!-- S4 -->
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-title">S4 – RAID 5 alarm in a server</div>
+              <span class="scenario-tag">RAID Troubleshooting</span>
+            </div>
+            <div class="scenario-body">
+              A server with a <strong>RAID 5</strong> array starts beeping. The OS shows the array as
+              <strong>“missing”</strong>, and the controller status indicates one drive is offline.
+            </div>
+
+            <div class="control-row">
+              <div class="label">Most Likely Cause</div>
+              <select id="s4_cause">
+                <option value="">-- Select cause --</option>
+                <option value="smart_ok">S.M.A.R.T. healthy on all drives</option>
+                <option value="too_fast">Hard drive spinning too fast</option>
+                <option value="ssd_firmware">SSD firmware corruption</option>
+                <option value="one_or_more_failed">One or more failed drives in the RAID array</option>
+              </select>
+              <div class="hint">Match the alarm and missing array to RAID behavior.</div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Immediate Response</div>
+              <select id="s4_action">
+                <option value="">-- Select action --</option>
+                <option value="ignore_alarm">Silence the alarm and ignore</option>
+                <option value="replace_failed_drive">Identify & replace failed drive, rebuild from backup</option>
+                <option value="reinstall_os">Reinstall the OS on the same disks</option>
+                <option value="format_array">Format the array to clear the error</option>
+              </select>
+              <div class="hint">What keeps data as safe as possible while restoring redundancy?</div>
+            </div>
+
+            <button class="mini-btn" type="button" data-sim="s4">
+              <span class="mini-dot"></span> Check RAID controller logs
+            </button>
+            <div class="sim-output placeholder" id="s4_output">
+              Click to see a summary of the RAID controller’s log entries for this failure.
+            </div>
+          </div>
+        </div>
+
+        <div class="module-footer">
+          <span>Storage & RAID module: 8 points total (2 per scenario).</span>
+          <span>Watch the symptoms: sound, LEDs, alarms, and S.M.A.R.T. all tell a story.</span>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- RESULTS OVERLAY -->
+  <div id="resultsOverlay">
+    <div id="resultsModal">
+      <div id="resultsHeader">
+        <h2>Lab Results</h2>
+        <div id="resultsScore"></div>
+      </div>
+      <div id="resultsBody"></div>
+      <div class="results-note">
+        Use these explanations to tune your real-world process: choose the right hardware, watch for
+        warning signs, and pick the safest corrective action.
+      </div>
+      <button id="closeResults" type="button">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // ------- Answer Key & Explanations -------
+
+    const scenarios = {
+      // Cables: 3 scenarios x 2 points = 6
+      c1: {
+        module: "cables",
+        title: "C1 – Office ceiling run to new workstation",
+        fields: {
+          c1_cable: {
+            correct: "cat5e_utp",
+            label: "Cable Type"
+          },
+          c1_conn: {
+            correct: "rj45",
+            label: "Connector"
+          },
+          c1_env: {
+            correct: "plenum",
+            label: "Environment / Jacket"
+          }
+        },
+        explanation: "For a plenum ceiling run carrying Gigabit Ethernet, Cat 5e or better UTP with RJ45 connectors is appropriate, but because the cable passes through an air-handling space, a plenum-rated jacket is required to meet fire and smoke regulations."
+      },
+      c2: {
+        module: "cables",
+        title: "C2 – Fiber run between campus buildings",
+        fields: {
+          c2_type: {
+            correct: "sm_fiber",
+            label: "Fiber Type"
+          },
+          c2_conn: {
+            correct: "lc",
+            label: "Connector"
+          }
+        },
+        explanation: "For multi-kilometer building links with low signal loss, single-mode fiber is preferred. Modern switches commonly use LC connectors for small form-factor fiber uplinks."
+      },
+      c3: {
+        module: "cables",
+        title: "C3 – VoIP phone + legacy line",
+        fields: {
+          c3_conn: {
+            correct: "rj11",
+            label: "Phone connector"
+          }
+        },
+        explanation: "Standard telephone lines use RJ11 connectors, while RJ45 is used for Ethernet. VoIP phones may use both, but the legacy analog line still terminates on RJ11."
+      },
+
+      // Memory: 3 scenarios x 2 points = 6
+      m1: {
+        module: "memory",
+        title: "M1 – Upgrade a thin laptop",
+        fields: {
+          m1_form: {
+            correct: "sodimm",
+            label: "RAM Form Factor"
+          },
+          m1_ecc: {
+            correct: "non_ecc",
+            label: "ECC Requirement"
+          }
+        },
+        explanation: "Laptops and small form-factor systems typically use SODIMM modules rather than full-size DIMMs. Consumer laptops almost always use non-ECC RAM, since error-correcting memory is reserved for servers and some workstations."
+      },
+      m2: {
+        module: "memory",
+        title: "M2 – Build a reliable database server",
+        fields: {
+          m2_type: {
+            correct: "ecc_ddr4",
+            label: "RAM Type"
+          },
+          m2_channel: {
+            correct: "quad",
+            label: "Channel Configuration"
+          }
+        },
+        explanation: "Critical systems like database servers use ECC DDR4 to detect and correct single-bit errors. Using the motherboard’s quad-channel capability maximizes memory bandwidth for better overall performance."
+      },
+      m3: {
+        module: "memory",
+        title: "M3 – Desktop dual-channel upgrade",
+        fields: {
+          m3_gen: {
+            correct: "ddr4",
+            label: "Memory Generation"
+          },
+          m3_benefit: {
+            correct: "improved_bandwidth",
+            label: "Main Performance Benefit"
+          }
+        },
+        explanation: "Upgrading from DDR3 to DDR4 on a compatible board improves performance and power efficiency. Installing two matching modules enables dual-channel operation, which increases memory bandwidth and overall system performance."
+      },
+
+      // Storage & RAID: 4 scenarios x 2 points = 8
+      s1: {
+        module: "storage",
+        title: "S1 – Video editing workstation drive choice",
+        fields: {
+          s1_drive: {
+            correct: "m2_nvme",
+            label: "Drive Type"
+          }
+        },
+        explanation: "An M.2 NVMe SSD that uses PCIe lanes offers the highest throughput compared to SATA SSDs or spinning HDDs, making it ideal for large video file workloads."
+      },
+      s2: {
+        module: "storage",
+        title: "S2 – RAID for performance + redundancy",
+        fields: {
+          s2_raid: {
+            correct: "raid10",
+            label: "RAID Level"
+          }
+        },
+        explanation: "RAID 10 mirrors and stripes data across multiple drives, combining improved performance with redundancy. RAID 0 has no redundancy, RAID 1 focuses on redundancy, and RAID 5 balances capacity and redundancy but with different performance characteristics."
+      },
+      s3: {
+        module: "storage",
+        title: "S3 – Grinding desktop drive",
+        fields: {
+          s3_cause: {
+            correct: "mechanical_failure",
+            label: "Most Likely Cause"
+          },
+          s3_action: {
+            correct: "replace_and_restore",
+            label: "Best Next Action"
+          }
+        },
+        explanation: "Grinding noises and degraded S.M.A.R.T. values indicate mechanical failure of a spinning HDD. The safest response is to back up critical data immediately, replace the drive, and restore from backup rather than ignoring the signs."
+      },
+      s4: {
+        module: "storage",
+        title: "S4 – RAID 5 alarm in a server",
+        fields: {
+          s4_cause: {
+            correct: "one_or_more_failed",
+            label: "Most Likely Cause"
+          },
+          s4_action: {
+            correct: "replace_failed_drive",
+            label: "Immediate Response"
+          }
+        },
+        explanation: "An audible alarm and a RAID 5 array showing as missing usually means one or more drives have failed or dropped offline. The correct response is to identify and replace the failed drive(s), then rebuild the array while using backups to protect data."
+      }
+    };
+
+    // ------- Module score tracking -------
+
+    const moduleMaxPoints = {
+      cables: 6,
+      memory: 6,
+      storage: 8
+    };
+
+    const moduleCurrentPoints = {
+      cables: 0,
+      memory: 0,
+      storage: 0
+    };
+
+    // ------- DOM references -------
+
+    const moduleButtons = document.querySelectorAll(".module-btn");
+    const modules = document.querySelectorAll(".module");
+    const gradeAllBtn = document.getElementById("gradeAllBtn");
+    const resultsOverlay = document.getElementById("resultsOverlay");
+    const resultsScore = document.getElementById("resultsScore");
+    const resultsBody = document.getElementById("resultsBody");
+    const closeResults = document.getElementById("closeResults");
+
+    // ------- Module switching -------
+
+    moduleButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const moduleName = btn.dataset.module;
+        moduleButtons.forEach(b => b.classList.toggle("active", b === btn));
+        modules.forEach(m => {
+          m.classList.toggle("active", m.dataset.moduleContent === moduleName);
+        });
+      });
+    });
+
+    // ------- Mini simulation outputs -------
+
+    function setOutput(id, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("placeholder");
+      el.textContent = text;
+    }
+
+    function handleSimClick(key) {
+      switch (key) {
+        case "c1":
+          setOutput(
+            "c1_output",
+            "Cable certification results:\n" +
+              "- Fire code check: PASS only if plenum-rated jacket is used in the air-handling space.\n" +
+              "- Link speed check: PASS for Cat 5e/6 at 1 Gbps.\n\n" +
+              "If you chose non-plenum cable, the inspector will fail the install even if the link works."
+          );
+          break;
+        case "c2":
+          setOutput(
+            "c2_output",
+            "Optical link simulation:\n" +
+              "- Distance: ~2 km campus run.\n" +
+              "- Multimode: marginal at this length; higher loss.\n" +
+              "- Single-mode: stable signal with low attenuation, especially with LC connectors.\n\n" +
+              "Single-mode with LC SFPs is the standard choice here."
+          );
+          break;
+        case "c3":
+          setOutput(
+            "c3_output",
+            "Dial tone test:\n" +
+              "- RJ11: Phone powers up and receives dial tone.\n" +
+              "- RJ45: Fits only in Ethernet jack, no dial tone.\n\n" +
+              "Standard analog and fax lines use RJ11 connectors."
+          );
+          break;
+        case "m1":
+          setOutput(
+            "m1_output",
+            "Memory compatibility check:\n" +
+              "- SODIMM, non-ECC DDR4: System POSTs and recognizes full capacity.\n" +
+              "- Full-size DIMM or ECC modules: Do not fit or may not be supported by the laptop.\n\n" +
+              "Thin laptops almost always use SODIMM and non-ECC memory."
+          );
+          break;
+        case "m2":
+          setOutput(
+            "m2_output",
+            "Theoretical memory behavior:\n" +
+              "- ECC DDR4: Detects and corrects single-bit errors, ideal for a finance database server.\n" +
+              "- Quad-channel: Increases memory bandwidth vs single/dual-channel.\n\n" +
+              "Combining ECC with multi-channel memory improves both reliability and throughput."
+          );
+          break;
+        case "m3":
+          setOutput(
+            "m3_output",
+            "POST & benchmark:\n" +
+              "- DDR4 modules in matching color-coded slots enable dual-channel.\n" +
+              "- Result: Higher memory bandwidth and better overall performance vs single DDR3 module.\n\n" +
+              "DDR generations are not backward compatible; the board must specifically support DDR4."
+          );
+          break;
+        case "s1":
+          setOutput(
+            "s1_output",
+            "Approximate throughput comparison (theoretical):\n" +
+              "- 3.5\" HDD (7200 RPM): ~150 MB/s sequential.\n" +
+              "- 2.5\" / mSATA SATA SSD: Up to ~550–600 MB/s.\n" +
+              "- M.2 NVMe SSD (PCIe): 2000–7000+ MB/s.\n\n" +
+              "For raw performance, M.2 NVMe is the clear winner."
+          );
+          break;
+        case "s2":
+          setOutput(
+            "s2_output",
+            "Drive failure simulation:\n" +
+              "- RAID 0: Any drive failure = total data loss.\n" +
+              "- RAID 1: One drive can fail with no data loss.\n" +
+              "- RAID 5: Tolerates one drive failure, but writes are parity-based.\n" +
+              "- RAID 10: Mirrors and stripes; can survive certain drive failures while retaining strong performance.\n\n" +
+              "For both performance and redundancy, RAID 10 is the preferred choice."
+          );
+          break;
+        case "s3":
+          setOutput(
+            "s3_output",
+            "S.M.A.R.T. deep scan:\n" +
+              "- Reallocated sectors: Increasing.\n" +
+              "- Read/write errors: Frequently logged.\n" +
+              "- Acoustic analysis: Grinding from spindle/heads.\n\n" +
+              "Treat this as a mechanical HDD failure. Back up data and replace the drive immediately."
+          );
+          break;
+        case "s4":
+          setOutput(
+            "s4_output",
+            "RAID controller log summary:\n" +
+              "- Status: RAID 5 array DEGRADED / MISSING.\n" +
+              "- One member drive reports offline / failed.\n" +
+              "- Audible alarm raised by controller.\n\n" +
+              "Replace the failed drive with a compatible unit and rebuild the array, using backups as needed."
+          );
+          break;
+        default:
+          break;
+      }
+    }
+
+    document.querySelectorAll(".mini-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.getAttribute("data-sim");
+        handleSimClick(key);
+      });
+    });
+
+    // ------- Grading -------
+
+    function gradeLab() {
+      let totalScore = 0;
+      let maxScore = 0;
+
+      // Reset module scores
+      Object.keys(moduleCurrentPoints).forEach(m => (moduleCurrentPoints[m] = 0));
+
+      resultsBody.innerHTML = "";
+
+      const sections = {
+        cables: [],
+        memory: [],
+        storage: []
+      };
+
+      Object.entries(scenarios).forEach(([id, sc]) => {
+        const fields = sc.fields;
+        let scenarioScore = 0;
+        let scenarioMax = Object.keys(fields).length;
+        maxScore += scenarioMax;
+
+        const lines = [];
+        lines.push({
+          type: "title",
+          text: sc.title
+        });
+
+        Object.entries(fields).forEach(([fieldId, meta]) => {
+          const el = document.getElementById(fieldId);
+          const userVal = el ? el.value : "";
+          const isCorrect = userVal === meta.correct;
+
+          if (isCorrect) {
+            scenarioScore++;
+          }
+
+          lines.push({
+            type: "field",
+            label: meta.label,
+            userVal: userVal || "<no selection>",
+            correctVal: meta.correct,
+            good: isCorrect
+          });
+        });
+
+        totalScore += scenarioScore;
+        moduleCurrentPoints[sc.module] += scenarioScore;
+
+        sections[sc.module].push({
+          title: sc.title,
+          lines,
+          explanation: sc.explanation,
+          scenarioScore,
+          scenarioMax
+        });
+      });
+
+      // Build results body grouped by module
+      function renderModuleSection(modName, titleText) {
+        const arr = sections[modName];
+        if (!arr.length) return;
+
+        const header = document.createElement("div");
+        header.className = "result-section-title";
+        header.textContent = titleText;
+        resultsBody.appendChild(header);
+
+        arr.forEach(sc => {
+          const block = document.createElement("div");
+          block.className = "result-scenario";
+
+          const t = document.createElement("div");
+          t.className = "result-title";
+          t.textContent = `${sc.title} (${sc.scenarioScore} / ${sc.scenarioMax} pts)`;
+          block.appendChild(t);
+
+          sc.lines
+            .filter(l => l.type === "field")
+            .forEach(l => {
+              const line = document.createElement("div");
+              line.className =
+                "result-line " + (l.good ? "good" : l.userVal === "<no selection>" ? "" : "bad");
+              line.innerHTML =
+                `<span class="label-inline">${l.label} – Your choice:</span> ${l.userVal}` +
+                (!l.good
+                  ? ` | <span class="label-inline">Correct:</span> ${l.correctVal}`
+                  : "");
+              block.appendChild(line);
+            });
+
+          const expl = document.createElement("div");
+          expl.className = "result-expl";
+          expl.textContent = sc.explanation;
+          block.appendChild(expl);
+
+          resultsBody.appendChild(block);
+        });
+      }
+
+      renderModuleSection("cables", "Cables & Connectors");
+      renderModuleSection("memory", "Memory Planning");
+      renderModuleSection("storage", "Storage & RAID");
+
+      resultsScore.textContent = `Total Score: ${totalScore} / ${maxScore} points`;
+      resultsOverlay.style.display = "flex";
+
+      updateModuleDots();
+    }
+
+    function updateModuleDots() {
+      document.querySelectorAll("[data-module-dot]").forEach(dot => {
+        const name = dot.getAttribute("data-module-dot");
+        const current = moduleCurrentPoints[name] || 0;
+        const max = moduleMaxPoints[name] || 0;
+
+        const pillText = dot.parentElement.querySelector("span:nth-child(2)");
+        if (pillText) {
+          pillText.textContent = `${current} / ${max} pts`;
+        }
+
+        dot.classList.remove("partial", "full");
+        if (current === 0) {
+          // leave as default
+        } else if (current < max) {
+          dot.classList.add("partial");
+        } else {
+          dot.classList.add("full");
+        }
+      });
+    }
+
+    gradeAllBtn.addEventListener("click", gradeLab);
+
+    closeResults.addEventListener("click", () => {
+      resultsOverlay.style.display = "none";
+    });
+
+    resultsOverlay.addEventListener("click", e => {
+      if (e.target === resultsOverlay) {
+        resultsOverlay.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
