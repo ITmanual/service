@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mobile Devices & Troubleshooting – Repair Workbench</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #0b1220;
+      --panel: #020817;
+      --accent: #22c55e; /* green */
+      --accent-soft: rgba(34, 197, 94, 0.14);
+      --accent-2: #eab308; /* yellow */
+      --danger: #f97373;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --text: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0b1220 0, #020617 55%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(to right, #020617, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.04em;
+    }
+
+    header .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    #scoreBtn {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s ease, transform 0.1s ease;
+      white-space: nowrap;
+    }
+
+    #scoreBtn:hover {
+      background: rgba(34, 197, 94, 0.24);
+      transform: translateY(-1px);
+    }
+
+    #scoreBtn:active {
+      transform: translateY(0);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    /* Left: tickets list */
+    #ticketsPanel {
+      width: 310px;
+      max-width: 100%;
+      border-right: 1px solid var(--border);
+      background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%);
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #ticketsPanel h2 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .ticket-list-hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    #ticketList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .ticket-item {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 10px 11px;
+      cursor: pointer;
+      transition: border 0.15s ease, background 0.15s ease, transform 0.1s ease;
+      position: relative;
+    }
+
+    .ticket-item:hover {
+      border-color: var(--accent-soft);
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    .ticket-item.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.7), rgba(15, 23, 42, 0.95));
+    }
+
+    .ticket-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .ticket-meta {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ticket-pill {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .ticket-pill.power {
+      border-color: rgba(239, 68, 68, 0.75);
+      color: #fecaca;
+    }
+
+    .ticket-pill.connectivity {
+      border-color: rgba(59, 130, 246, 0.75);
+      color: #bfdbfe;
+    }
+
+    .ticket-pill.performance {
+      border-color: rgba(249, 115, 22, 0.75);
+      color: #fed7aa;
+    }
+
+    .ticket-pill.accessory {
+      border-color: rgba(234, 179, 8, 0.75);
+      color: #fef9c3;
+    }
+
+    .ticket-pill.input {
+      border-color: rgba(16, 185, 129, 0.75);
+      color: #a7f3d0;
+    }
+
+    .ticket-score-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .ticket-score-dot.correct {
+      background: var(--accent);
+    }
+
+    .ticket-score-dot.partial {
+      background: var(--accent-2);
+    }
+
+    /* Right: workspace */
+    #workspace {
+      flex: 1;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .instructions-card {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), #020617 55%);
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .instructions-card strong {
+      font-weight: 700;
+    }
+
+    .instructions-steps {
+      font-size: 12px;
+      color: #d1d5db;
+    }
+
+    .badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--muted);
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr);
+      gap: 14px;
+      min-height: 0;
+    }
+
+    @media (max-width: 960px) {
+      main {
+        flex-direction: column;
+      }
+      #ticketsPanel {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        flex-direction: column;
+      }
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--bg-alt);
+      padding: 14px 14px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    #ticketDescription {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 10px;
+      padding: 10px 11px;
+      border: 1px solid rgba(15, 23, 42, 0.8);
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    #toolButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tool-btn {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, border 0.15s ease, transform 0.1s ease;
+    }
+
+    .tool-btn span {
+      font-size: 12px;
+    }
+
+    .tool-btn-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-2);
+    }
+
+    .tool-btn:hover {
+      border-color: var(--accent-soft);
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    .tool-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    #toolOutput {
+      margin-top: 6px;
+      min-height: 90px;
+      max-height: 150px;
+      overflow-y: auto;
+      border-radius: 10px;
+      border: 1px dashed rgba(55, 65, 81, 0.8);
+      padding: 9px 10px;
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), rgba(15, 23, 42, 0.95));
+      font-size: 12px;
+      line-height: 1.55;
+      color: #d1d5db;
+      white-space: pre-line;
+    }
+
+    #toolOutput.placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Right card – answers */
+    .qa-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .qa-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
+      background: #020617;
+    }
+
+    .answer-hint {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .qa-footer {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .qa-footer span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dot-mini {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    /* Results modal */
+    #resultsOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      padding: 16px;
+    }
+
+    #resultsModal {
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid rgba(75, 85, 99, 0.8);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.65);
+      padding: 16px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #resultsHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #resultsHeader h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #resultsScore {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #resultsBody {
+      font-size: 12px;
+      color: #e5e7eb;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.14), #020617 55%);
+      overflow-y: auto;
+    }
+
+    .result-ticket {
+      margin-bottom: 9px;
+      padding-bottom: 7px;
+      border-bottom: 1px dashed rgba(55, 65, 81, 0.8);
+    }
+
+    .result-ticket:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .result-line {
+      margin-bottom: 2px;
+    }
+
+    .result-line span.label-inline {
+      color: var(--muted);
+    }
+
+    .result-line.good {
+      color: var(--accent);
+    }
+
+    .result-line.partial {
+      color: var(--accent-2);
+    }
+
+    .result-line.bad {
+      color: var(--danger);
+    }
+
+    #closeResults {
+      align-self: flex-end;
+      margin-top: 4px;
+      padding: 6px 11px;
+      font-size: 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    #closeResults:hover {
+      background: rgba(30, 64, 175, 0.85);
+      transform: translateY(-1px);
+    }
+
+    #closeResults:active {
+      transform: translateY(0);
+    }
+
+    .results-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: -3px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Mobile Repair Workbench</h1>
+      <div class="subtitle">
+        Hands-on practice for mobile devices & troubleshooting (power, storage, connectivity, MDM, input & accessories)
+      </div>
+    </div>
+    <button id="scoreBtn" type="button">Grade My Tickets</button>
+  </header>
+
+  <main>
+    <!-- LEFT: Tickets -->
+    <section id="ticketsPanel">
+      <h2>Tickets</h2>
+      <div class="ticket-list-hint">
+        Click a ticket to load it in the workbench. Use diagnostics first, then select cause and fix.
+      </div>
+      <ul id="ticketList"></ul>
+    </section>
+
+    <!-- RIGHT: Workspace -->
+    <section id="workspace">
+      <div class="instructions-card">
+        <div>
+          <strong>How this lab works:</strong>
+          <div class="instructions-steps">
+            1) Pick a ticket & read the user’s complaint.<br />
+            2) Open at least one diagnostic tool (battery, storage, Wi-Fi, MDM, etc.) and read the “output”.<br />
+            3) Use what you saw to choose the <em>most likely cause</em> and the <em>best fix</em>.  
+            Then click <strong>Grade My Tickets</strong> for scoring & explanations.
+          </div>
+        </div>
+        <div class="badge">NO DRAG & DROP • REALISTIC FLOWS</div>
+      </div>
+
+      <div class="workspace-grid">
+        <!-- LEFT card: scenario & diagnostics -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title" id="ticketTitle">Select a ticket to begin</div>
+              <div class="card-subtitle" id="ticketSubtitle">You’ll see the user’s description and available diagnostics here.</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="label">Scenario</div>
+            <div id="ticketDescription">
+              Choose any ticket in the panel on the left.  
+              Then use the diagnostic buttons below to “run” tests just like you would in the field.
+            </div>
+          </div>
+
+          <div>
+            <div class="label">Diagnostics & Tools</div>
+            <div id="toolButtons"></div>
+            <div id="toolOutput" class="placeholder">
+              No diagnostic selected yet. Click a tool button above (for example, <strong>Battery Report</strong> or
+              <strong>MDM Console</strong>) to see simulated output that should guide your decision.
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT card: answers -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Analyze & Decide</div>
+              <div class="card-subtitle">
+                Use the dropdowns for the active ticket. Answers are saved automatically as you switch tickets.
+              </div>
+            </div>
+          </div>
+
+          <div class="qa-group">
+            <div class="qa-row">
+              <div class="label">Most Likely Cause</div>
+              <select id="causeSelect">
+                <option value="">⬇️ Select the most likely root cause</option>
+              </select>
+              <div class="answer-hint">
+                Base this on <em>evidence from the diagnostics</em>, not just the user’s guess.
+              </div>
+            </div>
+
+            <div class="qa-row">
+              <div class="label">Best Fix / Next Action</div>
+              <select id="fixSelect">
+                <option value="">⬇️ Select the best fix or next step</option>
+              </select>
+              <div class="answer-hint">
+                Pick the solution that directly addresses the root cause with proper CompTIA-style technique.
+              </div>
+            </div>
+          </div>
+
+          <div class="qa-footer">
+            <span><span class="dot-mini"></span> 2 points per ticket (1 for cause, 1 for fix)</span>
+            <span>Tip: If you’re stuck, run a different diagnostic tool and look for clues.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Results modal -->
+  <div id="resultsOverlay">
+    <div id="resultsModal">
+      <div id="resultsHeader">
+        <h2>Graded Results</h2>
+        <div id="resultsScore"></div>
+      </div>
+      <div id="resultsBody"></div>
+      <div class="results-note">
+        Use the explanations to refine your troubleshooting process: verify symptoms, confirm the component or policy at
+        fault, and then choose the fix that aligns with standard repair and support procedures.
+      </div>
+      <button id="closeResults" type="button">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // ---------- DATA MODEL ----------
+
+    const causeOptions = [
+      "Failing battery that can no longer hold a charge",
+      "Loose or damaged Wi-Fi antenna cable",
+      "Failing spinning HDD causing slow performance",
+      "MDM policy blocking app or email access",
+      "Stylus battery depleted or stylus hardware failure",
+      "Using the wrong accessory (USB hub instead of docking station)",
+      "Physically damaged charging port",
+      "Malware or too many background apps",
+      "Liquid damage to internal components",
+      "Digitizer misalignment or failure"
+    ];
+
+    const fixOptions = [
+      "Replace the battery with an OEM unit and verify operation on battery power",
+      "Reseat or replace the internal Wi-Fi antenna and test signal strength",
+      "Replace the HDD with an SSD and restore or reinstall the OS from backup",
+      "Review and update the user’s MDM policy/profile, then re-enroll or re-sync email",
+      "Replace or recharge the stylus and verify pairing or compatibility",
+      "Inspect, clean, or replace the charging port and retest charging",
+      "Remove malware and disable unnecessary background apps/services",
+      "Perform a liquid-damage inspection and replace affected components as needed",
+      "Recalibrate or replace the touchscreen digitizer module",
+      "Issue a full-featured docking station to provide video, USB, and power passthrough"
+    ];
+
+    const tickets = [
+      {
+        id: "t1",
+        title: "Laptop immediately powers off when unplugged",
+        category: "Battery & Power",
+        pillClass: "power",
+        description: `A user reports that their laptop shows the battery as “fully charged,” but the
+moment they unplug the AC adapter the system powers off. The laptop boots normally on AC power and
+there are no errors reported for the CPU or RAM in diagnostics.`,
+        tools: [
+          {
+            key: "battery",
+            label: "Battery Report",
+            output: `Battery health report:
+- Design capacity: 50 Wh
+- Full charge capacity: 9 Wh
+- Cycle count: 910
+- Status: CRITICAL – REPLACE BATTERY
+
+AC adapter diagnostics:
+- Voltage and wattage within spec
+- System passes AC power tests
+
+Interpretation: The laptop only stays on when AC is present and the battery can no longer provide
+adequate runtime on its own.`
+          },
+          {
+            key: "powerlog",
+            label: "Power Event Log",
+            output: `System event log:
+- Multiple unexpected shutdowns recorded when switching from AC to battery
+- No thermal events recorded
+- No driver or OS crash signatures
+
+Interpretation: Power-drop pattern points directly to the DC (battery) side, not to overheating or drivers.`
+          }
+        ],
+        correctCause: "Failing battery that can no longer hold a charge",
+        correctFix: "Replace the battery with an OEM unit and verify operation on battery power",
+        explanation: `Even though the OS reports the battery as “fully charged,” the health report shows
+a huge gap between design and full charge capacity plus a very high cycle count. AC power is stable, and
+there are no thermal or CPU/RAM errors, so the most likely cause is a battery that can no longer hold a
+usable charge. The correct fix is to replace the battery with an OEM (or equivalent) unit and verify the
+system can run on battery power alone.`
+      },
+      {
+        id: "t2",
+        title: "Phone loses Wi-Fi when the screen is opened/closed",
+        category: "Connectivity",
+        pillClass: "connectivity",
+        description: `A smartphone user reports that Wi-Fi drops whenever they flip the phone open or
+adjust the screen angle on a hinged design. When the phone lies flat on a desk, Wi-Fi works normally.
+You have already confirmed that the access point and Wi-Fi configuration are healthy and other devices
+stay connected.`,
+        tools: [
+          {
+            key: "wifiDiag",
+            label: "Wi-Fi Signal Monitor",
+            output: `Wi-Fi live readings:
+- Phone flat on bench: RSSI ≈ −45 dBm (strong), stable connection
+- While slowly flexing the hinge: RSSI sharply fluctuates, frequent disconnects
+- Other devices on the same AP show normal, stable signal
+
+Interpretation: Signal drop appears only when the hinge area is moved.`
+          },
+          {
+            key: "internalInspect",
+            label: "Internal Antenna Inspection",
+            output: `Teardown notes:
+- Thin coaxial antenna cable routed through the hinge assembly
+- Wi-Fi antenna connector near the hinge is slightly loose and shows signs of wear
+- No visible burning or board damage elsewhere
+
+Interpretation: Movement of the hinge likely pulls on a loose or partially broken antenna cable.`
+          }
+        ],
+        correctCause: "Loose or damaged Wi-Fi antenna cable",
+        correctFix: "Reseat or replace the internal Wi-Fi antenna and test signal strength",
+        explanation: `Because the Wi-Fi only fails when the hinge is moved and other devices remain
+stable, the issue is almost certainly physical rather than software or AP-related. The hinge teardown
+shows a loose antenna cable, so the most likely cause is a loose or damaged internal Wi-Fi antenna cable.
+The correct fix is to reseat or replace that antenna cable and verify that signal strength stays stable
+while moving the hinge.`
+      },
+      {
+        id: "t3",
+        title: "Laptop boots very slowly and apps crawl",
+        category: "Performance / Storage",
+        pillClass: "performance",
+        description: `A user complains that their laptop takes several minutes to boot and that launching
+applications is extremely slow. CPU and RAM diagnostics report no errors, but the hard drive activity
+LED stays solid for long periods of time while the system is “thinking.”`,
+        tools: [
+          {
+            key: "perfMon",
+            label: "Performance Monitor",
+            output: `Task Manager snapshot:
+- CPU usage: 12–20%
+- Memory usage: 48%
+- Disk usage: 100% (Process: System, multiple I/O waits)
+- Disk model: ST500LM012-1BD142 (5400 RPM HDD)
+
+Interpretation: CPU and RAM are not bottlenecks; storage is saturated.`
+          },
+          {
+            key: "smart",
+            label: "Storage SMART Status",
+            output: `SMART check:
+- Reallocated sector count: HIGH
+- Spin retry count: WARNING
+- Pending sectors detected
+- Status: DRIVE AT RISK – BACKUP AND REPLACE
+
+Interpretation: Mechanical HDD is slow and showing signs of impending failure.`
+          }
+        ],
+        correctCause: "Failing spinning HDD causing slow performance",
+        correctFix: "Replace the HDD with an SSD and restore or reinstall the OS from backup",
+        explanation: `All evidence points to the mechanical hard drive as the bottleneck: disk usage is
+pegged at 100% while CPU and RAM are fine, and SMART shows clear warning signs. The most likely cause is
+a failing/spinning HDD. The best solution is to replace the hard drive with an SSD and restore or
+reinstall the OS from backup, which both resolves the failure risk and dramatically improves performance.`
+      },
+      {
+        id: "t4",
+        title: "Smartphone can’t sync corporate email (MDM-managed)",
+        category: "Management / MDM",
+        pillClass: "connectivity",
+        description: `A user’s smartphone is managed through the company’s MDM solution. They report
+that their corporate email app will not sync any new messages. The phone can browse the internet over
+Wi-Fi and reach the company’s webmail portal in a browser, but the managed email app keeps failing to sync.`,
+        tools: [
+          {
+            key: "network",
+            label: "Network Connectivity Check",
+            output: `Connectivity:
+- Device can browse public websites over Wi-Fi
+- Device can reach the company’s OWA/portal via browser
+- No DNS or HTTPS errors in browser tests
+
+Interpretation: General network connectivity is healthy.`
+          },
+          {
+            key: "mdm",
+            label: "MDM Console",
+            output: `MDM console view for this device:
+- Compliance status: NON-COMPLIANT – PIN policy not enforced
+- Email profile: Blocked for non-compliant devices
+- Recent policy note: “Block corporate email when device non-compliant”
+
+Interpretation: Policy is actively preventing the managed email profile from syncing until compliance is restored.`
+          }
+        ],
+        correctCause: "MDM policy blocking app or email access",
+        correctFix: "Review and update the user’s MDM policy/profile, then re-enroll or re-sync email",
+        explanation: `Because the device can browse the internet and even reach webmail in a browser,
+the network and SIM are working. The MDM console clearly shows that the device is non-compliant and that
+the policy blocks email access in that state. Therefore, the most likely cause is an MDM policy blocking
+corporate email. The best fix is to bring the device back into compliance (for example, enforcing the PIN
+policy) and then update or re-push the MDM email profile so it can sync.`
+      },
+      {
+        id: "t5",
+        title: "Tablet stylus no longer interacts with the screen",
+        category: "Input / Digitizer",
+        pillClass: "input",
+        description: `A user’s tablet responds normally to finger touches, but the active stylus that
+came with the device no longer works at all. The stylus used to function correctly for drawing and note-taking,
+and the user has not changed any apps recently.`,
+        tools: [
+          {
+            key: "stylusDiag",
+            label: "Stylus Diagnostics",
+            output: `Stylus checks:
+- Stylus battery meter: LOW (≈ 2%)
+- Stylus LED does not light when the button is pressed
+- A different, known-good stylus works fine on this same tablet
+
+Interpretation: The issue follows the original stylus, not the tablet’s digitizer.`
+          },
+          {
+            key: "touchTest",
+            label: "Touchscreen Test",
+            output: `Digitizer test:
+- Finger touch input passes all tests
+- No cursor drift or ghost touches observed
+- Palm rejection and gesture tests pass
+
+Interpretation: The tablet’s digitizer is functioning normally.`
+          }
+        ],
+        correctCause: "Stylus battery depleted or stylus hardware failure",
+        correctFix: "Replace or recharge the stylus and verify pairing or compatibility",
+        explanation: `Because the tablet responds correctly to finger touches and even a different stylus
+works on the same device, the digitizer is fine. The diagnostics show the original stylus battery is very
+low and its LED does not turn on, so the most likely cause is a dead or failed stylus. The best fix is to
+replace or recharge the stylus (and re-pair if needed) rather than replace the tablet’s screen or digitizer.`
+      },
+      {
+        id: "t6",
+        title: "Mobile worker wants a one-cable desk setup",
+        category: "Accessories",
+        pillClass: "accessory",
+        description: `A user frequently switches between working at a desk and traveling with a laptop.
+They want to connect two external monitors, a wired keyboard, a mouse, speakers, and a wired Ethernet
+connection quickly, without plugging each device individually every time. Right now they’re using a basic
+USB-C hub that only provides a few USB-A ports and no video outputs.`,
+        tools: [
+          {
+            key: "ports",
+            label: "Laptop Port Inspection",
+            output: `Laptop physical ports:
+- 2 × USB-C (Thunderbolt capable)
+- 2 × USB-A
+- 1 × HDMI
+- 1 × 3.5 mm audio jack
+
+Current user equipment:
+- Simple USB-C hub (USB-A only, no video or Ethernet)
+- Two external monitors (HDMI/DisplayPort)
+- USB keyboard & mouse
+- USB speakers
+- Needs wired Ethernet at the desk
+
+Interpretation: Current hub does not provide enough display outputs or Ethernet.`
+          },
+          {
+            key: "accessoryGuide",
+            label: "Accessories Reference",
+            output: `Accessory comparison:
+- USB-C hub: Great for adding extra USB ports, but often lacks video output and power delivery.
+- Docking station: Provides multiple video outputs, USB ports, audio, Ethernet, and often power passthrough,
+  turning a laptop into a full desktop-style workstation.
+
+Interpretation: For multi-monitor plus peripherals and network, a docking station is the recommended accessory.`
+          }
+        ],
+        correctCause: "Using the wrong accessory (USB hub instead of docking station)",
+        correctFix: "Issue a full-featured docking station to provide video, USB, and power passthrough",
+        explanation: `The problem is not with the laptop’s hardware; it has plenty of capable ports.
+The limitation is that the user is relying on a simple USB-C hub that doesn’t provide video outputs or Ethernet.
+The root cause is using the wrong accessory for the job. The correct solution is to provide a proper docking
+station that supports multiple monitors, USB peripherals, Ethernet, and (ideally) power delivery through a
+single cable.`
+      }
+    ];
+
+    // Track answers: { [ticketId]: { cause: string, fix: string } }
+    const userAnswers = {};
+    // Track per-ticket score to show small indicators
+    const ticketScores = {};
+
+    let activeTicketId = null;
+    let activeToolKey = null;
+
+    // ---------- DOM ELEMENTS ----------
+    const ticketListEl = document.getElementById("ticketList");
+    const ticketTitleEl = document.getElementById("ticketTitle");
+    const ticketSubtitleEl = document.getElementById("ticketSubtitle");
+    const ticketDescriptionEl = document.getElementById("ticketDescription");
+    const toolButtonsEl = document.getElementById("toolButtons");
+    const toolOutputEl = document.getElementById("toolOutput");
+    const causeSelectEl = document.getElementById("causeSelect");
+    const fixSelectEl = document.getElementById("fixSelect");
+    const scoreBtnEl = document.getElementById("scoreBtn");
+    const resultsOverlayEl = document.getElementById("resultsOverlay");
+    const resultsScoreEl = document.getElementById("resultsScore");
+    const resultsBodyEl = document.getElementById("resultsBody");
+    const closeResultsEl = document.getElementById("closeResults");
+
+    // ---------- INITIALIZATION ----------
+
+    function populateSelectOptions(selectEl, optionsArr, placeholder) {
+      selectEl.innerHTML = "";
+      const placeholderOpt = document.createElement("option");
+      placeholderOpt.value = "";
+      placeholderOpt.textContent = placeholder;
+      selectEl.appendChild(placeholderOpt);
+
+      optionsArr.forEach(val => {
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        selectEl.appendChild(opt);
+      });
+    }
+
+    function renderTicketList() {
+      ticketListEl.innerHTML = "";
+      tickets.forEach((t, index) => {
+        const li = document.createElement("li");
+        li.className = "ticket-item";
+        li.dataset.id = t.id;
+
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "ticket-title";
+        titleDiv.textContent = `${index + 1}. ${t.title}`;
+        li.appendChild(titleDiv);
+
+        const metaDiv = document.createElement("div");
+        metaDiv.className = "ticket-meta";
+
+        const pill = document.createElement("span");
+        pill.className = `ticket-pill ${t.pillClass}`;
+        pill.textContent = t.category;
+        metaDiv.appendChild(pill);
+
+        const scoreDot = document.createElement("span");
+        scoreDot.className = "ticket-score-dot";
+        scoreDot.dataset.id = t.id;
+        metaDiv.appendChild(scoreDot);
+
+        li.appendChild(metaDiv);
+
+        li.addEventListener("click", () => {
+          setActiveTicket(t.id);
+        });
+
+        ticketListEl.appendChild(li);
+      });
+    }
+
+    function setActiveTicket(ticketId) {
+      activeTicketId = ticketId;
+      activeToolKey = null;
+
+      // highlight in list
+      Array.from(ticketListEl.children).forEach(li => {
+        li.classList.toggle("active", li.dataset.id === ticketId);
+      });
+
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (!ticket) return;
+
+      ticketTitleEl.textContent = ticket.title;
+      ticketSubtitleEl.textContent = ticket.category;
+      ticketDescriptionEl.textContent = ticket.description;
+
+      // Render tool buttons
+      toolButtonsEl.innerHTML = "";
+      ticket.tools.forEach(tool => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tool-btn";
+        btn.dataset.tool = tool.key;
+        btn.innerHTML = `<span class="tool-btn-dot"></span><span>${tool.label}</span>`;
+        btn.addEventListener("click", () => {
+          showToolOutput(ticket.id, tool.key);
+        });
+        toolButtonsEl.appendChild(btn);
+      });
+
+      toolOutputEl.classList.add("placeholder");
+      toolOutputEl.textContent =
+        "Select a diagnostic tool above to view simulated output for this ticket.";
+
+      // Restore saved answers if any
+      const saved = userAnswers[ticket.id] || { cause: "", fix: "" };
+      populateSelectOptions(
+        causeSelectEl,
+        causeOptions,
+        "⬇️ Select the most likely root cause"
+      );
+      populateSelectOptions(
+        fixSelectEl,
+        fixOptions,
+        "⬇️ Select the best fix or next step"
+      );
+      causeSelectEl.value = saved.cause || "";
+      fixSelectEl.value = saved.fix || "";
+    }
+
+    function showToolOutput(ticketId, toolKey) {
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (!ticket) return;
+
+      activeToolKey = toolKey;
+
+      Array.from(toolButtonsEl.children).forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tool === toolKey);
+      });
+
+      const tool = ticket.tools.find(t => t.key === toolKey);
+      if (!tool) return;
+
+      toolOutputEl.classList.remove("placeholder");
+      toolOutputEl.textContent = tool.output;
+    }
+
+    function updateTicketScoreDots() {
+      const dots = document.querySelectorAll(".ticket-score-dot");
+      dots.forEach(dot => {
+        const id = dot.dataset.id;
+        dot.classList.remove("correct", "partial");
+        const data = ticketScores[id];
+        if (!data) return;
+        if (data.score === 2) {
+          dot.classList.add("correct");
+        } else if (data.score === 1) {
+          dot.classList.add("partial");
+        }
+      });
+    }
+
+    // ---------- EVENT HANDLERS ----------
+
+    causeSelectEl.addEventListener("change", () => {
+      if (!activeTicketId) return;
+      const current = userAnswers[activeTicketId] || { cause: "", fix: "" };
+      current.cause = causeSelectEl.value;
+      userAnswers[activeTicketId] = current;
+    });
+
+    fixSelectEl.addEventListener("change", () => {
+      if (!activeTicketId) return;
+      const current = userAnswers[activeTicketId] || { cause: "", fix: "" };
+      current.fix = fixSelectEl.value;
+      userAnswers[activeTicketId] = current;
+    });
+
+    scoreBtnEl.addEventListener("click", gradeLab);
+    closeResultsEl.addEventListener("click", () => {
+      resultsOverlayEl.style.display = "none";
+    });
+
+    resultsOverlayEl.addEventListener("click", e => {
+      if (e.target === resultsOverlayEl) {
+        resultsOverlayEl.style.display = "none";
+      }
+    });
+
+    // ---------- GRADING ----------
+
+    function gradeLab() {
+      let totalScore = 0;
+      const maxScore = tickets.length * 2;
+      ticketScores.clear;
+
+      resultsBodyEl.innerHTML = "";
+
+      tickets.forEach((ticket, index) => {
+        const ans = userAnswers[ticket.id] || { cause: "", fix: "" };
+        let ticketScore = 0;
+        const causeCorrect = ans.cause === ticket.correctCause;
+        const fixCorrect = ans.fix === ticket.correctFix;
+
+        if (causeCorrect) ticketScore++;
+        if (fixCorrect) ticketScore++;
+        totalScore += ticketScore;
+        ticketScores[ticket.id] = { score: ticketScore };
+
+        const block = document.createElement("div");
+        block.className = "result-ticket";
+
+        const title = document.createElement("div");
+        title.className = "result-title";
+        title.textContent = `Ticket ${index + 1}: ${ticket.title}`;
+        block.appendChild(title);
+
+        const causeLine = document.createElement("div");
+        causeLine.className =
+          "result-line " +
+          (causeCorrect ? "good" : ans.cause ? "bad" : "");
+        causeLine.innerHTML =
+          `<span class="label-inline">Your cause:</span> ${
+            ans.cause || "<em>No answer selected</em>"
+          }`;
+        block.appendChild(causeLine);
+
+        const fixLine = document.createElement("div");
+        fixLine.className =
+          "result-line " +
+          (fixCorrect ? "good" : ans.fix ? "bad" : "");
+        fixLine.innerHTML =
+          `<span class="label-inline">Your fix:</span> ${
+            ans.fix || "<em>No answer selected</em>"
+          }`;
+        block.appendChild(fixLine);
+
+        const correctLine = document.createElement("div");
+        correctLine.className = "result-line partial";
+        correctLine.innerHTML =
+          `<span class="label-inline">Correct:</span> ${ticket.correctCause} → ${ticket.correctFix}`;
+        block.appendChild(correctLine);
+
+        const expLine = document.createElement("div");
+        expLine.className = "result-line";
+        expLine.textContent = ticket.explanation.replace(/\s+/g, " ").trim();
+        block.appendChild(expLine);
+
+        resultsBodyEl.appendChild(block);
+      });
+
+      resultsScoreEl.textContent = `Score: ${totalScore} / ${maxScore} points`;
+      resultsOverlayEl.style.display = "flex";
+      updateTicketScoreDots();
+    }
+
+    // ---------- STARTUP ----------
+    (function init() {
+      renderTicketList();
+      populateSelectOptions(
+        causeSelectEl,
+        causeOptions,
+        "⬇️ Select the most likely root cause"
+      );
+      populateSelectOptions(
+        fixSelectEl,
+        fixOptions,
+        "⬇️ Select the best fix or next step"
+      );
+
+      // Pre-select first ticket for convenience
+      if (tickets.length > 0) {
+        setActiveTicket(tickets[0].id);
+      }
+    })();
+  </script>
+</body>
+</html>
