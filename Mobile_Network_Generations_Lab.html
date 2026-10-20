@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en" class="dark"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Network Generations &amp; Data Speed Metrics Lab</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f6ff',
+                            100: '#e0edff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                            950: '#0f172a',
+                        },
+                        network: {
+                            '2g': '#f59e0b',
+                            '3g': '#10b981',
+                            '4g': '#3b82f6',
+                            '5g': '#8b5cf6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        code, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .progress-bar-animated {
+            background-size: 30px 30px;
+            background-image: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            animation: animate-stripes 1s linear infinite;
+        }
+        @keyframes animate-stripes {
+            0% { background-position: 0 0; }
+            100% { background-position: 30px 0; }
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.top-0{top:0px}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.mb-1{margin-bottom:0.25rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mt-1{margin-top:0.25rem}.mt-1\.5{margin-top:0.375rem}.mt-12{margin-top:3rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-16{height:4rem}.h-2\.5{height:0.625rem}.h-3{height:0.75rem}.h-3\.5{height:0.875rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-full{height:100%}.min-h-screen{min-height:100vh}.w-0{width:0px}.w-2\.5{width:0.625rem}.w-3{width:0.75rem}.w-3\.5{width:0.875rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-6{width:1.5rem}.w-full{width:100%}.max-w-3xl{max-width:48rem}.max-w-4xl{max-width:56rem}.max-w-7xl{max-width:80rem}.shrink-0{flex-shrink:0}.flex-grow{flex-grow:1}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}.cursor-pointer{cursor:pointer}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.justify-around{justify-content:space-around}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.space-x-1 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.25rem * var(--tw-space-x-reverse));margin-left:calc(0.25rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.space-y-8 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(2rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(2rem * var(--tw-space-y-reverse))}.divide-y > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px * var(--tw-divide-y-reverse))}.divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]){border-color:rgb(30 41 59 / 0.6)}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-t-4{border-top-width:4px}.border-amber-500\/20{border-color:rgb(245 158 11 / 0.2)}.border-amber-500\/30{border-color:rgb(245 158 11 / 0.3)}.border-blue-400\/20{border-color:rgb(96 165 250 / 0.2)}.border-blue-500{--tw-border-opacity:1;border-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.border-blue-500\/20{border-color:rgb(59 130 246 / 0.2)}.border-blue-500\/30{border-color:rgb(59 130 246 / 0.3)}.border-blue-800\/50{border-color:rgb(30 64 175 / 0.5)}.border-emerald-500\/20{border-color:rgb(16 185 129 / 0.2)}.border-emerald-500\/30{border-color:rgb(16 185 129 / 0.3)}.border-emerald-800\/50{border-color:rgb(6 95 70 / 0.5)}.border-purple-500\/20{border-color:rgb(168 85 247 / 0.2)}.border-purple-500\/30{border-color:rgb(168 85 247 / 0.3)}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.border-slate-800\/80{border-color:rgb(30 41 59 / 0.8)}.border-t-amber-500{--tw-border-opacity:1;border-top-color:rgb(245 158 11 / var(--tw-border-opacity, 1))}.border-t-blue-500{--tw-border-opacity:1;border-top-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.border-t-emerald-500{--tw-border-opacity:1;border-top-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.border-t-purple-500{--tw-border-opacity:1;border-top-color:rgb(168 85 247 / var(--tw-border-opacity, 1))}.bg-amber-500{--tw-bg-opacity:1;background-color:rgb(245 158 11 / var(--tw-bg-opacity, 1))}.bg-amber-500\/10{background-color:rgb(245 158 11 / 0.1)}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.bg-blue-500\/10{background-color:rgb(59 130 246 / 0.1)}.bg-blue-500\/20{background-color:rgb(59 130 246 / 0.2)}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.bg-blue-600\/20{background-color:rgb(37 99 235 / 0.2)}.bg-blue-950\/40{background-color:rgb(23 37 84 / 0.4)}.bg-emerald-500{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/10{background-color:rgb(16 185 129 / 0.1)}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-emerald-600\/20{background-color:rgb(5 150 105 / 0.2)}.bg-emerald-950\/40{background-color:rgb(2 44 34 / 0.4)}.bg-purple-500{--tw-bg-opacity:1;background-color:rgb(168 85 247 / var(--tw-bg-opacity, 1))}.bg-purple-500\/10{background-color:rgb(168 85 247 / 0.1)}.bg-purple-500\/20{background-color:rgb(168 85 247 / 0.2)}.bg-slate-400{--tw-bg-opacity:1;background-color:rgb(148 163 184 / var(--tw-bg-opacity, 1))}.bg-slate-500{--tw-bg-opacity:1;background-color:rgb(100 116 139 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-900\/60{background-color:rgb(15 23 42 / 0.6)}.bg-slate-900\/80{background-color:rgb(15 23 42 / 0.8)}.bg-slate-900\/90{background-color:rgb(15 23 42 / 0.9)}.bg-slate-950{--tw-bg-opacity:1;background-color:rgb(2 6 23 / var(--tw-bg-opacity, 1))}.bg-slate-950\/60{background-color:rgb(2 6 23 / 0.6)}.bg-slate-950\/80{background-color:rgb(2 6 23 / 0.8)}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-blue-600{--tw-gradient-from:#2563eb var(--tw-gradient-from-position);--tw-gradient-to:rgb(37 99 235 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-blue-900\/40{--tw-gradient-from:rgb(30 58 138 / 0.4) var(--tw-gradient-from-position);--tw-gradient-to:rgb(30 58 138 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-purple-900\/30{--tw-gradient-to:rgb(88 28 135 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), rgb(88 28 135 / 0.3) var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-indigo-500{--tw-gradient-to:#6366f1 var(--tw-gradient-to-position)}.to-slate-900{--tw-gradient-to:#0f172a var(--tw-gradient-to-position)}.p-1{padding:0.25rem}.p-2{padding:0.5rem}.p-2\.5{padding:0.625rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-4{padding-bottom:1rem}.pt-1{padding-top:0.25rem}.pt-2{padding-top:0.5rem}.pt-3{padding-top:0.75rem}.pt-4{padding-top:1rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.font-sans{font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"}.text-2xl{font-size:1.5rem;line-height:2rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.text-amber-500{--tw-text-opacity:1;color:rgb(245 158 11 / var(--tw-text-opacity, 1))}.text-blue-300{--tw-text-opacity:1;color:rgb(147 197 253 / var(--tw-text-opacity, 1))}.text-blue-400{--tw-text-opacity:1;color:rgb(96 165 250 / var(--tw-text-opacity, 1))}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-emerald-500{--tw-text-opacity:1;color:rgb(16 185 129 / var(--tw-text-opacity, 1))}.text-purple-300{--tw-text-opacity:1;color:rgb(216 180 254 / var(--tw-text-opacity, 1))}.text-purple-400{--tw-text-opacity:1;color:rgb(192 132 252 / var(--tw-text-opacity, 1))}.text-slate-100{--tw-text-opacity:1;color:rgb(241 245 249 / var(--tw-text-opacity, 1))}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.opacity-75{opacity:0.75}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-blue-600\/30{--tw-shadow-color:rgb(37 99 235 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-filter{-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-100{transition-duration:100ms}.selection\:bg-blue-500 *::selection{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.selection\:text-white *::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:bg-blue-500::selection{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.selection\:text-white::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:bg-blue-500:hover{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-700:hover{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-800\/30:hover{background-color:rgb(30 41 59 / 0.3)}.hover\:bg-slate-800\/50:hover{background-color:rgb(30 41 59 / 0.5)}.hover\:text-slate-200:hover{--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.focus\:border-blue-500:focus{--tw-border-opacity:1;border-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.peer:checked ~ .peer-checked\:border-amber-500{--tw-border-opacity:1;border-color:rgb(245 158 11 / var(--tw-border-opacity, 1))}.peer:checked ~ .peer-checked\:border-blue-400{--tw-border-opacity:1;border-color:rgb(96 165 250 / var(--tw-border-opacity, 1))}.peer:checked ~ .peer-checked\:border-blue-500{--tw-border-opacity:1;border-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.peer:checked ~ .peer-checked\:border-emerald-500{--tw-border-opacity:1;border-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.peer:checked ~ .peer-checked\:border-purple-500{--tw-border-opacity:1;border-color:rgb(168 85 247 / var(--tw-border-opacity, 1))}.peer:checked ~ .peer-checked\:bg-amber-500\/10{background-color:rgb(245 158 11 / 0.1)}.peer:checked ~ .peer-checked\:bg-blue-400\/10{background-color:rgb(96 165 250 / 0.1)}.peer:checked ~ .peer-checked\:bg-blue-500\/10{background-color:rgb(59 130 246 / 0.1)}.peer:checked ~ .peer-checked\:bg-emerald-500\/10{background-color:rgb(16 185 129 / 0.1)}.peer:checked ~ .peer-checked\:bg-purple-500\/10{background-color:rgb(168 85 247 / 0.1)}.peer:checked ~ .peer-checked\:bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}@media (min-width: 640px){.sm\:block{display:block}.sm\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.sm\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.sm\:grid-cols-5{grid-template-columns:repeat(5, minmax(0, 1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:p-8{padding:2rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}@media (min-width: 768px){.md\:flex{display:flex}.md\:hidden{display:none}.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.lg\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.lg\:px-8{padding-left:2rem;padding-right:2rem}}</style></head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-filter backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="radio-tower" aria-hidden="true" class="lucide lucide-radio-tower w-6 h-6"><path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"></path><path d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"></path><circle cx="12" cy="9" r="2"></circle><path d="M16.2 4.8c2 2 2.26 5.11.8 7.47"></path><path d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1"></path><path d="M9.5 18h5"></path><path d="m8 22 4-11 4 11"></path></svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-white flex items-center gap-2">
+                        Mobile Network Generations &amp; Speed Metrics
+                        <span class="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full font-normal">Lab &amp; Simulator</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Telecommunications Data Rates &amp; Technology Reference</p>
+                </div>
+            </div>
+
+            <!-- Header Action & Download Button -->
+            <div class="flex items-center gap-3">
+                <button onclick="downloadLabHTML()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-lg shadow-blue-600/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="download" aria-hidden="true" class="lucide lucide-download w-4 h-4"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
+                    <span>Download HTML File</span>
+                </button>
+
+                <!-- Tab Navigation -->
+                <nav class="hidden md:flex space-x-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800">
+                    <button onclick="switchTab('specs')" id="tab-specs" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 bg-blue-600 text-white shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layers" aria-hidden="true" class="lucide lucide-layers w-4 h-4"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"></path><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"></path><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"></path></svg>
+                        <span>Overview</span>
+                    </button>
+                    <button onclick="switchTab('units')" id="tab-units" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="calculator" aria-hidden="true" class="lucide lucide-calculator w-4 h-4"><rect width="16" height="20" x="4" y="2" rx="2"></rect><line x1="8" x2="16" y1="6" y2="6"></line><line x1="16" x2="16" y1="14" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
+                        <span>Conversion</span>
+                    </button>
+                    <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="download-cloud" aria-hidden="true" class="lucide lucide-download-cloud w-4 h-4"><path d="M12 13v8l-4-4"></path><path d="m12 21 4-4"></path><path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"></path></svg>
+                        <span>Simulator</span>
+                    </button>
+                    <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="award" aria-hidden="true" class="lucide lucide-award w-4 h-4"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path><circle cx="12" cy="8" r="6"></circle></svg>
+                        <span>Quiz</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Sub-Nav -->
+    <div class="md:hidden bg-slate-900 border-b border-slate-800 px-4 py-2 flex justify-around">
+        <button onclick="switchTab('specs')" class="text-xs text-blue-400 font-medium">Overview</button>
+        <button onclick="switchTab('units')" class="text-xs text-slate-400 font-medium">Conversion</button>
+        <button onclick="switchTab('simulator')" class="text-xs text-slate-400 font-medium">Simulator</button>
+        <button onclick="switchTab('quiz')" class="text-xs text-slate-400 font-medium">Quiz</button>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================= SECTION 1: SPECS & OVERVIEW ================= -->
+        <section id="section-specs" class="tab-content block space-y-8">
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900/40 via-purple-900/30 to-slate-900 p-6 sm:p-8 border border-slate-800 shadow-2xl">
+                <div class="max-w-3xl space-y-3">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="signal" aria-hidden="true" class="lucide lucide-signal w-3.5 h-3.5"><path d="M2 20h.01"></path><path d="M7 20v-4"></path><path d="M12 20v-8"></path><path d="M17 20V8"></path><path d="M22 4v16"></path></svg> Evolution of Cellular Networks
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Understanding Cellular Data Standards &amp; Throughput</h2>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        Explore the evolution from basic voice/data speeds of 2G to multi-gigabit throughput of 5G. Learn key architectural standards across GSM and CDMA tracks, theoretical maximums, and real-world performance limits.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Network Generation Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <!-- 2G Card -->
+                <div class="glass-card rounded-2xl p-6 relative flex flex-col justify-between border-t-4 border-t-amber-500">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-xs font-mono uppercase text-amber-400 font-bold tracking-wider">Generation 2.0</span>
+                                <h3 class="text-2xl font-bold text-white mt-1">2G Networks</h3>
+                            </div>
+                            <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="signal-low" aria-hidden="true" class="lucide lucide-signal-low w-6 h-6"><path d="M2 20h.01"></path><path d="M7 20v-4"></path></svg>
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Minimal 2G service levels introducing digital voice &amp; basic packet data.</p>
+                        
+                        <div class="space-y-3 text-sm mb-6">
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xs text-slate-400 block mb-1">Key Technologies</span>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <span class="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">G/E (GSM)</span>
+                                    <span class="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-300 font-mono border border-amber-500/30">1x (CDMA)</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1.5">GSM: GPRS / EDGE | CDMA: 1xRTT</p>
+                            </div>
+
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xs text-slate-400 block mb-1">Connection Speed</span>
+                                <span class="text-lg font-bold font-mono text-amber-400">50 – 400 kb/s</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800/80 text-xs text-slate-400 flex items-center justify-between">
+                        <span>Best for: SMS, Basic Web</span>
+                        <span class="font-mono text-amber-500 font-semibold">Kilobits Range</span>
+                    </div>
+                </div>
+
+                <!-- 3G Card -->
+                <div class="glass-card rounded-2xl p-6 relative flex flex-col justify-between border-t-4 border-t-emerald-500">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-xs font-mono uppercase text-emerald-400 font-bold tracking-wider">Generation 3.0</span>
+                                <h3 class="text-2xl font-bold text-white mt-1">3G Networks</h3>
+                            </div>
+                            <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="signal-medium" aria-hidden="true" class="lucide lucide-signal-medium w-6 h-6"><path d="M2 20h.01"></path><path d="M7 20v-4"></path><path d="M12 20v-8"></path></svg>
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Enabled mobile web browsing, video calling, and early mobile app ecosystems.</p>
+
+                        <div class="space-y-3 text-sm mb-6">
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xs text-slate-400 block mb-1">Key Technologies</span>
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-slate-300">GSM Standard:</span>
+                                        <span class="font-mono text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">UMTS</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-slate-300">CDMA Standard:</span>
+                                        <span class="font-mono text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">EV-DO</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xs text-slate-400 block mb-1">Average Connection Speed</span>
+                                <span class="text-lg font-bold font-mono text-emerald-400">~ 3 Mb/s</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800/80 text-xs text-slate-400 flex items-center justify-between">
+                        <span>Best for: Web Browsing, Audio</span>
+                        <span class="font-mono text-emerald-500 font-semibold">Megabits Range</span>
+                    </div>
+                </div>
+
+                <!-- 4G Card -->
+                <div class="glass-card rounded-2xl p-6 relative flex flex-col justify-between border-t-4 border-t-blue-500">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-xs font-mono uppercase text-blue-400 font-bold tracking-wider">Generation 4.0</span>
+                                <h3 class="text-2xl font-bold text-white mt-1">4G LTE</h3>
+                            </div>
+                            <span class="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="signal-high" aria-hidden="true" class="lucide lucide-signal-high w-6 h-6"><path d="M2 20h.01"></path><path d="M7 20v-4"></path><path d="M12 20v-8"></path><path d="M17 20V8"></path></svg>
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">All-IP packet architecture bringing true HD video streaming &amp; online gaming.</p>
+
+                        <div class="space-y-3 text-sm mb-6">
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xs text-slate-400 block mb-1">Standard Technology</span>
+                                <span class="font-mono text-xs text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30">LTE (Long Term Evolution)</span>
+                            </div>
+
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-slate-400">Theoretical Max:</span>
+                                    <span class="font-mono font-bold text-blue-300">300 Mb/s</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-1 border-t border-slate-800">
+                                    <span class="text-xs text-slate-400">Real World Speed:</span>
+                                    <span class="font-mono font-bold text-blue-400 text-base">20 – 90 Mb/s</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800/80 text-xs text-slate-400 flex items-center justify-between">
+                        <span>Best for: HD Video, Mobile Gaming</span>
+                        <span class="font-mono text-blue-500 font-semibold">High Megabits</span>
+                    </div>
+                </div>
+
+                <!-- 5G Card -->
+                <div class="glass-card rounded-2xl p-6 relative flex flex-col justify-between border-t-4 border-t-purple-500">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-xs font-mono uppercase text-purple-400 font-bold tracking-wider">Generation 5.0</span>
+                                <h3 class="text-2xl font-bold text-white mt-1">5G Networks</h3>
+                            </div>
+                            <span class="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="zap" aria-hidden="true" class="lucide lucide-zap w-6 h-6"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"></path></svg>
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Ultra-low latency, massive IoT, millimeter wave &amp; sub-6 GHz spectrums.</p>
+
+                        <div class="space-y-3 text-sm mb-6">
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xs text-slate-400 block mb-1">Standard Technology</span>
+                                <span class="font-mono text-xs text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded border border-purple-500/30">5G NR (New Radio)</span>
+                            </div>
+
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-slate-400">Theoretical Max:</span>
+                                    <span class="font-mono font-bold text-purple-300">Up to 1 Gb/s+</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-1 border-t border-slate-800">
+                                    <span class="text-xs text-slate-400">Current Real World:</span>
+                                    <span class="font-mono font-bold text-purple-400 text-base">50 Mb/s – 300 Mb/s</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800/80 text-xs text-slate-400 flex items-center justify-between">
+                        <span>Best for: 4K/8K, AR/VR, IoT</span>
+                        <span class="font-mono text-purple-400 font-semibold">Gigabit Era</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Full Master Specifications Table -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
+                <div class="px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="table" aria-hidden="true" class="lucide lucide-table w-5 h-5 text-blue-400"><path d="M12 3v18"></path><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path></svg>
+                        Comprehensive Mobile Generation Comparison Matrix
+                    </h3>
+                    <span class="text-xs text-slate-400">Reference Chart</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-950/80 text-xs uppercase font-mono text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="px-6 py-3.5">Generation</th>
+                                <th class="px-6 py-3.5">GSM Track Standard</th>
+                                <th class="px-6 py-3.5">CDMA Track Standard</th>
+                                <th class="px-6 py-3.5">Theoretical Max Speed</th>
+                                <th class="px-6 py-3.5">Real-World Speed</th>
+                                <th class="px-6 py-3.5">Primary Service Level</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60 font-mono text-xs sm:text-sm">
+                            <tr class="hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4 font-bold text-amber-400 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 2G
+                                </td>
+                                <td class="px-6 py-4">G / E <span class="text-slate-500 text-xs font-sans">(GPRS / EDGE)</span></td>
+                                <td class="px-6 py-4">1x <span class="text-slate-500 text-xs font-sans">(1xRTT)</span></td>
+                                <td class="px-6 py-4 text-slate-300">Up to 400 kb/s</td>
+                                <td class="px-6 py-4 text-amber-300">50 – 400 kb/s</td>
+                                <td class="px-6 py-4 text-slate-400 font-sans">Minimal data, SMS, Voice</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4 font-bold text-emerald-400 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 3G
+                                </td>
+                                <td class="px-6 py-4 text-emerald-300">UMTS</td>
+                                <td class="px-6 py-4 text-emerald-300">EV-DO</td>
+                                <td class="px-6 py-4 text-slate-300">7.2 – 42 Mb/s (HSPA+)</td>
+                                <td class="px-6 py-4 text-emerald-300">~ 3 Mb/s</td>
+                                <td class="px-6 py-4 text-slate-400 font-sans">Basic Mobile Web, Audio</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4 font-bold text-blue-400 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> 4G
+                                </td>
+                                <td class="px-6 py-4 text-blue-300" colspan="2">LTE <span class="text-slate-500 text-xs font-sans">(Unified All-IP Standard)</span></td>
+                                <td class="px-6 py-4 text-blue-300 font-bold">300 Mb/s</td>
+                                <td class="px-6 py-4 text-blue-400 font-bold">20 – 90 Mb/s</td>
+                                <td class="px-6 py-4 text-slate-400 font-sans">HD Streaming, Video Calls</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30 transition-colors">
+                                <td class="px-6 py-4 font-bold text-purple-400 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> 5G
+                                </td>
+                                <td class="px-6 py-4 text-purple-300" colspan="2">5G NR <span class="text-slate-500 text-xs font-sans">(New Radio)</span></td>
+                                <td class="px-6 py-4 text-purple-300 font-bold">Up to 1 Gb/s</td>
+                                <td class="px-6 py-4 text-purple-400 font-bold">50 Mb/s – 300 Mb/s</td>
+                                <td class="px-6 py-4 text-slate-400 font-sans">Ultra-HD, Low Latency, Cloud Gaming</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: UNITS & CONVERSION ================= -->
+        <section id="section-units" class="tab-content hidden space-y-8">
+            <div class="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800 space-y-6">
+                <div class="border-b border-slate-800 pb-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="scale" aria-hidden="true" class="lucide lucide-scale w-6 h-6 text-blue-400"><path d="M12 3v18"></path><path d="m19 8 3 8a5 5 0 0 1-6 0zV7"></path><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1"></path><path d="m5 8 3 8a5 5 0 0 1-6 0zV7"></path><path d="M7 21h10"></path></svg>
+                        Data Speed Units &amp; Conversion Breakdown
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">
+                        Understanding bitrates (bits per second) versus file sizes (Bytes). Telecommunication speeds are represented in kilobits (kb/s), megabits (Mb/s), and gigabits (Gb/s).
+                    </p>
+                </div>
+
+                <!-- Bit vs Byte Callout Box -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-blue-950/40 border border-blue-800/50 rounded-xl p-4 flex gap-4 items-start">
+                        <div class="p-2.5 bg-blue-600/20 text-blue-400 rounded-lg shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="binary" aria-hidden="true" class="lucide lucide-binary w-6 h-6"><rect x="14" y="14" width="4" height="6" rx="2"></rect><rect x="6" y="4" width="4" height="6" rx="2"></rect><path d="M6 20h4"></path><path d="M14 10h4"></path><path d="M6 14h2v6"></path><path d="M14 4h2v6"></path></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-blue-300 text-sm">Bit (b) - Network Speed Metric</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                Used for network transmission speeds (e.g., <strong>Mb/s</strong> or <strong>Mbps</strong>). 
+                                Lowercase <strong>'b'</strong> signifies bits.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-950/40 border border-emerald-800/50 rounded-xl p-4 flex gap-4 items-start">
+                        <div class="p-2.5 bg-emerald-600/20 text-emerald-400 rounded-lg shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="hard-drive" aria-hidden="true" class="lucide lucide-hard-drive w-6 h-6"><path d="M10 16h.01"></path><path d="M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><path d="M21.946 12.013H2.054"></path><path d="M6 16h.01"></path></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-emerald-300 text-sm">Byte (B) - Storage Size Metric</h4>
+                            <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                Used for stored file sizes (e.g., <strong>MB</strong> or <strong>GB</strong>). 
+                                Uppercase <strong>'B'</strong> signifies Bytes. <span class="text-emerald-400 font-mono font-bold">1 Byte = 8 Bits</span>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unit Scaling Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-900/90 p-5 rounded-xl border border-slate-800 text-center space-y-2">
+                        <span class="text-xs font-mono text-amber-400 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">Kilobit per second</span>
+                        <div class="text-2xl font-bold font-mono text-white">1 kb/s</div>
+                        <p class="text-xs text-slate-400">Base Unit: 1,000 bits/sec</p>
+                        <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 font-mono">2G Bandwidth Scale</div>
+                    </div>
+
+                    <div class="bg-slate-900/90 p-5 rounded-xl border border-slate-800 text-center space-y-2">
+                        <span class="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">Megabit per second</span>
+                        <div class="text-2xl font-bold font-mono text-white">1 Mb/s</div>
+                        <p class="text-xs text-slate-400">1,000 kb/s (1,000,000 bits/s)</p>
+                        <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 font-mono">3G &amp; 4G Bandwidth Scale</div>
+                    </div>
+
+                    <div class="bg-slate-900/90 p-5 rounded-xl border border-slate-800 text-center space-y-2">
+                        <span class="text-xs font-mono text-purple-400 bg-purple-500/10 px-2 py-1 rounded border border-purple-500/20">Gigabit per second</span>
+                        <div class="text-2xl font-bold font-mono text-white">1 Gb/s</div>
+                        <p class="text-xs text-slate-400">1,000 Mb/s (1,000,000 kb/s)</p>
+                        <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400 font-mono">5G &amp; Fiber Bandwidth Scale</div>
+                    </div>
+                </div>
+
+                <!-- Interactive Conversion Calculator -->
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                    <h3 class="font-bold text-white text-base flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="calculator" aria-hidden="true" class="lucide lucide-calculator w-5 h-5 text-blue-400"><rect width="16" height="20" x="4" y="2" rx="2"></rect><line x1="8" x2="16" y1="6" y2="6"></line><line x1="16" x2="16" y1="14" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
+                        Interactive Rate &amp; Conversion Tool
+                    </h3>
+                    <p class="text-xs text-slate-400">Enter a bandwidth speed to dynamically view its metric breakdown and theoretical download rate:</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-medium text-slate-300">Enter Value:</label>
+                            <input type="number" id="calc-input-val" value="300" min="1" oninput="calculateUnitConversion()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-mono focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-medium text-slate-300">Unit Standard:</label>
+                            <select id="calc-input-unit" onchange="calculateUnitConversion()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-mono focus:outline-none focus:border-blue-500">
+                                <option value="kb">Kilobits per second (kb/s)</option>
+                                <option value="Mb" selected="">Megabits per second (Mb/s)</option>
+                                <option value="Gb">Gigabits per second (Gb/s)</option>
+                            </select>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                            <span class="text-xs text-slate-400 block">Equiv. Max Download Rate</span>
+                            <span id="calc-output-MBs" class="text-lg font-bold font-mono text-emerald-400">37.50 MB/s</span>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown table generated output -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 font-mono text-xs text-slate-300">
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80">
+                            <span class="text-slate-500 block text-[10px]">IN KILOBITS (kb/s)</span>
+                            <span id="calc-out-kb" class="font-bold text-amber-400 text-sm">300,000 kb/s</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80">
+                            <span class="text-slate-500 block text-[10px]">IN MEGABITS (Mb/s)</span>
+                            <span id="calc-out-mb" class="font-bold text-blue-400 text-sm">300 Mb/s</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80">
+                            <span class="text-slate-500 block text-[10px]">IN GIGABITS (Gb/s)</span>
+                            <span id="calc-out-gb" class="font-bold text-purple-400 text-sm">0.3 Gb/s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: SIMULATOR LAB ================= -->
+        <section id="section-simulator" class="tab-content hidden space-y-8">
+            <div class="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800 space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play-circle" aria-hidden="true" class="lucide lucide-play-circle w-6 h-6 text-blue-400"><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                        Interactive Speed &amp; File Transfer Simulator
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">
+                        Select a target file payload and test how long it would take to download across real-world and theoretical mobile connection profiles.
+                    </p>
+                </div>
+
+                <!-- Simulation Controls Header -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- File Selector -->
+                    <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-4">
+                        <h3 class="font-semibold text-sm text-slate-200 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-box" aria-hidden="true" class="lucide lucide-file-box w-4 h-4 text-blue-400"><path d="M14 2v5a1 1 0 001 1h5"></path><path d="M14.692 22H18a2 2 0 002-2V8a2.4 2.4 0 00-.706-1.706l-3.588-3.588A2.4 2.4 0 0014 2H6a2 2 0 00-2 2v3.804"></path><path d="M2.264 13.752 7 16.5l4.737-2.748"></path><path d="M2.995 13.014A2 2 0 002 14.744v3.516a2 2 0 00.996 1.73l3 1.74a2 2 0 002.008 0l3-1.74A2 2 0 0012 18.26v-3.517a2 2 0 00-.995-1.73l-3-1.742a2 2 0 00-1.892-.064z"></path><path d="M7 16.5V22"></path></svg> 1. Select Sample File
+                        </h3>
+                        
+                        <div class="space-y-2">
+                            <button onclick="selectSimFile(5, '5 MB MP3 Audio File', 'music')" id="file-btn-5" class="sim-file-btn w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all bg-blue-600/20 border-blue-500 text-white">
+                                <div class="flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="music" aria-hidden="true" class="lucide lucide-music w-5 h-5 text-blue-400"><path d="M21 16V3a1 1 0 0 0-1.28-.96l-10 2.917a1 1 0 0 0-.72.96V19"></path><circle cx="18" cy="16" r="3"></circle><circle cx="6" cy="19" r="3"></circle></svg>
+                                    <div>
+                                        <div class="text-xs font-bold">5 MB MP3 Song</div>
+                                        <div class="text-[11px] text-slate-400">Standard Compressed Audio</div>
+                                    </div>
+                                </div>
+                                <span class="font-mono text-xs font-bold bg-slate-900 px-2 py-1 rounded">5 MB</span>
+                            </button>
+
+                            <button onclick="selectSimFile(50, '50 MB Photo Album', 'image')" id="file-btn-50" class="sim-file-btn w-full p-3 rounded-xl border border-slate-800 text-left flex items-center justify-between transition-all hover:bg-slate-800/50 text-slate-300">
+                                <div class="flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="image" aria-hidden="true" class="lucide lucide-image w-5 h-5 text-emerald-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                                    <div>
+                                        <div class="text-xs font-bold">50 MB Photo Album</div>
+                                        <div class="text-[11px] text-slate-400">High Resolution Gallery</div>
+                                    </div>
+                                </div>
+                                <span class="font-mono text-xs font-bold bg-slate-900 px-2 py-1 rounded">50 MB</span>
+                            </button>
+
+                            <button onclick="selectSimFile(1500, '1.5 GB HD Movie', 'film')" id="file-btn-1500" class="sim-file-btn w-full p-3 rounded-xl border border-slate-800 text-left flex items-center justify-between transition-all hover:bg-slate-800/50 text-slate-300">
+                                <div class="flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="film" aria-hidden="true" class="lucide lucide-film w-5 h-5 text-purple-400"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M7 3v18"></path><path d="M3 7.5h4"></path><path d="M3 12h18"></path><path d="M3 16.5h4"></path><path d="M17 3v18"></path><path d="M17 7.5h4"></path><path d="M17 16.5h4"></path></svg>
+                                    <div>
+                                        <div class="text-xs font-bold">1.5 GB HD Movie</div>
+                                        <div class="text-[11px] text-slate-400">Full Length 1080p Video</div>
+                                    </div>
+                                </div>
+                                <span class="font-mono text-xs font-bold bg-slate-900 px-2 py-1 rounded">1.5 GB</span>
+                            </button>
+
+                            <button onclick="selectSimFile(25000, '25 GB 4K Game', 'gamepad-2')" id="file-btn-25000" class="sim-file-btn w-full p-3 rounded-xl border border-slate-800 text-left flex items-center justify-between transition-all hover:bg-slate-800/50 text-slate-300">
+                                <div class="flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="gamepad-2" aria-hidden="true" class="lucide lucide-gamepad-2 w-5 h-5 text-amber-400"><line x1="6" x2="10" y1="11" y2="11"></line><line x1="8" x2="8" y1="9" y2="13"></line><line x1="15" x2="15.01" y1="12" y2="12"></line><line x1="18" x2="18.01" y1="10" y2="10"></line><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"></path></svg>
+                                    <div>
+                                        <div class="text-xs font-bold">25 GB 4K Game Payload</div>
+                                        <div class="text-[11px] text-slate-400">Large Gaming Asset Pack</div>
+                                    </div>
+                                </div>
+                                <span class="font-mono text-xs font-bold bg-slate-900 px-2 py-1 rounded">25 GB</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Network Tier Selector -->
+                    <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-4">
+                        <h3 class="font-semibold text-sm text-slate-200 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wifi" aria-hidden="true" class="lucide lucide-wifi w-4 h-4 text-blue-400"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg> 2. Select Connection Profile
+                        </h3>
+
+                        <div class="space-y-2">
+                            <label class="block">
+                                <input type="radio" name="sim-speed" value="200" class="peer hidden" onchange="updateSelectedSpeed()" checked="">
+                                <div class="p-2.5 rounded-xl border border-slate-800 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 cursor-pointer transition-all flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="font-bold text-amber-400 block">2G Service Level</span>
+                                        <span class="text-slate-400 text-[11px]">200 kb/s (Mid 2G)</span>
+                                    </div>
+                                    <span class="font-mono text-amber-400 font-bold">200 kb/s</span>
+                                </div>
+                            </label>
+
+                            <label class="block">
+                                <input type="radio" name="sim-speed" value="3000" class="peer hidden" onchange="updateSelectedSpeed()">
+                                <div class="p-2.5 rounded-xl border border-slate-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 cursor-pointer transition-all flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="font-bold text-emerald-400 block">3G UMTS / EV-DO</span>
+                                        <span class="text-slate-400 text-[11px]">3 Mb/s Connection</span>
+                                    </div>
+                                    <span class="font-mono text-emerald-400 font-bold">3 Mb/s</span>
+                                </div>
+                            </label>
+
+                            <label class="block">
+                                <input type="radio" name="sim-speed" value="50000" class="peer hidden" onchange="updateSelectedSpeed()">
+                                <div class="p-2.5 rounded-xl border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 cursor-pointer transition-all flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="font-bold text-blue-400 block">4G LTE (Real-World Avg)</span>
+                                        <span class="text-slate-400 text-[11px]">50 Mb/s Connection</span>
+                                    </div>
+                                    <span class="font-mono text-blue-400 font-bold">50 Mb/s</span>
+                                </div>
+                            </label>
+
+                            <label class="block">
+                                <input type="radio" name="sim-speed" value="300000" class="peer hidden" onchange="updateSelectedSpeed()">
+                                <div class="p-2.5 rounded-xl border border-slate-800 peer-checked:border-blue-400 peer-checked:bg-blue-400/10 cursor-pointer transition-all flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="font-bold text-blue-300 block">4G LTE (Theoretical Max)</span>
+                                        <span class="text-slate-400 text-[11px]">300 Mb/s Ceiling</span>
+                                    </div>
+                                    <span class="font-mono text-blue-300 font-bold">300 Mb/s</span>
+                                </div>
+                            </label>
+
+                            <label class="block">
+                                <input type="radio" name="sim-speed" value="1000000" class="peer hidden" onchange="updateSelectedSpeed()">
+                                <div class="p-2.5 rounded-xl border border-slate-800 peer-checked:border-purple-500 peer-checked:bg-purple-500/10 cursor-pointer transition-all flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="font-bold text-purple-400 block">5G NR (Theoretical Peak)</span>
+                                        <span class="text-slate-400 text-[11px]">1 Gb/s Maximum Target</span>
+                                    </div>
+                                    <span class="font-mono text-purple-400 font-bold">1 Gb/s</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Simulator Action & Active Monitor -->
+                    <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-semibold text-sm text-slate-200 flex items-center gap-2 mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="activity" aria-hidden="true" class="lucide lucide-activity w-4 h-4 text-blue-400"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg> 3. Test Simulation
+                            </h3>
+
+                            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 font-mono">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-slate-400">Target Payload:</span>
+                                    <span id="sim-display-file" class="text-white font-bold">5 MB MP3 File</span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-slate-400">Configured Speed:</span>
+                                    <span id="sim-display-speed" class="text-amber-400 font-bold">200 kb/s</span>
+                                </div>
+                                <div class="flex justify-between text-xs pt-2 border-t border-slate-800">
+                                    <span class="text-slate-400">Estimated Duration:</span>
+                                    <span id="sim-display-time" class="text-emerald-400 font-bold text-sm">3m 20s</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 space-y-2">
+                            <button onclick="startDownloadSimulation()" id="start-sim-btn" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play" aria-hidden="true" class="lucide lucide-play w-4 h-4"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg> Start Transfer Simulation
+                            </button>
+                            <button onclick="resetSimulation()" id="reset-sim-btn" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition-all">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Animation Canvas Box -->
+                <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="relative flex h-3 w-3">
+                              <span id="sim-ping-dot" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 opacity-75"></span>
+                              <span id="sim-status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-slate-500"></span>
+                            </span>
+                            <span id="sim-status-text" class="font-mono text-xs text-slate-400 font-semibold uppercase tracking-wider">Status: Idle / Ready</span>
+                        </div>
+                        <div class="font-mono text-xs text-slate-400">
+                            Transfer Time: <span id="sim-timer" class="text-white font-bold text-sm">00:00.0</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-slate-900 rounded-full h-6 p-1 border border-slate-800 relative overflow-hidden">
+                        <div id="sim-progress-bar" class="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full transition-all duration-100 w-0 progress-bar-animated"></div>
+                    </div>
+
+                    <!-- Transfer Details Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80">
+                            <span class="text-slate-500 text-[10px] block">TRANSFERRED</span>
+                            <span id="sim-transferred-val" class="text-white font-bold">0 MB</span>
+                        </div>
+                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80">
+                            <span class="text-slate-500 text-[10px] block">REMAINING</span>
+                            <span id="sim-remaining-val" class="text-white font-bold">0 MB</span>
+                        </div>
+                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80">
+                            <span class="text-slate-500 text-[10px] block">CURRENT RATE</span>
+                            <span id="sim-rate-val" class="text-blue-400 font-bold">0 Mb/s</span>
+                        </div>
+                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80">
+                            <span class="text-slate-500 text-[10px] block">PERCENT COMPLETE</span>
+                            <span id="sim-percent-val" class="text-emerald-400 font-bold">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cross-Generation Time Comparison Table -->
+                <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
+                    <h3 class="font-bold text-white text-sm mb-3 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="clock" aria-hidden="true" class="lucide lucide-clock w-4 h-4 text-blue-400"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                        Time Comparison Across All Generations for Selected File (<span id="compare-file-name" class="text-blue-400">5 MB MP3</span>)
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 font-mono text-center">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-amber-500/20">
+                            <span class="text-[10px] text-amber-400 block font-bold">2G (200 kb/s)</span>
+                            <span id="cmp-2g" class="text-xs text-slate-200 font-bold mt-1 block">3m 20s</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-emerald-500/20">
+                            <span class="text-[10px] text-emerald-400 block font-bold">3G (3 Mb/s)</span>
+                            <span id="cmp-3g" class="text-xs text-slate-200 font-bold mt-1 block">13.3 s</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-blue-500/20">
+                            <span class="text-[10px] text-blue-400 block font-bold">4G Real (50 Mb/s)</span>
+                            <span id="cmp-4g-real" class="text-xs text-slate-200 font-bold mt-1 block">800 ms</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-blue-400/20">
+                            <span class="text-[10px] text-blue-300 block font-bold">4G Max (300 Mb/s)</span>
+                            <span id="cmp-4g-max" class="text-xs text-slate-200 font-bold mt-1 block">133 ms</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-purple-500/20">
+                            <span class="text-[10px] text-purple-400 block font-bold">5G Max (1 Gb/s)</span>
+                            <span id="cmp-5g-max" class="text-xs text-slate-200 font-bold mt-1 block">40 ms</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: KNOWLEDGE CHECK QUIZ ================= -->
+        <section id="section-quiz" class="tab-content hidden space-y-8">
+            <div class="glass-card rounded-2xl p-6 sm:p-8 border border-slate-800 space-y-6 max-w-4xl mx-auto">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-slate-800 pb-4 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="award" aria-hidden="true" class="lucide lucide-award w-6 h-6 text-blue-400"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path><circle cx="12" cy="8" r="6"></circle></svg>
+                            Knowledge Check &amp; Assessment Quiz
+                        </h2>
+                        <p class="text-sm text-slate-400 mt-1">Test your knowledge on 2G–5G cellular standards, speeds, and data metrics.</p>
+                    </div>
+                    <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-800 text-right">
+                        <span class="text-xs text-slate-400 block">Score</span>
+                        <span id="quiz-score-display" class="font-mono text-lg font-bold text-blue-400">0 / 5</span>
+                    </div>
+                </div>
+
+                <!-- Quiz Questions Container -->
+                <div id="quiz-container" class="space-y-6"><div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-3">
+                    <h4 class="font-bold text-sm text-white">1. What standard represents 3G technology on the GSM evolutionary path?</h4>
+                    <div class="space-y-2">
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-0" value="0" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>G / E (GPRS/EDGE)</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-0" value="1" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>UMTS (Universal Mobile Telecommunications Service)</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-0" value="2" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>1x (1xRTT)</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-0" value="3" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>EV-DO</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    </div>
+                    <div id="quiz-feedback-0" class="hidden p-3 rounded-lg text-xs font-mono"></div>
+                </div><div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-3">
+                    <h4 class="font-bold text-sm text-white">2. According to the reference chart, what is the theoretical maximum download speed of 4G LTE?</h4>
+                    <div class="space-y-2">
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-1" value="0" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>50 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-1" value="1" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>90 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-1" value="2" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>300 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-1" value="3" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>1 Gb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    </div>
+                    <div id="quiz-feedback-1" class="hidden p-3 rounded-lg text-xs font-mono"></div>
+                </div><div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-3">
+                    <h4 class="font-bold text-sm text-white">3. How many Megabits per second (Mb/s) are equivalent to a speed of 1 Gigabit per second (Gb/s)?</h4>
+                    <div class="space-y-2">
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-2" value="0" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>100 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-2" value="1" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>1,000 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-2" value="2" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>10,000 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-2" value="3" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>100,000 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    </div>
+                    <div id="quiz-feedback-2" class="hidden p-3 rounded-lg text-xs font-mono"></div>
+                </div><div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-3">
+                    <h4 class="font-bold text-sm text-white">4. What is the typical connection speed range listed for 2G Minimal Service Levels (G/E or 1x)?</h4>
+                    <div class="space-y-2">
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-3" value="0" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>1 - 10 kb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-3" value="1" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>50 - 400 kb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-3" value="2" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>1 - 3 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-3" value="3" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>20 - 90 Mb/s</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    </div>
+                    <div id="quiz-feedback-3" class="hidden p-3 rounded-lg text-xs font-mono"></div>
+                </div><div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-3">
+                    <h4 class="font-bold text-sm text-white">5. Which standard is associated with 3G technology on CDMA networks?</h4>
+                    <div class="space-y-2">
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-4" value="0" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>G/E</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-4" value="1" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>1x</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-4" value="2" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>EV-DO (Evolution-Data Optimized)</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-4" value="3" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>LTE</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    </div>
+                    <div id="quiz-feedback-4" class="hidden p-3 rounded-lg text-xs font-mono"></div>
+                </div></div>
+
+                <!-- Quiz Action Buttons -->
+                <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                    <button onclick="resetQuiz()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all">
+                        Reset Quiz
+                    </button>
+                    <button onclick="submitQuiz()" id="submit-quiz-btn" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all text-sm">
+                        Submit Answers
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>Mobile Network Generations &amp; Speed Metrics Lab • Designed for Interactive Learning</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Download Self-Contained HTML File Function
+        function downloadLabHTML() {
+            const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Mobile_Network_Generations_Lab.html";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Active Navigation Tab Management
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                activeBtn.classList.remove('text-slate-400');
+            }
+        }
+
+        // ================= SECTION 2 LOGIC: CONVERSION TOOL =================
+        function calculateUnitConversion() {
+            const val = parseFloat(document.getElementById('calc-input-val').value) || 0;
+            const unit = document.getElementById('calc-input-unit').value;
+
+            let speedInKbps = 0;
+
+            if (unit === 'kb') {
+                speedInKbps = val;
+            } else if (unit === 'Mb') {
+                speedInKbps = val * 1000;
+            } else if (unit === 'Gb') {
+                speedInKbps = val * 1000000;
+            }
+
+            const speedInMbps = speedInKbps / 1000;
+            const speedInGbps = speedInKbps / 1000000;
+            
+            // Convert bits/sec to Bytes/sec (divide by 8)
+            const MBps = speedInMbps / 8;
+
+            document.getElementById('calc-out-kb').innerText = speedInKbps.toLocaleString() + ' kb/s';
+            document.getElementById('calc-out-mb').innerText = speedInMbps.toLocaleString() + ' Mb/s';
+            document.getElementById('calc-out-gb').innerText = speedInGbps.toLocaleString() + ' Gb/s';
+            document.getElementById('calc-output-MBs').innerText = MBps >= 1 ? MBps.toFixed(2) + ' MB/s' : (MBps * 1024).toFixed(1) + ' KB/s';
+        }
+
+        // ================= SECTION 3 LOGIC: SIMULATOR =================
+        let currentFileMB = 5;
+        let currentFileName = "5 MB MP3 Audio File";
+        let simulationInterval = null;
+        let isSimulating = false;
+
+        function selectSimFile(sizeMB, name, icon) {
+            currentFileMB = sizeMB;
+            currentFileName = name;
+
+            document.querySelectorAll('.sim-file-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600/20', 'border-blue-500', 'text-white');
+                btn.classList.add('border-slate-800', 'text-slate-300');
+            });
+
+            const activeBtn = document.getElementById(`file-btn-${sizeMB}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-blue-600/20', 'border-blue-500', 'text-white');
+            }
+
+            document.getElementById('sim-display-file').innerText = name;
+            document.getElementById('compare-file-name').innerText = name;
+            
+            updateSelectedSpeed();
+            calculateComparisons();
+        }
+
+        function getSelectedSpeedKbps() {
+            const selectedRadio = document.querySelector('input[name="sim-speed"]:checked');
+            return parseFloat(selectedRadio.value);
+        }
+
+        function updateSelectedSpeed() {
+            const kbps = getSelectedSpeedKbps();
+            let speedText = "";
+            if (kbps < 1000) {
+                speedText = `${kbps} kb/s`;
+            } else if (kbps < 1000000) {
+                speedText = `${kbps / 1000} Mb/s`;
+            } else {
+                speedText = `${kbps / 1000000} Gb/s`;
+            }
+
+            document.getElementById('sim-display-speed').innerText = speedText;
+
+            // Calculate duration in seconds: (File size in bits) / (Speed in bits per sec)
+            const totalBits = currentFileMB * 8 * 1000000;
+            const speedBitsPerSec = kbps * 1000;
+            const durationSec = totalBits / speedBitsPerSec;
+
+            document.getElementById('sim-display-time').innerText = formatTime(durationSec);
+            resetSimulation();
+        }
+
+        function formatTime(seconds) {
+            if (seconds < 1) return (seconds * 1000).toFixed(0) + ' ms';
+            if (seconds < 60) return seconds.toFixed(1) + ' s';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            if (mins < 60) return `${mins}m ${secs}s`;
+            const hours = Math.floor(mins / 60);
+            const remMins = mins % 60;
+            return `${hours}h ${remMins}m`;
+        }
+
+        function calculateComparisons() {
+            const totalBits = currentFileMB * 8 * 1000000;
+
+            const speeds = {
+                'cmp-2g': 200 * 1000,
+                'cmp-3g': 3000 * 1000,
+                'cmp-4g-real': 50000 * 1000,
+                'cmp-4g-max': 300000 * 1000,
+                'cmp-5g-max': 1000000 * 1000
+            };
+
+            for (const [id, speedBps] of Object.entries(speeds)) {
+                const duration = totalBits / speedBps;
+                document.getElementById(id).innerText = formatTime(duration);
+            }
+        }
+
+        function startDownloadSimulation() {
+            if (isSimulating) return;
+
+            resetSimulation();
+            isSimulating = true;
+
+            const kbps = getSelectedSpeedKbps();
+            const totalBits = currentFileMB * 8 * 1000000;
+            const speedBitsPerSec = kbps * 1000;
+            const totalSecondsNeeded = totalBits / speedBitsPerSec;
+
+            // UI updates for Active status
+            document.getElementById('sim-ping-dot').className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75';
+            document.getElementById('sim-status-dot').className = 'relative inline-flex rounded-full h-3 w-3 bg-emerald-500';
+            document.getElementById('sim-status-text').innerText = 'Status: Transferring Data...';
+            document.getElementById('sim-status-text').className = 'font-mono text-xs text-emerald-400 font-semibold uppercase tracking-wider';
+
+            let elapsedSimSeconds = 0;
+            const maxSimDurationRealSec = 8;
+            const timeStepRealMs = 50;
+            const simAccelerationFactor = Math.max(1, totalSecondsNeeded / maxSimDurationRealSec);
+
+            const startTime = Date.now();
+
+            simulationInterval = setInterval(() => {
+                const now = Date.now();
+                const realElapsedMs = now - startTime;
+                elapsedSimSeconds = (realElapsedMs / 1000) * simAccelerationFactor;
+
+                if (elapsedSimSeconds >= totalSecondsNeeded) {
+                    elapsedSimSeconds = totalSecondsNeeded;
+                    clearInterval(simulationInterval);
+                    isSimulating = false;
+
+                    // Complete UI state
+                    document.getElementById('sim-ping-dot').className = 'hidden';
+                    document.getElementById('sim-status-dot').className = 'relative inline-flex rounded-full h-3 w-3 bg-blue-500';
+                    document.getElementById('sim-status-text').innerText = 'Status: Download Complete';
+                    document.getElementById('sim-status-text').className = 'font-mono text-xs text-blue-400 font-semibold uppercase tracking-wider';
+                }
+
+                const progressFraction = elapsedSimSeconds / totalSecondsNeeded;
+                const transferredMB = (currentFileMB * progressFraction).toFixed(currentFileMB >= 1000 ? 1 : 2);
+                const remainingMB = (currentFileMB - transferredMB).toFixed(currentFileMB >= 1000 ? 1 : 2);
+
+                document.getElementById('sim-progress-bar').style.width = `${(progressFraction * 100).toFixed(1)}%`;
+                document.getElementById('sim-timer').innerText = formatTime(elapsedSimSeconds);
+                document.getElementById('sim-transferred-val').innerText = transferredMB + ' MB';
+                document.getElementById('sim-remaining-val').innerText = remainingMB + ' MB';
+                document.getElementById('sim-rate-val').innerText = document.getElementById('sim-display-speed').innerText;
+                document.getElementById('sim-percent-val').innerText = (progressFraction * 100).toFixed(0) + '%';
+
+            }, timeStepRealMs);
+        }
+
+        function resetSimulation() {
+            if (simulationInterval) clearInterval(simulationInterval);
+            isSimulating = false;
+
+            document.getElementById('sim-ping-dot').className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 opacity-75';
+            document.getElementById('sim-status-dot').className = 'relative inline-flex rounded-full h-3 w-3 bg-slate-500';
+            document.getElementById('sim-status-text').innerText = 'Status: Idle / Ready';
+            document.getElementById('sim-status-text').className = 'font-mono text-xs text-slate-400 font-semibold uppercase tracking-wider';
+
+            document.getElementById('sim-progress-bar').style.width = '0%';
+            document.getElementById('sim-timer').innerText = '00:00.0';
+            document.getElementById('sim-transferred-val').innerText = '0 MB';
+            document.getElementById('sim-remaining-val').innerText = currentFileMB + ' MB';
+            document.getElementById('sim-rate-val').innerText = '0 Mb/s';
+            document.getElementById('sim-percent-val').innerText = '0%';
+        }
+
+        // ================= SECTION 4 LOGIC: QUIZ SYSTEM =================
+        const quizQuestions = [
+            {
+                q: "1. What standard represents 3G technology on the GSM evolutionary path?",
+                options: ["G / E (GPRS/EDGE)", "UMTS (Universal Mobile Telecommunications Service)", "1x (1xRTT)", "EV-DO"],
+                answer: 1,
+                explanation: "UMTS is the 3G standard for GSM networks, whereas EV-DO was used for CDMA networks."
+            },
+            {
+                q: "2. According to the reference chart, what is the theoretical maximum download speed of 4G LTE?",
+                options: ["50 Mb/s", "90 Mb/s", "300 Mb/s", "1 Gb/s"],
+                answer: 2,
+                explanation: "4G LTE has a theoretical maximum download speed of 300 Mb/s, though real-world speeds typically range from 20 to 90 Mb/s."
+            },
+            {
+                q: "3. How many Megabits per second (Mb/s) are equivalent to a speed of 1 Gigabit per second (Gb/s)?",
+                options: ["100 Mb/s", "1,000 Mb/s", "10,000 Mb/s", "100,000 Mb/s"],
+                answer: 1,
+                explanation: "1 Gb/s equals 1,000 Mb/s, which in turn equals 1,000,000 kb/s."
+            },
+            {
+                q: "4. What is the typical connection speed range listed for 2G Minimal Service Levels (G/E or 1x)?",
+                options: ["1 - 10 kb/s", "50 - 400 kb/s", "1 - 3 Mb/s", "20 - 90 Mb/s"],
+                answer: 1,
+                explanation: "2G networks provide minimal data connection speeds ranging between 50 and 400 kb/s."
+            },
+            {
+                q: "5. Which standard is associated with 3G technology on CDMA networks?",
+                options: ["G/E", "1x", "EV-DO (Evolution-Data Optimized)", "LTE"],
+                answer: 2,
+                explanation: "Evolution-Data Optimized (EV-DO) is the 3G data standard for CDMA networks."
+            }
+        ];
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+
+            quizQuestions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900/80 p-5 rounded-xl border border-slate-800 space-y-3';
+                
+                let optionsHTML = '';
+                item.options.forEach((opt, optIdx) => {
+                    optionsHTML += `
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="q-${index}" value="${optIdx}" class="peer hidden">
+                            <div class="p-3 rounded-lg border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-xs text-slate-300 hover:bg-slate-800/50 transition-all flex items-center justify-between">
+                                <span>${opt}</span>
+                                <span class="w-4 h-4 rounded-full border border-slate-700 peer-checked:bg-blue-500"></span>
+                            </div>
+                        </label>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <h4 class="font-bold text-sm text-white">${item.q}</h4>
+                    <div class="space-y-2">${optionsHTML}</div>
+                    <div id="quiz-feedback-${index}" class="hidden p-3 rounded-lg text-xs font-mono"></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function submitQuiz() {
+            let score = 0;
+
+            quizQuestions.forEach((item, index) => {
+                const selected = document.querySelector(`input[name="q-${index}"]:checked`);
+                const feedbackDiv = document.getElementById(`quiz-feedback-${index}`);
+                feedbackDiv.classList.remove('hidden', 'bg-emerald-950/50', 'text-emerald-300', 'border-emerald-800', 'bg-rose-950/50', 'text-rose-300', 'border-rose-800');
+
+                if (selected) {
+                    const userAns = parseInt(selected.value);
+                    if (userAns === item.answer) {
+                        score++;
+                        feedbackDiv.classList.add('bg-emerald-950/50', 'text-emerald-300', 'border', 'border-emerald-800/80');
+                        feedbackDiv.innerHTML = `✓ <strong>Correct!</strong> ${item.explanation}`;
+                    } else {
+                        feedbackDiv.classList.add('bg-rose-950/50', 'text-rose-300', 'border', 'border-rose-800/80');
+                        feedbackDiv.innerHTML = `✕ <strong>Incorrect.</strong> ${item.explanation}`;
+                    }
+                } else {
+                    feedbackDiv.classList.add('bg-amber-950/50', 'text-amber-300', 'border', 'border-amber-800/80');
+                    feedbackDiv.innerHTML = `⚠ <strong>Please select an answer.</strong> Correct answer: ${item.options[item.answer]}`;
+                }
+            });
+
+            document.getElementById('quiz-score-display').innerText = `${score} / ${quizQuestions.length}`;
+        }
+
+        function resetQuiz() {
+            renderQuiz();
+            document.getElementById('quiz-score-display').innerText = `0 / ${quizQuestions.length}`;
+        }
+
+        // Window Load Initializations
+        window.onload = function () {
+            calculateUnitConversion();
+            calculateComparisons();
+            renderQuiz();
+        };
+    </script>
+
+</body></html>
