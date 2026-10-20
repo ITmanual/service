@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Day 4 – Power & Display Hands-On Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020819;
+      --bg-alt: #04101c;
+      --panel: #051822;
+      --accent: #22c55e; /* green */
+      --accent-soft: rgba(34, 197, 94, 0.18);
+      --accent-2: #0ea5e9; /* blue */
+      --danger: #f97373;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --text: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #020617 0, #020819 35%, #020617 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(90deg, #020617, #022c22, #020617);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    #gradeBtn {
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    #gradeBtn:hover {
+      background: rgba(34, 197, 94, 0.28);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    #gradeBtn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    main {
+      flex: 1;
+      padding: 16px 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    /* Step overview bar */
+
+    .steps-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 960px) {
+      .steps-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-card {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.18), #020617 60%);
+      padding: 10px 12px;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .step-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .step-desc {
+      color: var(--muted);
+    }
+
+    .step-progress {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .step-dot.partial {
+      background: #facc15;
+    }
+
+    .step-dot.full {
+      background: #22c55e;
+    }
+
+    /* Sections */
+
+    section.lab-section {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      padding: 12px 13px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .section-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.95);
+      white-space: nowrap;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      gap: 12px;
+      min-height: 0;
+    }
+
+    @media (max-width: 960px) {
+      .section-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .scenario-box {
+      font-size: 12px;
+      color: #e5e7eb;
+      background: rgba(6, 28, 37, 0.95);
+      border-radius: 12px;
+      border: 1px solid rgba(30, 64, 175, 0.5);
+      padding: 9px 10px;
+      line-height: 1.5;
+    }
+
+    .controls-panel {
+      background: rgba(2, 14, 24, 0.98);
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      padding: 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--muted);
+      margin-top: 2px;
+      margin-bottom: 2px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 3px;
+    }
+
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
+      background: #020617;
+    }
+
+    .counter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .counter-label {
+      flex: 1;
+    }
+
+    .counter-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      padding: 2px 4px;
+    }
+
+    .counter-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: none;
+      background: rgba(34, 197, 94, 0.17);
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    .counter-btn:hover {
+      background: rgba(34, 197, 94, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .counter-btn:active {
+      transform: translateY(0);
+    }
+
+    .counter-value {
+      min-width: 20px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .toggle-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+    }
+
+    .action-btn {
+      margin-top: 4px;
+      align-self: flex-start;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.85);
+      background: rgba(6, 24, 37, 0.98);
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(8, 47, 73, 0.98);
+      transform: translateY(-1px);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    .mini-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-2);
+    }
+
+    .output-box {
+      margin-top: 5px;
+      border-radius: 10px;
+      border: 1px dashed rgba(55, 65, 81, 0.95);
+      padding: 7px 9px;
+      font-size: 11px;
+      color: #d1d5db;
+      background: radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), #020617 65%);
+      white-space: pre-line;
+    }
+
+    .output-box.placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .section-footer {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    /* Display preview card */
+
+    .display-preview {
+      margin-top: 4px;
+      border-radius: 10px;
+      border: 1px solid rgba(37, 99, 235, 0.7);
+      background: radial-gradient(circle at top, #0f172a 0, #020617 70%);
+      padding: 6px 8px;
+      font-size: 11px;
+    }
+
+    .preview-line {
+      margin-bottom: 2px;
+    }
+
+    /* Results overlay */
+
+    #resultsOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      padding: 16px;
+    }
+
+    #resultsModal {
+      max-width: 920px;
+      width: 100%;
+      max-height: 90vh;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid rgba(75, 85, 99, 0.95);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.7);
+      padding: 14px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #resultsHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #resultsHeader h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #resultsScore {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #resultsBody {
+      font-size: 12px;
+      color: #e5e7eb;
+      padding: 9px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.2), #020617 60%);
+      overflow-y: auto;
+    }
+
+    .result-section-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #bbf7d0;
+    }
+
+    .result-scenario {
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed rgba(55, 65, 81, 0.9);
+    }
+
+    .result-scenario:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .result-line {
+      margin-bottom: 2px;
+    }
+
+    .result-line span.label-inline {
+      color: var(--muted);
+    }
+
+    .result-line.good {
+      color: #22c55e;
+    }
+
+    .result-line.bad {
+      color: var(--danger);
+    }
+
+    .result-expl {
+      margin-top: 2px;
+    }
+
+    #closeResults {
+      align-self: flex-end;
+      margin-top: 3px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    #closeResults:hover {
+      background: rgba(8, 47, 73, 0.98);
+      transform: translateY(-1px);
+    }
+
+    #closeResults:active {
+      transform: translateY(0);
+    }
+
+    .results-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: -3px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Power & Display Workbench</h1>
+      <div class="subtitle">
+        Day 4 – Power supplies, displays & troubleshooting (hands-on simulation)
+      </div>
+    </div>
+    <button id="gradeBtn" type="button">Grade My Lab</button>
+  </header>
+
+  <main>
+    <!-- Step overview -->
+    <div class="steps-bar">
+      <div class="step-card">
+        <div class="step-title">Step 1 – Power Build Planner</div>
+        <div class="step-desc">
+          Add parts, watch the wattage change, then commit to a PSU and cabling choice.
+        </div>
+        <div class="step-progress">
+          <span class="step-dot" data-step-dot="power"></span>
+          <span class="step-score-text" data-step-score-text="power">0 / 4 pts</span>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-title">Step 2 – Input Voltage & Rails Safety</div>
+        <div class="step-desc">
+          Set region, AC behavior & DC rails, then flip the power switch and see if it survives.
+        </div>
+        <div class="step-progress">
+          <span class="step-dot" data-step-dot="voltage"></span>
+          <span class="step-score-text" data-step-score-text="voltage">0 / 4 pts</span>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-title">Step 3 – Display & Projector Doctor</div>
+        <div class="step-desc">
+          Tweak resolution, brightness, panel types & diagnose display symptoms.
+        </div>
+        <div class="step-progress">
+          <span class="step-dot" data-step-dot="display"></span>
+          <span class="step-score-text" data-step-score-text="display">0 / 6 pts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 1: Power Build Planner -->
+    <section class="lab-section" id="section-power">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Power Build Planner – Custom Desktop</div>
+          <div class="section-sub">
+            Make hardware choices, calculate load, then select a PSU wattage & cabling style.
+          </div>
+        </div>
+        <div class="badge">Power • Sizing • Modular • 80 PLUS</div>
+      </div>
+
+      <div class="section-grid">
+        <div>
+          <div class="scenario-box">
+            You’re building a new desktop for mixed use (office work, light gaming, and some
+            video editing). You can **add components** below and watch the estimated wattage
+            change in real time.<br><br>
+            Requirements:<br>
+            • The system must stay stable under load (no random shutdowns).<br>
+            • There should be room for **future upgrades** (20–30% headroom).<br>
+            • The user wants **good airflow** and fewer unused cables.<br>
+            • They care about **power efficiency** to reduce heat and electricity costs.<br><br>
+            After configuring the build, select a PSU type and rating, then run a compatibility check.
+          </div>
+        </div>
+
+        <div class="controls-panel">
+          <div class="label">Component Mix (Hands-on builder)</div>
+
+          <div class="counter-row">
+            <div class="counter-label">3.5" or 2.5" drives (HDD/SSD)</div>
+            <div class="counter-controls">
+              <button class="counter-btn" type="button" data-counter="drives" data-delta="-1">−</button>
+              <span class="counter-value" id="count_drives">2</span>
+              <button class="counter-btn" type="button" data-counter="drives" data-delta="1">+</button>
+            </div>
+          </div>
+
+          <div class="counter-row">
+            <div class="counter-label">Case fans (120mm)</div>
+            <div class="counter-controls">
+              <button class="counter-btn" type="button" data-counter="fans" data-delta="-1">−</button>
+              <span class="counter-value" id="count_fans">3</span>
+              <button class="counter-btn" type="button" data-counter="fans" data-delta="1">+</button>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">GPU Tier</div>
+            <select id="pp_gpu">
+              <option value="none">No dedicated GPU</option>
+              <option value="mid">Mid-range GPU</option>
+              <option value="high">High-end GPU</option>
+            </select>
+            <div class="hint">High-end GPUs can easily add 250–300W+ on the 12V rail.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Estimated CPU Class</div>
+            <select id="pp_cpu">
+              <option value="low">Entry-level (2–4 cores)</option>
+              <option value="mid" selected>Mid-range (6–8 cores)</option>
+              <option value="high">High-end (10+ cores)</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Choose PSU Wattage</div>
+            <select id="pp_psu">
+              <option value="">-- Select PSU rating --</option>
+              <option value="450">450W</option>
+              <option value="650">650W</option>
+              <option value="850">850W</option>
+              <option value="1000">1000W</option>
+            </select>
+            <div class="hint">Leave 20–30% headroom above calculated load for stability and upgrades.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Cabling Style</div>
+            <select id="pp_cabling">
+              <option value="">-- Select cabling style --</option>
+              <option value="non_modular">Non-modular (all cables attached)</option>
+              <option value="semi_modular">Semi-modular (essentials fixed)</option>
+              <option value="modular">Fully modular (all cables detachable)</option>
+            </select>
+            <div class="hint">Which option best supports clean airflow and only the cables you need?</div>
+          </div>
+
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" id="pp_eff" />
+              PSU has 80 PLUS energy-efficient certification
+            </label>
+            <span class="hint">Efficient PSUs waste less power as heat and lower electricity costs.</span>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Live Wattage Estimate</div>
+            <div class="display-preview" id="pp_preview">
+              <div class="preview-line" id="pp_estimate_line">Estimated system load: ~0 W</div>
+              <div class="preview-line" id="pp_headroom_line">
+                Headroom with selected PSU: (choose a PSU to calculate)
+              </div>
+            </div>
+          </div>
+
+          <button class="action-btn" type="button" data-run="power">
+            <span class="mini-dot"></span> Run power compatibility check
+          </button>
+          <div class="output-box placeholder" id="pp_output">
+            As you add components, the wattage above updates. When you’re happy with the build,
+            choose a PSU and click to see if it’s sized correctly and well-designed.
+          </div>
+
+          <div class="section-footer">
+            <span>Power build planner: 4 points total.</span>
+            <span>Focus: correct wattage, modular cabling, and efficiency rating.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Input Voltage & Rails Safety -->
+    <section class="lab-section" id="section-voltage">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Input Voltage & Rails Safety Bench</div>
+          <div class="section-sub">
+            Configure the PSU for the region, then pick which rails power which components before you power on.
+          </div>
+        </div>
+        <div class="badge">Input Voltage • 12V Rail • Redundant</div>
+      </div>
+
+      <div class="section-grid">
+        <div>
+          <div class="scenario-box">
+            You’re preparing a small rack server for deployment. It will be used in different regions
+            and must stay online if one power supply fails.<br><br>
+            Tasks:<br>
+            • Set the **region** where the system will run (North America or Europe).<br>
+            • Choose how the PSU handles **input voltage** (manual switch vs auto-sensing).<br>
+            • Identify which **DC rail powers the GPU** and heavy motors.<br>
+            • Enable or disable **redundant power supplies** for uptime.<br><br>
+            After you configure the settings, flip the big **Power switch** and see if you sized and wired
+            it safely—or if you let the magic smoke out.
+          </div>
+        </div>
+
+        <div class="controls-panel">
+          <div class="control-row">
+            <div class="label">Deployment Region</div>
+            <select id="iv_region">
+              <option value="">-- Select region --</option>
+              <option value="na">North America / Japan (110–120V)</option>
+              <option value="eu">Europe / Many others (220–240V)</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Input Voltage Handling</div>
+            <select id="iv_mode">
+              <option value="">-- Select behavior --</option>
+              <option value="manual_115">Manual switch fixed at 115V</option>
+              <option value="manual_230">Manual switch fixed at 230V</option>
+              <option value="auto">Auto-sensing (110–120V / 220–240V)</option>
+            </select>
+            <div class="hint">
+              Older supplies had a red 115/230 switch. Modern units sense voltage automatically.
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">GPU / High-end Card Power Rail</div>
+            <select id="iv_gpuRail">
+              <option value="">-- Select DC rail --</option>
+              <option value="3.3">3.3V rail</option>
+              <option value="5">5V rail</option>
+              <option value="12">12V rail</option>
+              <option value="5sb">5V standby</option>
+            </select>
+            <div class="hint">
+              High-end GPUs and drives use the rail designed for motors and high-power components.
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" id="iv_redundant" />
+              Enable redundant hot-swappable power supplies
+            </label>
+            <span class="hint">Common in servers to survive a single PSU failure.</span>
+          </div>
+
+          <button class="action-btn" type="button" data-run="voltage">
+            <span class="mini-dot"></span> Flip power switch
+          </button>
+          <div class="output-box placeholder" id="iv_output">
+            This simulates what happens when you plug in and power on with your chosen voltage
+            settings and rail usage.
+          </div>
+
+          <div class="section-footer">
+            <span>Voltage & rails bench: 4 points total.</span>
+            <span>Think: 110–120 vs 220–240, auto-sensing, 12V GPU rail, servers need redundancy.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Display & Projector Doctor -->
+    <section class="lab-section" id="section-display">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Display & Projector Doctor</div>
+          <div class="section-sub">
+            Tweak real controls and then diagnose what’s wrong with each display scenario.
+          </div>
+        </div>
+        <div class="badge">LCD • OLED • Inverter • Resolution • Burn-in</div>
+      </div>
+
+      <div class="section-grid">
+        <!-- Left column: two sub-cases -->
+        <div class="controls-panel">
+          <!-- D1: Designer laptop -->
+          <div class="label">Case D1 – Color-accurate Designer Laptop</div>
+          <div class="scenario-box" style="margin-bottom:6px;">
+            A graphic designer wants a laptop screen with **wide viewing angles and very accurate colors**
+            for photo editing. They don’t care about ultra-high refresh rates, but they do want a display
+            that covers a wide color gamut.
+          </div>
+
+          <div class="control-row">
+            <div class="label">Panel Technology</div>
+            <select id="d1_panel">
+              <option value="">-- Select panel type --</option>
+              <option value="tn">TN LCD</option>
+              <option value="ips">IPS LCD</option>
+              <option value="va">VA LCD</option>
+              <option value="oled">OLED</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Key Attribute to Prioritize</div>
+            <select id="d1_attr">
+              <option value="">-- Select attribute --</option>
+              <option value="refresh">High refresh rate (Hz)</option>
+              <option value="pixel_density">Pixel density (PPI)</option>
+              <option value="color_gamut">Wide color gamut / accuracy</option>
+            </select>
+            <div class="hint">
+              Think IPS + wide gamut for pro design work, as emphasized in class.
+            </div>
+          </div>
+
+          <!-- D2: Dim laptop (inverter) -->
+          <div class="label" style="margin-top:8px;">Case D2 – Dim Laptop Screen</div>
+          <div class="scenario-box" style="margin-bottom:6px;">
+            A user has an older laptop with a **very dim screen**. The image is still there, and if you shine
+            a flashlight you can see the desktop clearly. Brightness controls in the OS do almost nothing.
+          </div>
+
+          <div class="control-row">
+            <div class="label">Try Adjusting Brightness Slider</div>
+            <div class="slider-row">
+              <input type="range" id="d2_brightness" min="0" max="100" value="20" />
+              <span id="d2_brightness_value">20%</span>
+            </div>
+            <div class="hint">
+              For older CCFL-backlit LCDs, this might not solve the underlying hardware problem.
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Most Likely Faulty Component</div>
+            <select id="d2_cause">
+              <option value="">-- Select component --</option>
+              <option value="digitizer">Digitizer</option>
+              <option value="inverter">Backlight inverter</option>
+              <option value="oled_panel">OLED panel</option>
+              <option value="touch_ctrl">Touchscreen controller</option>
+            </select>
+          </div>
+
+          <button class="action-btn" type="button" data-run="display-left">
+            <span class="mini-dot"></span> Run display analysis (left cases)
+          </button>
+          <div class="output-box placeholder" id="display_left_output">
+            Use the controls for D1 and D2, then run the analysis to see how a display technician would
+            interpret your configuration.
+          </div>
+        </div>
+
+        <!-- Right column: two more sub-cases -->
+        <div class="controls-panel">
+          <!-- D3: Fuzzy text due to resolution -->
+          <div class="label">Case D3 – Fuzzy Monitor Text</div>
+          <div class="scenario-box" style="margin-bottom:6px;">
+            A user with a 1080p monitor says the text looks **fuzzy and slightly blurry**. The HDMI cable
+            is known-good and seated properly. You suspect the OS isn’t using the monitor’s native
+            resolution.
+          </div>
+
+          <div class="control-row">
+            <div class="label">Current OS Resolution</div>
+            <select id="d3_res">
+              <option value="">-- Select resolution --</option>
+              <option value="1280x720">1280 × 720</option>
+              <option value="1600x900">1600 × 900</option>
+              <option value="1920x1080">1920 × 1080 (native)</option>
+              <option value="2560x1440">2560 × 1440</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Monitor Preview</div>
+            <div class="display-preview" id="d3_preview">
+              <div class="preview-line" id="d3_text_line">
+                Sample text appears here. Adjust the resolution to see how it would look.
+              </div>
+            </div>
+          </div>
+
+          <!-- D4: Ghost image / burn-in -->
+          <div class="label" style="margin-top:8px;">Case D4 – Persistent Ghost Image</div>
+          <div class="scenario-box" style="margin-bottom:6px;">
+            On a desktop monitor, a faint image of a spreadsheet window is **always visible**, even when other
+            programs are open. It doesn’t move and has been present for weeks.
+          </div>
+
+          <div class="control-row">
+            <div class="label">Most Likely Cause</div>
+            <select id="d4_cause">
+              <option value="">-- Select cause --</option>
+              <option value="dead_pixels">Dead pixels</option>
+              <option value="burn_in">Display burn-in / image persistence</option>
+              <option value="dim_image">Dim backlight</option>
+              <option value="flashing">Flashing input source</option>
+            </select>
+          </div>
+
+          <button class="action-btn" type="button" data-run="display-right">
+            <span class="mini-dot"></span> Run display analysis (right cases)
+          </button>
+          <div class="output-box placeholder" id="display_right_output">
+            Fix the fuzzy text by choosing the native resolution, and diagnose the ghost image, then
+            run the analysis to compare your reasoning with official troubleshooting steps.
+          </div>
+
+          <div class="section-footer">
+            <span>Display & projector doctor: 6 points total.</span>
+            <span>Focus: IPS & color gamut, inverters/backlights, native resolution, burn-in.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- RESULTS MODAL -->
+  <div id="resultsOverlay">
+    <div id="resultsModal">
+      <div id="resultsHeader">
+        <h2>Lab Results – Power & Display</h2>
+        <div id="resultsScore"></div>
+      </div>
+      <div id="resultsBody"></div>
+      <div class="results-note">
+        Use these explanations to reinforce Day 4 topics: wattage sizing, modular vs. redundant PSUs,
+        proper input voltage, display panel choices, and real-world troubleshooting symptoms.
+      </div>
+      <button id="closeResults" type="button">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // ------------ Live wattage calculator for Power Planner ------------
+
+    const counters = {
+      drives: 2,
+      fans: 3
+    };
+
+    function updateCounterUI() {
+      document.getElementById("count_drives").textContent = counters.drives;
+      document.getElementById("count_fans").textContent = counters.fans;
+      updatePowerEstimate();
+    }
+
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+
+    document.querySelectorAll(".counter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const type = btn.getAttribute("data-counter");
+        const delta = parseInt(btn.getAttribute("data-delta"), 10);
+        if (!(type in counters)) return;
+        counters[type] = clamp(counters[type] + delta, 0, 10);
+        updateCounterUI();
+      });
+    });
+
+    function calcBaseWattage() {
+      // Simple approximations for teaching purposes
+      const cpuSel = document.getElementById("pp_cpu").value;
+      let cpuW = 65;
+      if (cpuSel === "low") cpuW = 45;
+      if (cpuSel === "mid") cpuW = 95;
+      if (cpuSel === "high") cpuW = 140;
+
+      const gpuSel = document.getElementById("pp_gpu").value;
+      let gpuW = 0;
+      if (gpuSel === "mid") gpuW = 150;
+      if (gpuSel === "high") gpuW = 300;
+
+      const drivesW = counters.drives * 10; // HDD/SSD ~5–10W
+      const fansW = counters.fans * 5; // case fans ~5W each
+      const miscW = 50; // motherboard, RAM, USB, etc.
+
+      return cpuW + gpuW + drivesW + fansW + miscW;
+    }
+
+    function updatePowerEstimate() {
+      const est = calcBaseWattage();
+      const psuSel = document.getElementById("pp_psu").value;
+      const estLine = document.getElementById("pp_estimate_line");
+      const headLine = document.getElementById("pp_headroom_line");
+
+      estLine.textContent = `Estimated system load: ~${est} W (CPU, GPU, drives, fans, misc)`;
+
+      if (psuSel) {
+        const psuW = parseInt(psuSel, 10);
+        const headroom = psuW - est;
+        const headroomPct = Math.round((headroom / psuW) * 100);
+        headLine.textContent =
+          `Selected PSU: ${psuW} W. Estimated headroom: ${headroom} W (~${headroomPct}% of PSU capacity).`;
+      } else {
+        headLine.textContent = "Headroom with selected PSU: (choose a PSU to calculate)";
+      }
+    }
+
+    document.querySelectorAll("#pp_cpu, #pp_gpu, #pp_psu").forEach(el => {
+      el.addEventListener("change", updatePowerEstimate);
+    });
+
+    updateCounterUI();
+
+    // ------------ Display sliders / previews ------------
+
+    const brightnessSlider = document.getElementById("d2_brightness");
+    const brightnessValue = document.getElementById("d2_brightness_value");
+    brightnessSlider.addEventListener("input", () => {
+      brightnessValue.textContent = `${brightnessSlider.value}%`;
+    });
+
+    const d3Res = document.getElementById("d3_res");
+    const d3Text = document.getElementById("d3_text_line");
+
+    d3Res.addEventListener("change", () => {
+      const val = d3Res.value;
+      if (!val) {
+        d3Text.textContent =
+          "Sample text appears here. Adjust the resolution to see how it would look.";
+        return;
+      }
+      if (val === "1920x1080") {
+        d3Text.textContent =
+          "Text looks crisp and sharp at the monitor’s native 1920 × 1080 resolution.";
+      } else {
+        d3Text.textContent =
+          `Text looks somewhat fuzzy at ${val}. This is not the monitor’s native 1080p resolution.`;
+      }
+    });
+
+    // ------------ Mini simulations (Run buttons) ------------
+
+    function setOutput(id, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("placeholder");
+      el.textContent = text;
+    }
+
+    function runSimulation(key) {
+      switch (key) {
+        case "power": {
+          const est = calcBaseWattage();
+          const psuSel = document.getElementById("pp_psu").value;
+          const cabling = document.getElementById("pp_cabling").value;
+          const eff = document.getElementById("pp_eff").checked;
+
+          if (!psuSel) {
+            setOutput(
+              "pp_output",
+              "Power planner check:\n- No PSU wattage selected yet.\n" +
+                "Choose a PSU rating after you finish adjusting components."
+            );
+            break;
+          }
+
+          const psuW = parseInt(psuSel, 10);
+          const headroom = psuW - est;
+          const headroomPct = Math.round((headroom / psuW) * 100);
+
+          let summary =
+            "Power planner check:\n" +
+            `- Estimated load: ~${est} W\n` +
+            `- PSU rating: ${psuW} W (headroom: ${headroom} W ≈ ${headroomPct}% of PSU)\n`;
+
+          if (headroomPct < 15) {
+            summary +=
+              "- Headroom: TOO LOW – system may crash or the PSU may run at max capacity constantly.\n";
+          } else if (headroomPct >= 15 && headroomPct <= 35) {
+            summary +=
+              "- Headroom: GOOD – within the recommended 20–30% overhead for upgrades and stability.\n";
+          } else {
+            summary +=
+              "- Headroom: OK but very high – you’re paying for extra capacity you might not need.\n";
+          }
+
+          if (cabling === "modular") {
+            summary +=
+              "- Cabling: Fully modular – best for airflow and using only the cables you need.\n";
+          } else if (cabling === "semi_modular") {
+            summary +=
+              "- Cabling: Semi-modular – essentials attached, extras can be removed. Good compromise.\n";
+          } else if (cabling === "non_modular") {
+            summary +=
+              "- Cabling: Non-modular – all cables are attached, which can create more clutter.\n";
+          } else {
+            summary += "- Cabling: Not selected.\n";
+          }
+
+          if (eff) {
+            summary +=
+              "- Efficiency: 80 PLUS or better – runs cooler and uses less power from the wall.\n";
+          } else {
+            summary +=
+              "- Efficiency: Not certified – okay for budget, but less efficient and hotter.\n";
+          }
+
+          summary +=
+            "\nTeaching note: sizing a PSU from Day 4 involves total wattage, headroom for future upgrades, " +
+            "and features like modular cabling and 80 PLUS efficiency.";
+
+          setOutput("pp_output", summary);
+          break;
+        }
+
+        case "voltage": {
+          const region = document.getElementById("iv_region").value;
+          const mode = document.getElementById("iv_mode").value;
+          const gpuRail = document.getElementById("iv_gpuRail").value;
+          const redundant = document.getElementById("iv_redundant").checked;
+
+          let out = "Power-on simulation:\n";
+
+          // Region vs input mode
+          let safeVoltage = false;
+          if (!region || !mode) {
+            out += "- Input voltage: Region or mode not fully selected. Risk of misconfiguration.\n";
+          } else {
+            if (mode === "auto") {
+              out +=
+                "- Input voltage: Auto-sensing PSU adapts to 110–120V or 220–240V safely for any region.\n";
+              safeVoltage = true;
+            } else if (mode === "manual_115" && region === "na") {
+              out += "- Input voltage: Manual set to 115V in a 110–120V region – OK.\n";
+              safeVoltage = true;
+            } else if (mode === "manual_230" && region === "eu") {
+              out += "- Input voltage: Manual set to 230V in a 220–240V region – OK.\n";
+              safeVoltage = true;
+            } else {
+              out +=
+                "- Input voltage: MISMATCH – the manual switch is set incorrectly for the region. " +
+                "You risk damaging the PSU or system.\n";
+            }
+          }
+
+          // GPU rail
+          if (!gpuRail) {
+            out += "- DC rails: GPU rail not selected.\n";
+          } else if (gpuRail === "12") {
+            out +=
+              "- DC rails: GPU and high-draw components are correctly placed on the 12V rail.\n";
+          } else if (gpuRail === "3.3" || gpuRail === "5") {
+            out +=
+              "- DC rails: You selected " +
+              gpuRail +
+              "V for the GPU – this is incorrect; 12V is needed for GPUs and motors.\n";
+          } else {
+            out += "- DC rails: 5V standby is only for low-power always-on circuits, not GPUs.\n";
+          }
+
+          if (redundant) {
+            out +=
+              "- Redundancy: Enabled – if one PSU fails, the others keep the server running (common in enterprise).\n";
+          } else {
+            out +=
+              "- Redundancy: Disabled – a single PSU failure would bring the system down.\n";
+          }
+
+          if (safeVoltage && gpuRail === "12") {
+            out +=
+              "\nResult: System powers on cleanly, voltages are correct, and GPU has proper 12V power.\n" +
+              "With redundancy enabled, this matches the Day 4 guidance for server-grade PSUs.";
+          } else {
+            out +=
+              "\nResult: There are serious configuration issues. Fix the input voltage setting and ensure high-draw " +
+              "components use the 12V rail before going live.";
+          }
+
+          setOutput("iv_output", out);
+          break;
+        }
+
+        case "display-left": {
+          const panel = document.getElementById("d1_panel").value;
+          const attr = document.getElementById("d1_attr").value;
+          const brightness = document.getElementById("d2_brightness").value;
+          const cause = document.getElementById("d2_cause").value;
+
+          let out = "Display analysis – left cases:\n";
+
+          // D1
+          out += "\nCase D1 – Designer laptop:\n";
+          if (!panel || !attr) {
+            out += "- Panel or attribute not fully selected.\n";
+          } else {
+            out += `- Selected panel: ${panel.toUpperCase()}, priority: ${attr.replace("_", " ")}.\n`;
+          }
+
+          if (panel === "ips" && attr === "color_gamut") {
+            out +=
+              "- Good: IPS panels provide wide viewing angles and accurate color reproduction, " +
+              "and prioritizing color gamut matches photo editing needs.\n";
+          } else {
+            out +=
+              "- Note: For professional design work, IPS with a wide color gamut (sRGB/AdobeRGB/DCI-P3) " +
+              "is preferred over TN or VA focused on speed or contrast.\n";
+          }
+
+          // D2
+          out += "\nCase D2 – Dim laptop screen:\n";
+          out += `- Brightness slider set to ~${brightness}%.\n`;
+
+          if (cause === "inverter") {
+            out +=
+              "- Correct: On older CCFL-backlit LCDs, a failing inverter causes a very dim screen where " +
+              "you can still see the image with a flashlight.\n";
+          } else if (cause) {
+            out +=
+              "- Diagnosis: The symptoms match a bad inverter more than " +
+              cause +
+              ". Digitizers and touch controllers affect input, not brightness, and OLED isn’t used in this older laptop.\n";
+          } else {
+            out +=
+              "- Diagnosis: Not selected. Remember that a dim CCFL screen with a visible image usually points to the inverter or backlight circuitry.\n";
+          }
+
+          setOutput("display_left_output", out);
+          break;
+        }
+
+        case "display-right": {
+          const res = document.getElementById("d3_res").value;
+          const cause = document.getElementById("d4_cause").value;
+
+          let out = "Display analysis – right cases:\n";
+
+          // D3
+          out += "\nCase D3 – Fuzzy monitor text:\n";
+          if (!res) {
+            out += "- Resolution not set yet.\n";
+          } else {
+            out += `- OS resolution chosen: ${res}.\n`;
+            if (res === "1920x1080") {
+              out +=
+                "- Correct: 1920 × 1080 is the native resolution for a 1080p monitor; fuzzy text is usually due to using a non-native resolution.\n";
+            } else {
+              out +=
+                "- Note: This is not the native resolution for a 1080p monitor, so text will appear fuzzy or scaled.\n";
+            }
+          }
+
+          // D4
+          out += "\nCase D4 – Persistent ghost image:\n";
+          if (!cause) {
+            out += "- No cause selected.\n";
+          } else if (cause === "burn_in") {
+            out +=
+              "- Correct: A faint image that never goes away is classic display burn-in/image persistence.\n";
+          } else {
+            out +=
+              "- Diagnosis: The symptoms point to burn-in rather than " +
+              cause +
+              ". Dead pixels are fixed dots; dim image is global brightness; flashing is intermittent, not a static ghost.\n";
+          }
+
+          setOutput("display_right_output", out);
+          break;
+        }
+
+        default:
+          break;
+      }
+    }
+
+    document.querySelectorAll(".action-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.getAttribute("data-run");
+        runSimulation(key);
+      });
+    });
+
+    // ------------ Grading logic ------------
+
+    const scenarios = {
+      // Power planner – 4 points: PSU headroom, modular, efficiency, GPU selection that drives wattage
+      power: {
+        step: "power",
+        title: "Power Build Planner",
+        fields: {
+          psu: {
+            label: "PSU wattage sizing",
+            eval: () => {
+              const est = calcBaseWattage();
+              const psuSel = document.getElementById("pp_psu").value;
+              if (!psuSel) return { ok: false, display: "Not selected" };
+              const psuW = parseInt(psuSel, 10);
+              const headroom = psuW - est;
+              const pct = headroom / psuW;
+              const ok = pct >= 0.18 && pct <= 0.4; // approx 18–40% headroom
+              return {
+                ok,
+                display: `${psuW} W (estimated load ~${est} W, headroom ${(pct * 100).toFixed(
+                  0
+                )}%)`,
+                correct: "PSU sized to allow roughly 20–30% headroom"
+              };
+            }
+          },
+          cabling: {
+            label: "Cabling style for airflow",
+            eval: () => {
+              const val = document.getElementById("pp_cabling").value;
+              return {
+                ok: val === "modular",
+                display: val || "<no selection>",
+                correct: "Fully modular (for best cable management and airflow)"
+              };
+            }
+          },
+          eff: {
+            label: "80 PLUS efficiency",
+            eval: () => {
+              const checked = document.getElementById("pp_eff").checked;
+              return {
+                ok: checked,
+                display: checked ? "Selected" : "Not selected",
+                correct: "Energy-efficient / 80 PLUS certified"
+              };
+            }
+          },
+          gpuImpact: {
+            label: "GPU power awareness",
+            eval: () => {
+              const gpu = document.getElementById("pp_gpu").value;
+              const psuSel = document.getElementById("pp_psu").value;
+              if (!psuSel) {
+                return {
+                  ok: false,
+                  display: "No PSU selected",
+                  correct: "Pick a PSU that accounts for high-end GPU draw"
+                };
+              }
+              const psuW = parseInt(psuSel, 10);
+              const base = calcBaseWattage();
+              // If high GPU chosen but PSU barely above base, mark as bad
+              const ok =
+                gpu !== "high" ||
+                (gpu === "high" && psuW - base > 120); // some margin for high GPU
+              return {
+                ok,
+                display: gpu === "high" ? "High-end GPU chosen" : gpu || "<no GPU>",
+                correct:
+                  "If a high-end GPU is used, ensure significantly more wattage on the 12V rail"
+              };
+            }
+          }
+        },
+        explanation:
+          "In Day 4, PSU planning involves adding up estimated component loads, then selecting a wattage with extra headroom. " +
+          "Modular cabling improves airflow and reduces clutter, and 80 PLUS certification improves efficiency and lowers heat."
+      },
+
+      // Voltage bench – 4 points: region, mode, GPU rail, redundancy
+      voltage: {
+        step: "voltage",
+        title: "Input Voltage & Rails Safety",
+        fields: {
+          regionMode: {
+            label: "Region vs input mode",
+            eval: () => {
+              const region = document.getElementById("iv_region").value;
+              const mode = document.getElementById("iv_mode").value;
+              let ok = false;
+              if (!region || !mode) ok = false;
+              else if (mode === "auto") ok = true;
+              else if (mode === "manual_115" && region === "na") ok = true;
+              else if (mode === "manual_230" && region === "eu") ok = true;
+              return {
+                ok,
+                display:
+                  (region || "<no region>") + " / " + (mode || "<no setting>"),
+                correct:
+                  "Either auto-sensing or manual 115V in 110–120V regions, 230V in 220–240V regions"
+              };
+            }
+          },
+          gpuRail: {
+            label: "Correct DC rail for GPU",
+            eval: () => {
+              const rail = document.getElementById("iv_gpuRail").value;
+              return {
+                ok: rail === "12",
+                display: rail ? rail + "V rail" : "<no selection>",
+                correct: "12V rail"
+              };
+            }
+          },
+          redundant: {
+            label: "Redundant PSU for uptime",
+            eval: () => {
+              const red = document.getElementById("iv_redundant").checked;
+              return {
+                ok: red,
+                display: red ? "Enabled" : "Disabled",
+                correct: "Enabled for servers that must survive a PSU failure"
+              };
+            }
+          },
+          awareness: {
+            label: "Input voltage awareness",
+            eval: () => {
+              const mode = document.getElementById("iv_mode").value;
+              return {
+                ok: !!mode,
+                display: mode || "<no selection>",
+                correct: "Voltage-mode set correctly (manual or auto) before power-on"
+              };
+            }
+          }
+        },
+        explanation:
+          "The slides emphasize matching 110–120V vs 220–240V correctly, preferring auto-sensing PSUs when possible, " +
+          "supplying high-draw components from the 12V rail, and using redundant PSUs in enterprise servers."
+      },
+
+      // Display doctor – 6 points: IPS + gamut, inverter, native resolution, burn-in, etc.
+      display: {
+        step: "display",
+        title: "Display & Projector Doctor",
+        fields: {
+          d1: {
+            label: "D1 – IPS + color accuracy",
+            eval: () => {
+              const panel = document.getElementById("d1_panel").value;
+              const attr = document.getElementById("d1_attr").value;
+              const ok = panel === "ips" && attr === "color_gamut";
+              return {
+                ok,
+                display:
+                  (panel || "<no panel>") + " / " + (attr || "<no attribute>"),
+                correct: "IPS panel, prioritize wide color gamut/accuracy"
+              };
+            }
+          },
+          d2: {
+            label: "D2 – Dim laptop / inverter",
+            eval: () => {
+              const cause = document.getElementById("d2_cause").value;
+              return {
+                ok: cause === "inverter",
+                display: cause || "<no selection>",
+                correct:
+                  "Backlight inverter failure (image visible but screen is very dim)"
+              };
+            }
+          },
+          d3: {
+            label: "D3 – Native resolution",
+            eval: () => {
+              const res = document.getElementById("d3_res").value;
+              return {
+                ok: res === "1920x1080",
+                display: res || "<no selection>",
+                correct: "1920 × 1080 (native 1080p resolution) to fix fuzzy text"
+              };
+            }
+          },
+          d4: {
+            label: "D4 – Burn-in ghost image",
+            eval: () => {
+              const cause = document.getElementById("d4_cause").value;
+              return {
+                ok: cause === "burn_in",
+                display: cause || "<no selection>",
+                correct: "Display burn-in / image persistence"
+              };
+            }
+          },
+          dExtraRefresh: {
+            label: "Awareness of refresh vs color",
+            eval: () => {
+              const attr = document.getElementById("d1_attr").value;
+              // At least not picking refresh as the ONLY priority for designer
+              const ok = attr !== "refresh";
+              return {
+                ok,
+                display: attr || "<no selection>",
+                correct:
+                  "For design work, refresh rate is less critical than color accuracy"
+              };
+            }
+          },
+          dExtraSymptom: {
+            label: "Symptom-based reasoning (ghost vs fuzzy)",
+            eval: () => {
+              const res = document.getElementById("d3_res").value;
+              const cause = document.getElementById("d4_cause").value;
+              const ok = res === "1920x1080" && cause === "burn_in";
+              return {
+                ok,
+                display:
+                  "Resolution: " +
+                  (res || "<none>") +
+                  ", Ghost cause: " +
+                  (cause || "<none>"),
+                correct:
+                  "Fix fuzzy text by native resolution; treat persistent ghost as burn-in"
+              };
+            }
+          }
+        },
+        explanation:
+          "Day 4 display content highlights matching display technology to use case (IPS for color-critical work, TN for budget/fast response), " +
+          "knowing when an inverter/backlight is failing, using native resolution for clarity, and distinguishing burn-in from dead pixels or cabling issues."
+      }
+    };
+
+    const stepMaxPoints = {
+      power: 4,
+      voltage: 4,
+      display: 6
+    };
+
+    const stepCurrentPoints = {
+      power: 0,
+      voltage: 0,
+      display: 0
+    };
+
+    const gradeBtn = document.getElementById("gradeBtn");
+    const resultsOverlay = document.getElementById("resultsOverlay");
+    const resultsBody = document.getElementById("resultsBody");
+    const resultsScore = document.getElementById("resultsScore");
+    const closeResults = document.getElementById("closeResults");
+
+    function gradeLab() {
+      Object.keys(stepCurrentPoints).forEach(k => (stepCurrentPoints[k] = 0));
+      resultsBody.innerHTML = "";
+
+      let totalScore = 0;
+      let totalMax = 0;
+
+      Object.entries(scenarios).forEach(([key, sc]) => {
+        const step = sc.step;
+        let stepScore = 0;
+        const fields = sc.fields;
+        const scenarioMax = Object.keys(fields).length;
+        totalMax += scenarioMax;
+
+        const secHeader = document.createElement("div");
+        secHeader.className = "result-section-title";
+        secHeader.textContent = sc.title;
+        resultsBody.appendChild(secHeader);
+
+        Object.entries(fields).forEach(([fid, meta]) => {
+          const res = meta.eval();
+          const div = document.createElement("div");
+          div.className =
+            "result-scenario";
+
+          const title = document.createElement("div");
+          title.className = "result-title";
+          title.textContent = meta.label;
+          div.appendChild(title);
+
+          const line = document.createElement("div");
+          line.className =
+            "result-line " +
+            (res.ok
+              ? "good"
+              : res.display === "<no selection>" || res.display === "Not selected"
+              ? ""
+              : "bad");
+          line.innerHTML =
+            `<span class="label-inline">Your choice:</span> ${res.display}` +
+            (res.ok || !res.correct
+              ? ""
+              : ` | <span class="label-inline">Expected:</span> ${res.correct}`);
+          div.appendChild(line);
+
+          const expl = document.createElement("div");
+          expl.className = "result-expl";
+          expl.textContent = sc.explanation;
+          div.appendChild(expl);
+
+          resultsBody.appendChild(div);
+
+          if (res.ok) {
+            stepScore++;
+            totalScore++;
+          }
+        });
+
+        stepCurrentPoints[step] += stepScore;
+      });
+
+      resultsScore.textContent = `Total Score: ${totalScore} / ${totalMax} points`;
+      resultsOverlay.style.display = "flex";
+      updateStepDots();
+    }
+
+    function updateStepDots() {
+      document.querySelectorAll("[data-step-dot]").forEach(dot => {
+        const step = dot.getAttribute("data-step-dot");
+        const cur = stepCurrentPoints[step] || 0;
+        const max = stepMaxPoints[step] || 0;
+
+        const txt = document.querySelector(
+          `[data-step-score-text="${step}"]`
+        );
+        if (txt) {
+          txt.textContent = `${cur} / ${max} pts`;
+        }
+
+        dot.classList.remove("partial", "full");
+        if (cur === 0) {
+          // default
+        } else if (cur < max) {
+          dot.classList.add("partial");
+        } else {
+          dot.classList.add("full");
+        }
+      });
+    }
+
+    gradeBtn.addEventListener("click", gradeLab);
+
+    closeResults.addEventListener("click", () => {
+      resultsOverlay.style.display = "none";
+    });
+
+    resultsOverlay.addEventListener("click", e => {
+      if (e.target === resultsOverlay) {
+        resultsOverlay.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
