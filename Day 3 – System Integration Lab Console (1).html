@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Day 3 – System Integration Lab Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #070719;
+      --panel: #050516;
+      --accent: #f97316; /* orange */
+      --accent-soft: rgba(249, 115, 22, 0.15);
+      --accent-2: #22c55e; /* green */
+      --danger: #f97373;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --text: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #020617 0, #000 60%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(90deg, #020617, #111827, #020617);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    #gradeBtn {
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    #gradeBtn:hover {
+      background: rgba(249, 115, 22, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    #gradeBtn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* Top nav "stations" */
+    #stationNav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: #020617;
+    }
+
+    .station-tab {
+      flex: 1;
+      padding: 10px 12px;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      align-items: flex-start;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .station-tab:last-child {
+      border-right: none;
+    }
+
+    .station-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .station-desc {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .station-tab:hover {
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .station-tab.active {
+      background: radial-gradient(circle at top, rgba(249, 115, 22, 0.2), #020617 55%);
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .station-indicator {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .station-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .station-dot.partial {
+      background: #facc15;
+    }
+
+    .station-dot.full {
+      background: var(--accent-2);
+    }
+
+    /* Instructions */
+    .instructions-bar {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(90deg, #020617, #0b1120);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+
+    .instructions-main strong {
+      font-weight: 700;
+    }
+
+    .badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    /* Station content */
+
+    .station {
+      flex: 1;
+      display: none;
+      padding: 14px 18px;
+      min-height: 0;
+    }
+
+    .station.active {
+      display: block;
+    }
+
+    .station-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr);
+      gap: 12px;
+      min-height: 0;
+    }
+
+    @media (max-width: 960px) {
+      .station-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-alt);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 12px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .scenario-box {
+      font-size: 12px;
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 8px 9px;
+      line-height: 1.5;
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--muted);
+      margin-top: 4px;
+      margin-bottom: 3px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.4);
+      background: #020617;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .toggle-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .action-btn {
+      margin-top: 4px;
+      align-self: flex-start;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(30, 64, 175, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    .mini-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .output-box {
+      margin-top: 5px;
+      border-radius: 10px;
+      border: 1px dashed rgba(55, 65, 81, 0.95);
+      padding: 7px 9px;
+      font-size: 11px;
+      color: #d1d5db;
+      background: radial-gradient(circle at top left, rgba(249, 115, 22, 0.16), #020617 65%);
+      white-space: pre-line;
+    }
+
+    .output-box.placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .station-footer {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Results overlay */
+
+    #resultsOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      padding: 16px;
+    }
+
+    #resultsModal {
+      max-width: 880px;
+      width: 100%;
+      max-height: 90vh;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid rgba(75, 85, 99, 0.95);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.7);
+      padding: 14px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #resultsHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #resultsHeader h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #resultsScore {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #resultsBody {
+      font-size: 12px;
+      color: #e5e7eb;
+      padding: 9px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), #020617 60%);
+      overflow-y: auto;
+    }
+
+    .result-section-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #fed7aa;
+    }
+
+    .result-scenario {
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed rgba(55, 65, 81, 0.9);
+    }
+
+    .result-scenario:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .result-line {
+      margin-bottom: 2px;
+    }
+
+    .result-line span.label-inline {
+      color: var(--muted);
+    }
+
+    .result-line.good {
+      color: var(--accent-2);
+    }
+
+    .result-line.bad {
+      color: var(--danger);
+    }
+
+    .result-expl {
+      margin-top: 2px;
+      color: #e5e7eb;
+    }
+
+    #closeResults {
+      align-self: flex-end;
+      margin-top: 3px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    #closeResults:hover {
+      background: rgba(30, 64, 175, 0.9);
+      transform: translateY(-1px);
+    }
+
+    #closeResults:active {
+      transform: translateY(0);
+    }
+
+    .results-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: -3px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>System Integration Lab Console</h1>
+      <div class="subtitle">
+        Day 3 – Motherboards, CPUs, Add-on Cards, BIOS/UEFI & Troubleshooting
+      </div>
+    </div>
+    <button id="gradeBtn" type="button">Grade My Lab Run</button>
+  </header>
+
+  <!-- Station navigation -->
+  <div id="stationNav">
+    <div class="station-tab active" data-station="build">
+      <div class="station-name">Station 1 – Build Planning</div>
+      <div class="station-desc">Choose form factor, socket, slots & storage connectors.</div>
+      <div class="station-indicator">
+        <span class="station-dot" data-station-dot="build"></span>
+        <span class="small">0 / 5 pts</span>
+      </div>
+    </div>
+    <div class="station-tab" data-station="bios">
+      <div class="station-name">Station 2 – BIOS & Security Setup</div>
+      <div class="station-desc">Enable VT-x/AMD-V, TPM, Secure Boot & boot order.</div>
+      <div class="station-indicator">
+        <span class="station-dot" data-station-dot="bios"></span>
+        <span class="small">0 / 5 pts</span>
+      </div>
+    </div>
+    <div class="station-tab" data-station="troubleshoot">
+      <div class="station-name">Station 3 – POST & Power Troubleshooting</div>
+      <div class="station-desc">Interpret beeps, smells, crashes & shutdowns.</div>
+      <div class="station-indicator">
+        <span class="station-dot" data-station-dot="troubleshoot"></span>
+        <span class="small">0 / 8 pts</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="instructions-bar">
+    <div class="instructions-main">
+      <strong>How to use this lab:</strong>
+      1) Select a station. 2) Read the scenario and configure hardware/BIOS or pick a troubleshooting path.
+      3) Use the orange buttons to <em>run checks</em> and see simulated output. 4) Click
+      <strong>Grade My Lab Run</strong> for scoring & explanations.
+    </div>
+    <div class="badge">Hands-on • No Drag & Drop</div>
+  </div>
+
+  <main>
+    <!-- STATION 1: Build planning -->
+    <section class="station active" data-station-content="build">
+      <div class="station-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Scenario – Compact Virtualization Workstation</div>
+              <div class="panel-subtitle">
+                Design a build for an IT pro running multiple VMs with hardware encryption.
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-box">
+            Your task is to choose a motherboard and CPU combination for a lab workstation.
+            Requirements:<br><br>
+            • Case is mid-tower but space is limited – they want something more compact than full ATX
+            but still with multiple expansion slots.<br>
+            • CPU will be a 12th-gen Intel Core i7 used for running several virtual machines.<br>
+            • They need a dedicated GPU plus a capture card for recording training sessions.<br>
+            • The OS and VMs should run from an <strong>NVMe SSD</strong> for best performance.<br><br>
+            Choose the right form factor, socket, slots, and storage connector.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Build Choices</div>
+              <div class="panel-subtitle">Set your hardware selections, then run a compatibility check.</div>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Motherboard Form Factor</div>
+            <select id="b_form">
+              <option value="">-- Select form factor --</option>
+              <option value="atx">ATX</option>
+              <option value="microatx">microATX</option>
+              <option value="miniitx">Mini-ITX</option>
+              <option value="eatx">EATX</option>
+            </select>
+            <div class="hint">You want smaller than full ATX, but still room for multiple PCIe cards.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">CPU Socket for 12th-gen Intel</div>
+            <select id="b_socket">
+              <option value="">-- Select socket --</option>
+              <option value="lga1200">LGA 1200</option>
+              <option value="lga1700">LGA 1700</option>
+              <option value="am4">AM4</option>
+              <option value="am5">AM5</option>
+            </select>
+            <div class="hint">Match the CPU family to the correct Intel LGA socket.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Slot for Dedicated GPU</div>
+            <select id="b_gpuSlot">
+              <option value="">-- Select slot --</option>
+              <option value="pcie_x1">PCIe x1</option>
+              <option value="pcie_x4">PCIe x4</option>
+              <option value="pcie_x8">PCIe x8</option>
+              <option value="pcie_x16">PCIe x16</option>
+              <option value="pci_legacy">Legacy PCI</option>
+            </select>
+            <div class="hint">Modern graphics cards use the widest PCIe lane count available.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Interface for NVMe SSD</div>
+            <select id="b_nvme">
+              <option value="">-- Select connector --</option>
+              <option value="sata">SATA port</option>
+              <option value="esata">eSATA</option>
+              <option value="m2">M.2 slot</option>
+              <option value="usb3">USB 3.0 port</option>
+            </select>
+            <div class="hint">Look for the slot that supports NVMe over PCIe.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Expansion Bus for Capture Card</div>
+            <select id="b_capture">
+              <option value="">-- Select slot --</option>
+              <option value="pcie_x1">PCIe x1</option>
+              <option value="pcie_x16">PCIe x16</option>
+              <option value="isa">ISA</option>
+              <option value="agp">AGP</option>
+            </select>
+            <div class="hint">Modern capture cards are typically PCIe add-on cards, not legacy buses.</div>
+          </div>
+
+          <button class="action-btn" type="button" data-run="build">
+            <span class="mini-dot"></span> Run hardware compatibility check
+          </button>
+          <div class="output-box placeholder" id="b_output">
+            Click "Run hardware compatibility check" to see how your build choices line up.
+          </div>
+
+          <div class="station-footer">
+            <span>Station 1: 5 points total.</span>
+            <span>Think: form factor, socket, PCIe x16 for GPUs, and M.2 for NVMe.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATION 2: BIOS & security -->
+    <section class="station" data-station-content="bios">
+      <div class="station-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Scenario – Secure Virtualization Host</div>
+              <div class="panel-subtitle">
+                Configure BIOS/UEFI for VMs and hardware-based encryption.
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-box">
+            The system you just built will run multiple virtual machines and must support
+            <strong>hardware-based disk encryption</strong> for sensitive data.<br><br>
+            Requirements:<br>
+            • Hypervisor (Type 1 or Type 2) must be able to use CPU virtualization extensions.<br>
+            • Windows will use BitLocker with a hardware root of trust.<br>
+            • Only trusted operating systems should be allowed to boot.<br>
+            • Unauthorized users must not be able to change BIOS/UEFI settings.<br><br>
+            Configure the BIOS/UEFI toggles to meet these requirements, then run a
+            <strong>configuration check</strong>.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">BIOS/UEFI Settings</div>
+              <div class="panel-subtitle">
+                Toggle features just like you would in a firmware setup screen.
+              </div>
+            </div>
+          </div>
+
+          <div class="label">CPU & Virtualization</div>
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" id="bios_vt" />
+              Enable Intel VT-x / AMD-V
+            </label>
+            <span class="small">Required for running multiple virtual machines efficiently.</span>
+          </div>
+
+          <div class="label">Security & Encryption</div>
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" id="bios_tpm" />
+              Enable TPM (Trusted Platform Module)
+            </label>
+            <span class="small">Needed for BitLocker and other hardware-based encryption.</span>
+          </div>
+
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" id="bios_secureboot" />
+              Enable Secure Boot
+            </label>
+            <span class="small">Helps ensure only trusted OS loaders can boot.</span>
+          </div>
+
+          <div class="label">Boot Order</div>
+          <select id="bios_boot">
+            <option value="">-- Select primary boot order --</option>
+            <option value="hdd_first">HDD → SSD → USB → Network</option>
+            <option value="ssd_first">NVMe SSD → Network → USB</option>
+            <option value="usb_first">USB → NVMe SSD → Network</option>
+            <option value="network_first">Network → NVMe SSD → USB</option>
+          </select>
+          <div class="hint">Think about where the main OS for VMs actually lives.</div>
+
+          <div class="label">Firmware Access Control</div>
+          <select id="bios_password">
+            <option value="">-- BIOS/UEFI password policy --</option>
+            <option value="none">No password set</option>
+            <option value="user_only">User password only for boot</option>
+            <option value="admin_config">Administrator password required to change settings</option>
+          </select>
+          <div class="hint">Which option best prevents unauthorized configuration changes?</div>
+
+          <button class="action-btn" type="button" data-run="bios">
+            <span class="mini-dot"></span> Run configuration check
+          </button>
+          <div class="output-box placeholder" id="bios_output">
+            Click "Run configuration check" to simulate what a security review would say.
+          </div>
+
+          <div class="station-footer">
+            <span>Station 2: 5 points total.</span>
+            <span>Focus: VT-x/AMD-V, TPM, Secure Boot, boot device, and firmware password.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATION 3: Troubleshooting -->
+    <section class="station" data-station-content="troubleshoot">
+      <div class="station-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Case Files – POST & Power Symptoms</div>
+              <div class="panel-subtitle">
+                Choose likely components and first responses for each case.
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-box">
+            You’re on call for a hardware support queue. Each case below represents a different
+            motherboard/CPU/add-on card or power-related problem.<br><br>
+            • Read the description carefully, including beeps, smells, and crash behavior.<br>
+            • Decide which <strong>component or area</strong> is most likely at fault.<br>
+            • Choose the <strong>best first action</strong> to take.<br><br>
+            You can run a quick diagnostic simulation for each case to see extra clues before deciding.
+          </div>
+        </div>
+
+        <div class="panel">
+          <!-- Case T1 -->
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Case T1 – Continuous Beeps, Blank Screen</div>
+              <div class="panel-subtitle">New build, no display, system never reaches POST screen.</div>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Symptom Summary</div>
+            <div class="scenario-box">
+              • System powers on, fans spin.<br>
+              • No video output at all.<br>
+              • Continuous, repeating beeps from the motherboard speaker.<br>
+              • You have verified the monitor and cable on another system.
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Most Likely Component/Area</div>
+            <select id="t1_component">
+              <option value="">-- Select component --</option>
+              <option value="hdd">Hard drive / storage</option>
+              <option value="ram">RAM / memory</option>
+              <option value="gpu">Video card</option>
+              <option value="os">Operating system</option>
+            </select>
+            <div class="hint">Think about common POST beep code meanings from your study materials.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Best First Action</div>
+            <select id="t1_action">
+              <option value="">-- Select action --</option>
+              <option value="reseat_ram">Power down and reseat/replace RAM modules</option>
+              <option value="reinstall_os">Attempt an OS reinstall from USB</option>
+              <option value="swap_hdd">Swap hard drive with a known-good drive</option>
+              <option value="update_bios">Update BIOS through OS utility</option>
+            </select>
+            <div class="hint">If the system never reaches POST, the OS and storage haven’t loaded yet.</div>
+          </div>
+
+          <button class="action-btn" type="button" data-run="t1">
+            <span class="mini-dot"></span> Simulate POST beep reference
+          </button>
+          <div class="output-box placeholder" id="t1_output">
+            Click to see a short reference of what the beep pattern suggests.
+          </div>
+
+          <hr style="border: none; border-top: 1px solid rgba(31,41,55,0.9); margin: 10px 0;">
+
+          <!-- Case T2 -->
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Case T2 – Burning Smell & Swollen Capacitors</div>
+              <div class="panel-subtitle">Desktop with intermittent crashes and now visible damage.</div>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Symptom Summary</div>
+            <div class="scenario-box">
+              • System had been randomly shutting off under load.<br>
+              • Now you smell a burning odor from inside the case.<br>
+              • Several capacitors near the CPU socket look swollen or leaking.<br>
+              • Fan speeds appear normal.
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Most Likely Cause</div>
+            <select id="t2_cause">
+              <option value="">-- Select cause --</option>
+              <option value="ram_fail">Failing RAM module</option>
+              <option value="overheat_cpu">Overheated CPU from poor paste</option>
+              <option value="mobo_psu_fail">Failing motherboard or power supply circuitry</option>
+              <option value="os_corrupt">Corrupted operating system</option>
+            </select>
+            <div class="hint">Match swollen capacitors and burning smell to the right subsystem.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">First Safety Step</div>
+            <select id="t2_action">
+              <option value="">-- Select action --</option>
+              <option value="continue_testing">Continue stress testing to reproduce issue</option>
+              <option value="disconnect_replace">Disconnect power and replace motherboard/PSU</option>
+              <option value="reinstall_os">Reinstall OS and run updates</option>
+              <option value="add_case_fans">Add more case fans for airflow</option>
+            </select>
+            <div class="hint">Think safety first when you see heat damage and suspect power issues.</div>
+          </div>
+
+          <button class="action-btn" type="button" data-run="t2">
+            <span class="mini-dot"></span> View board inspection notes
+          </button>
+          <div class="output-box placeholder" id="t2_output">
+            Click to see what a closer board inspection log might say.
+          </div>
+
+          <hr style="border: none; border-top: 1px solid rgba(31,41,55,0.9); margin: 10px 0;">
+
+          <!-- Case T3 -->
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Case T3 – Shutdowns Under Load, Very Hot CPU</div>
+              <div class="panel-subtitle">Workstation dies during heavy workloads only.</div>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Symptom Summary</div>
+            <div class="scenario-box">
+              • Workstation passes POST and boots into Windows normally.<br>
+              • During stress tests or games, it suddenly powers off.<br>
+              • Hardware monitoring shows CPU temps spiking very high just before shutdown.<br>
+              • The CPU fan makes unusual noises and RPM readings fluctuate.
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Most Likely Cause</div>
+            <select id="t3_cause">
+              <option value="">-- Select cause --</option>
+              <option value="ram_insufficient">Insufficient RAM capacity</option>
+              <option value="cpu_overheat">CPU overheating due to inadequate cooling</option>
+              <option value="hdd_failure">Failing hard drive</option>
+              <option value="clock_battery">Dead CMOS battery</option>
+            </select>
+            <div class="hint">Match random shutdowns under load and high temps to the right root cause.</div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Best First Corrective Action</div>
+            <select id="t3_action">
+              <option value="">-- Select action --</option>
+              <option value="add_ram">Install additional RAM modules</option>
+              <option value="reapply_paste">Clean/reseat heatsink, reapply thermal paste, verify fan</option>
+              <option value="replace_hdd">Replace HDD and reinstall OS</option>
+              <option value="set_boot_order">Change boot order in BIOS/UEFI</option>
+            </select>
+            <div class="hint">What directly addresses CPU thermal issues on the motherboard?</div>
+          </div>
+
+          <button class="action-btn" type="button" data-run="t3">
+            <span class="mini-dot"></span> Run thermal log review
+          </button>
+          <div class="output-box placeholder" id="t3_output">
+            Click to see a short thermal and fan log summary for this case.
+          </div>
+
+          <div class="station-footer">
+            <span>Station 3: 8 points total (2 or 3 per case).</span>
+            <span>Use POST beeps, physical clues, and power symptoms just like on the exam.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- RESULTS MODAL -->
+  <div id="resultsOverlay">
+    <div id="resultsModal">
+      <div id="resultsHeader">
+        <h2>Lab Run Results</h2>
+        <div id="resultsScore"></div>
+      </div>
+      <div id="resultsBody"></div>
+      <div class="results-note">
+        These explanations tie your choices back to key A+ Day 3 topics: motherboard form factors and sockets,
+        CPU virtualization features, BIOS/UEFI security, POST codes, and power/thermal symptoms.
+      </div>
+      <button id="closeResults" type="button">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Answer key & explanations ----------
+
+    const scenarios = {
+      // Station 1 – Build planning (5 points)
+      b_build: {
+        station: "build",
+        title: "Station 1 – Compact Virtualization Workstation",
+        fields: {
+          b_form: {
+            correct: "microatx",
+            label: "Motherboard Form Factor"
+          },
+          b_socket: {
+            correct: "lga1700",
+            label: "CPU Socket"
+          },
+          b_gpuSlot: {
+            correct: "pcie_x16",
+            label: "GPU Slot"
+          },
+          b_nvme: {
+            correct: "m2",
+            label: "NVMe Connector"
+          },
+          b_capture: {
+            correct: "pcie_x1",
+            label: "Capture Card Slot"
+          }
+        },
+        explanation:
+          "A compact build with multiple expansion slots is a good fit for microATX, smaller than full ATX but more flexible than Mini-ITX. " +
+          "12th-gen Intel CPUs use the LGA 1700 socket. Modern GPUs use PCIe x16 slots, while many capture cards are PCIe add-on cards that operate happily in x1 or larger PCIe slots. " +
+          "NVMe SSDs typically connect using an M.2 slot that carries PCIe lanes."
+      },
+
+      // Station 2 – BIOS & security (5 points)
+      bios: {
+        station: "bios",
+        title: "Station 2 – Secure Virtualization Host",
+        fields: {
+          bios_vt: {
+            correct: true,
+            label: "Intel VT-x / AMD-V"
+          },
+          bios_tpm: {
+            correct: true,
+            label: "TPM"
+          },
+          bios_secureboot: {
+            correct: true,
+            label: "Secure Boot"
+          },
+          bios_boot: {
+            correct: "ssd_first",
+            label: "Boot Order"
+          },
+          bios_password: {
+            correct: "admin_config",
+            label: "Firmware Password"
+          }
+        },
+        explanation:
+          "To support hypervisors, you must enable the CPU's virtualization extensions (Intel VT-x or AMD-V) in BIOS/UEFI. " +
+          "Hardware-based encryption with BitLocker relies on TPM being enabled. " +
+          "Secure Boot helps ensure only trusted OS loaders are used. " +
+          "Setting the NVMe SSD as the primary boot device lets the system load the main OS quickly, and an administrator/firmware password protects BIOS/UEFI settings from unauthorized changes."
+      },
+
+      // Station 3 – Troubleshooting (8 points)
+      t1: {
+        station: "troubleshoot",
+        title: "Case T1 – Continuous Beeps, Blank Screen",
+        fields: {
+          t1_component: {
+            correct: "ram",
+            label: "Most Likely Component"
+          },
+          t1_action: {
+            correct: "reseat_ram",
+            label: "Best First Action"
+          }
+        },
+        explanation:
+          "Continuous POST beeps with no display often indicate RAM problems. If the monitor and cable are known-good, the OS and hard drive are not involved yet because the system has not completed POST. " +
+          "The best first action is to power down, reseat or replace the memory modules, and try again."
+      },
+      t2: {
+        station: "troubleshoot",
+        title: "Case T2 – Burning Smell & Swollen Capacitors",
+        fields: {
+          t2_cause: {
+            correct: "mobo_psu_fail",
+            label: "Most Likely Cause"
+          },
+          t2_action: {
+            correct: "disconnect_replace",
+            label: "First Safety Step"
+          }
+        },
+        explanation:
+          "Swollen or leaking capacitors and a burning smell point to failing power regulation circuitry on the motherboard or possibly the power supply. " +
+          "Continuing to run the system is unsafe. The correct first step is to disconnect power immediately and plan to replace the motherboard and/or PSU rather than reinstalling the OS or just adding case fans."
+      },
+      t3: {
+        station: "troubleshoot",
+        title: "Case T3 – Shutdowns Under Load, Very Hot CPU",
+        fields: {
+          t3_cause: {
+            correct: "cpu_overheat",
+            label: "Most Likely Cause"
+          },
+          t3_action: {
+            correct: "reapply_paste",
+            label: "Best Corrective Action"
+          }
+        },
+        explanation:
+          "Random shutdowns only under heavy load, combined with very high CPU temperatures and noisy, unstable fan speeds, strongly indicate CPU overheating rather than RAM or storage issues. " +
+          "The best corrective action is to check and reseat the CPU heatsink, clean and reapply thermal compound, verify fan operation, and ensure proper airflow."
+      }
+    };
+
+    const stationMaxPoints = {
+      build: 5,
+      bios: 5,
+      troubleshoot: 8
+    };
+
+    const stationCurrentPoints = {
+      build: 0,
+      bios: 0,
+      troubleshoot: 0
+    };
+
+    // ---------- Station tab switching ----------
+
+    const stationTabs = document.querySelectorAll(".station-tab");
+    const stationSections = document.querySelectorAll(".station");
+
+    stationTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        const name = tab.dataset.station;
+        stationTabs.forEach(t => t.classList.toggle("active", t === tab));
+        stationSections.forEach(sec => {
+          sec.classList.toggle(
+            "active",
+            sec.getAttribute("data-station-content") === name
+          );
+        });
+      });
+    });
+
+    // ---------- Mini "run check" outputs ----------
+
+    function setOutput(id, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("placeholder");
+      el.textContent = text;
+    }
+
+    function handleRun(key) {
+      switch (key) {
+        case "build": {
+          const form = document.getElementById("b_form").value;
+          const socket = document.getElementById("b_socket").value;
+          const gpu = document.getElementById("b_gpuSlot").value;
+          const nvme = document.getElementById("b_nvme").value;
+
+          let notes = "Compatibility summary:\n";
+          if (form === "microatx") {
+            notes += "- Form factor: microATX provides a smaller board with multiple PCIe slots.\n";
+          } else if (form) {
+            notes += "- Form factor: Selected type may not meet the 'compact but expandable' requirement.\n";
+          } else {
+            notes += "- Form factor: Not selected.\n";
+          }
+
+          if (socket === "lga1700") {
+            notes += "- Socket: LGA 1700 correctly matches 12th-gen Intel CPUs.\n";
+          } else if (socket) {
+            notes += "- Socket: Does not match the specified 12th-gen Intel CPU.\n";
+          } else {
+            notes += "- Socket: Not selected.\n";
+          }
+
+          if (gpu === "pcie_x16") {
+            notes += "- GPU slot: PCIe x16 is appropriate for modern graphics cards.\n";
+          } else if (gpu) {
+            notes += "- GPU slot: May not provide the expected bandwidth for a modern GPU.\n";
+          } else {
+            notes += "- GPU slot: Not selected.\n";
+          }
+
+          if (nvme === "m2") {
+            notes += "- Storage: M.2 slot allows NVMe SSDs to use PCIe lanes for high performance.\n";
+          } else if (nvme) {
+            notes += "- Storage: Selected connector does not match an NVMe M.2 drive.\n";
+          } else {
+            notes += "- Storage: Not selected.\n";
+          }
+
+          notes += "\nRemember: capture cards are typically PCIe add-on cards, often sized for x1/x4 slots.";
+          setOutput("b_output", notes);
+          break;
+        }
+        case "bios": {
+          const vt = document.getElementById("bios_vt").checked;
+          const tpm = document.getElementById("bios_tpm").checked;
+          const sb = document.getElementById("bios_secureboot").checked;
+          const boot = document.getElementById("bios_boot").value;
+          const pw = document.getElementById("bios_password").value;
+
+          let notes = "BIOS/UEFI configuration review:\n";
+          notes += vt
+            ? "- VT-x / AMD-V: ENABLED (OK for hypervisors).\n"
+            : "- VT-x / AMD-V: DISABLED – hypervisors may refuse to run or will be slower.\n";
+          notes += tpm
+            ? "- TPM: ENABLED (OK for BitLocker and secure key storage).\n"
+            : "- TPM: DISABLED – OS cannot use TPM for full hardware-based encryption.\n";
+          notes += sb
+            ? "- Secure Boot: ENABLED (helps block untrusted bootloaders).\n"
+            : "- Secure Boot: DISABLED – system may boot untrusted OS images.\n";
+
+          if (boot === "ssd_first") {
+            notes += "- Boot order: OS will boot from fast NVMe SSD first.\n";
+          } else if (boot) {
+            notes += "- Boot order: Might delay boot or allow booting from removable media first.\n";
+          } else {
+            notes += "- Boot order: Not selected; default behavior unknown.\n";
+          }
+
+          if (pw === "admin_config") {
+            notes += "- Firmware password: Admin password required to change settings (good for security).\n";
+          } else if (pw === "user_only") {
+            notes += "- Firmware password: Only a user boot password set; settings may still be changed.\n";
+          } else if (pw === "none") {
+            notes += "- Firmware password: None – anyone with physical access can change BIOS/UEFI.\n";
+          } else {
+            notes += "- Firmware password: Not specified.\n";
+          }
+
+          setOutput("bios_output", notes);
+          break;
+        }
+        case "t1": {
+          setOutput(
+            "t1_output",
+            "POST beep reference (sample):\n" +
+              "- Continuous or repeating beeps often indicate a memory problem.\n" +
+              "- GPU errors are usually a pattern of long + short beeps depending on BIOS vendor.\n" +
+              "- Storage and OS issues are not detected until after POST completes.\n\n" +
+              "Priority check: reseat or replace RAM modules first."
+          );
+          break;
+        }
+        case "t2": {
+          setOutput(
+            "t2_output",
+            "Board inspection notes:\n" +
+              "- Capacitors near CPU VRM area are swollen and venting.\n" +
+              "- PCB around power circuitry shows heat discoloration.\n" +
+              "- PSU smells burnt; fan still spins but rails may be unstable.\n\n" +
+              "This points to failing power regulation on the motherboard and/or PSU – shut down and replace hardware immediately."
+          );
+          break;
+        }
+        case "t3": {
+          setOutput(
+            "t3_output",
+            "Thermal and fan log:\n" +
+              "- Idle CPU temp: ~40°C.\n" +
+              "- Under load: temps spike above 95–100°C within minutes.\n" +
+              "- CPU fan RPM fluctuates, with occasional drops to very low speeds.\n" +
+              "- Shutdown events coincide with critical temperature warnings.\n\n" +
+              "Likely causes: poor thermal contact, failing fan, or inadequate heatsink – address CPU cooling first."
+          );
+          break;
+        }
+        default:
+          break;
+      }
+    }
+
+    document.querySelectorAll("[data-run]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.getAttribute("data-run");
+        handleRun(key);
+      });
+    });
+
+    // ---------- Grading ----------
+
+    const gradeBtn = document.getElementById("gradeBtn");
+    const resultsOverlay = document.getElementById("resultsOverlay");
+    const resultsBody = document.getElementById("resultsBody");
+    const resultsScore = document.getElementById("resultsScore");
+    const closeResults = document.getElementById("closeResults");
+
+    function gradeLab() {
+      let totalScore = 0;
+      let maxScore = 0;
+
+      // Reset station scores
+      Object.keys(stationCurrentPoints).forEach(s => (stationCurrentPoints[s] = 0));
+      resultsBody.innerHTML = "";
+
+      const grouped = {
+        build: [],
+        bios: [],
+        troubleshoot: []
+      };
+
+      Object.entries(scenarios).forEach(([id, sc]) => {
+        let scenarioScore = 0;
+        const scenarioMax = Object.keys(sc.fields).length;
+        maxScore += scenarioMax;
+
+        const resultLines = [];
+
+        Object.entries(sc.fields).forEach(([fieldId, meta]) => {
+          const el = document.getElementById(fieldId);
+          let userVal = "";
+          let correctVal = meta.correct;
+          let isCorrect = false;
+
+          if (!el) return;
+
+          if (typeof meta.correct === "boolean") {
+            userVal = el.checked;
+            isCorrect = userVal === meta.correct;
+          } else {
+            userVal = el.value || "";
+            isCorrect = userVal === meta.correct;
+          }
+
+          if (isCorrect) {
+            scenarioScore++;
+          }
+
+          let userDisplay;
+          if (typeof meta.correct === "boolean") {
+            userDisplay = userVal ? "Enabled" : "Disabled";
+            correctVal = meta.correct ? "Enabled" : "Disabled";
+          } else {
+            userDisplay = userVal || "<no selection>";
+          }
+
+          resultLines.push({
+            label: meta.label,
+            userDisplay,
+            correctDisplay: correctVal,
+            good: isCorrect
+          });
+        });
+
+        totalScore += scenarioScore;
+        stationCurrentPoints[sc.station] += scenarioScore;
+
+        grouped[sc.station].push({
+          title: sc.title,
+          scenarioScore,
+          scenarioMax,
+          resultLines,
+          explanation: sc.explanation
+        });
+      });
+
+      function renderStationSection(stationKey, titleText) {
+        const arr = grouped[stationKey];
+        if (!arr || !arr.length) return;
+
+        const header = document.createElement("div");
+        header.className = "result-section-title";
+        header.textContent = titleText;
+        resultsBody.appendChild(header);
+
+        arr.forEach(scen => {
+          const block = document.createElement("div");
+          block.className = "result-scenario";
+
+          const t = document.createElement("div");
+          t.className = "result-title";
+          t.textContent = `${scen.title} (${scen.scenarioScore} / ${scen.scenarioMax} pts)`;
+          block.appendChild(t);
+
+          scen.resultLines.forEach(line => {
+            const div = document.createElement("div");
+            div.className =
+              "result-line " +
+              (line.good ? "good" : line.userDisplay === "<no selection>" ? "" : "bad");
+            div.innerHTML =
+              `<span class="label-inline">${line.label} – Your choice:</span> ${line.userDisplay}` +
+              (!line.good && line.userDisplay !== "<no selection>"
+                ? ` | <span class="label-inline">Correct:</span> ${line.correctDisplay}`
+                : "");
+            block.appendChild(div);
+          });
+
+          const expl = document.createElement("div");
+          expl.className = "result-expl";
+          expl.textContent = scen.explanation;
+          block.appendChild(expl);
+
+          resultsBody.appendChild(block);
+        });
+      }
+
+      renderStationSection("build", "Station 1 – Build Planning");
+      renderStationSection("bios", "Station 2 – BIOS & Security Setup");
+      renderStationSection("troubleshoot", "Station 3 – POST & Power Troubleshooting");
+
+      resultsScore.textContent = `Total Score: ${totalScore} / ${maxScore} points`;
+      resultsOverlay.style.display = "flex";
+
+      updateStationDots();
+    }
+
+    function updateStationDots() {
+      document.querySelectorAll("[data-station-dot]").forEach(dot => {
+        const name = dot.getAttribute("data-station-dot");
+        const cur = stationCurrentPoints[name] || 0;
+        const max = stationMaxPoints[name] || 0;
+
+        const text = dot.parentElement.querySelector(".small");
+        if (text) text.textContent = `${cur} / ${max} pts`;
+
+        dot.classList.remove("partial", "full");
+        if (cur === 0) {
+          // leave default
+        } else if (cur < max) {
+          dot.classList.add("partial");
+        } else {
+          dot.classList.add("full");
+        }
+      });
+    }
+
+    gradeBtn.addEventListener("click", gradeLab);
+
+    closeResults.addEventListener("click", () => {
+      resultsOverlay.style.display = "none";
+    });
+
+    resultsOverlay.addEventListener("click", e => {
+      if (e.target === resultsOverlay) {
+        resultsOverlay.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
