@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Day 5 – Printer Operations Mini-Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #050013;
+      --bg-alt: #0b0422;
+      --panel: #12052d;
+      --accent: #e879f9; /* magenta */
+      --accent-soft: rgba(232, 121, 249, 0.2);
+      --accent-2: #22d3ee; /* cyan */
+      --danger: #fb7185;
+      --muted: #a5b4fc;
+      --border: #312e81;
+      --text: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1e1b4b 0, #020617 55%, #020617 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(90deg, #020617, #312e81, #4c1d95);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    #gradeBtn {
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    #gradeBtn:hover {
+      background: rgba(232, 121, 249, 0.35);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    #gradeBtn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+      }
+    }
+
+    /* Left column: ticket list */
+
+    #ticketPanel {
+      border-right: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(232, 121, 249, 0.22), #020617 60%);
+      padding: 12px 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .panel-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .ticket-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .ticket {
+      border-radius: 10px;
+      border: 1px solid rgba(129, 140, 248, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 8px 9px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      transition: border 0.12s ease, background 0.12s ease, transform 0.08s ease;
+    }
+
+    .ticket:hover {
+      background: rgba(76, 29, 149, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .ticket.active {
+      border-color: var(--accent-2);
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.3), rgba(15, 23, 42, 0.96));
+    }
+
+    .ticket-title {
+      font-weight: 600;
+    }
+
+    .ticket-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .ticket-score {
+      font-size: 11px;
+      color: #a7f3d0;
+    }
+
+    .badge {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(165, 180, 252, 0.9);
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.95);
+      display: inline-block;
+      margin-top: 3px;
+    }
+
+    /* Right column: workspace */
+
+    #workspace {
+      padding: 12px 14px 16px;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), #020617 55%);
+    }
+
+    .workspace-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .workspace-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .workspace-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .hint-bar {
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 999px;
+      border: 1px solid rgba(79, 70, 229, 0.9);
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hint-bar strong {
+      color: var(--accent-2);
+    }
+
+    .workspace-body {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .workspace-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .scenario-box {
+      font-size: 12px;
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 12px;
+      border: 1px solid rgba(79, 70, 229, 0.8);
+      padding: 9px 10px;
+      line-height: 1.5;
+    }
+
+    .controls-panel {
+      background: var(--panel);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--muted);
+      margin-top: 2px;
+      margin-bottom: 2px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 3px;
+    }
+
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(129, 140, 248, 0.9);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    select:focus {
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.4);
+      background: #020617;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .toggle-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .action-btn {
+      margin-top: 4px;
+      align-self: flex-start;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(165, 180, 252, 0.9);
+      background: rgba(15, 23, 42, 0.97);
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(55, 48, 163, 0.98);
+      transform: translateY(-1px);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    .mini-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-2);
+    }
+
+    .output-box {
+      margin-top: 5px;
+      border-radius: 10px;
+      border: 1px dashed rgba(129, 140, 248, 0.9);
+      padding: 7px 9px;
+      font-size: 11px;
+      color: #e5e7eb;
+      background: radial-gradient(circle at top left, rgba(232, 121, 249, 0.22), #020617 70%);
+      white-space: pre-line;
+    }
+
+    .output-box.placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Ticket workspaces */
+
+    .ticket-workspace {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      height: 100%;
+    }
+
+    .ticket-workspace.active {
+      display: flex;
+    }
+
+    .workspace-footer {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Results overlay */
+
+    #resultsOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      padding: 16px;
+    }
+
+    #resultsModal {
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid rgba(129, 140, 248, 0.95);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.8);
+      padding: 14px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #resultsHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #resultsHeader h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #resultsScore {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #resultsBody {
+      font-size: 12px;
+      color: #e5e7eb;
+      padding: 9px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(79, 70, 229, 0.9);
+      background: radial-gradient(circle at top left, rgba(34, 211, 238, 0.2), #020617 60%);
+      overflow-y: auto;
+    }
+
+    .result-scenario {
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed rgba(55, 65, 81, 0.9);
+    }
+
+    .result-scenario:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .result-line {
+      margin-bottom: 2px;
+    }
+
+    .result-line span.label-inline {
+      color: var(--muted);
+    }
+
+    .result-line.good {
+      color: #6ee7b7;
+    }
+
+    .result-line.bad {
+      color: var(--danger);
+    }
+
+    .result-expl {
+      margin-top: 2px;
+    }
+
+    #closeResults {
+      align-self: flex-end;
+      margin-top: 3px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(165, 180, 252, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    #closeResults:hover {
+      background: rgba(55, 48, 163, 0.98);
+      transform: translateY(-1px);
+    }
+
+    #closeResults:active {
+      transform: translateY(0);
+    }
+
+    .results-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: -3px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Printer Ops Console</h1>
+      <div class="subtitle">
+        Day 5 – Deploy, maintain, and troubleshoot printers by working real tickets.
+      </div>
+    </div>
+    <button id="gradeBtn" type="button">Evaluate My Tickets</button>
+  </header>
+
+  <main>
+    <!-- Left: ticket list -->
+    <aside id="ticketPanel">
+      <div class="panel-title">Ticket Queue</div>
+      <div class="panel-sub">
+        Click a ticket, read the description, then actually configure or repair the printer
+        using the controls on the right.
+      </div>
+
+      <div class="ticket-list">
+        <div class="ticket active" data-ticket="t1">
+          <div class="ticket-title">T1 – New Shared MFP Deployment</div>
+          <div class="ticket-meta">Driver • Network • Security • Scan-to-SMB</div>
+          <div class="ticket-score" data-ticket-score="t1">Score: 0 / 4</div>
+          <span class="badge">Deploy & Configure</span>
+        </div>
+
+        <div class="ticket" data-ticket="t2">
+          <div class="ticket-title">T2 – Faded & Speckled Laser Output</div>
+          <div class="ticket-meta">Laser maintenance • Toner • Internal cleaning</div>
+          <div class="ticket-score" data-ticket-score="t2">Score: 0 / 3</div>
+          <span class="badge">Laser Maintenance</span>
+        </div>
+
+        <div class="ticket" data-ticket="t3">
+          <div class="ticket-title">T3 – Inkjet Pulling Multiple Sheets</div>
+          <div class="ticket-meta">Rollers • Paper feed • Preventing jams</div>
+          <div class="ticket-score" data-ticket-score="t3">Score: 0 / 3</div>
+          <span class="badge">Paper Handling</span>
+        </div>
+
+        <div class="ticket" data-ticket="t4">
+          <div class="ticket-title">T4 – Network Printer Offline & Queue Stuck</div>
+          <div class="ticket-meta">Network • Print spooler • Queue management</div>
+          <div class="ticket-score" data-ticket-score="t4">Score: 0 / 4</div>
+          <span class="badge">Queue & Network</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right: workspace -->
+    <section id="workspace">
+      <div class="workspace-header">
+        <div>
+          <div class="workspace-title" id="workspaceTitle">
+            Ticket T1 – New Shared MFP Deployment
+          </div>
+          <div class="workspace-sub" id="workspaceSub">
+            Configure drivers, connectivity, security, and scan settings for a new multifunction printer.
+          </div>
+        </div>
+      </div>
+
+      <div class="hint-bar">
+        <span>
+          <strong>Workflow:</strong> 1) Pick a ticket. 2) Use the controls to actually change settings or maintenance actions.
+          3) Click the purple <strong>Simulate</strong> button for that ticket to see “logs”. 4) Hit
+          <strong>Evaluate My Tickets</strong> when you’re done.
+        </span>
+        <span>Nothing is drag-and-drop – everything is hands-on configuration.</span>
+      </div>
+
+      <!-- Ticket workspaces -->
+      <div class="ticket-workspace active" data-ticket-workspace="t1">
+        <div class="workspace-body">
+          <div class="scenario-box">
+            <strong>Scenario – Deploy a shared multifunction printer</strong><br><br>
+            Your company just purchased a new multifunction printer (print/scan/copy). It will sit in a
+            shared office area and must support:<br><br>
+            • Users on Windows, macOS, and Linux.<br>
+            • Printing complex reports with charts and graphics.<br>
+            • Centralized control over print queues and permissions.<br>
+            • Secure printing so confidential jobs only release when the user is at the device.<br>
+            • Scan-to-folder for a shared network folder called <code>\\SERVER\Scans</code>.<br><br>
+            Use the controls to actually configure how this printer is deployed to the network.
+          </div>
+
+          <div class="controls-panel">
+            <div class="control-row">
+              <div class="label">Driver Type</div>
+              <select id="t1_driver">
+                <option value="">-- Select driver --</option>
+                <option value="pcl">PCL (Printer Control Language)</option>
+                <option value="postscript">PostScript</option>
+                <option value="generic">Generic text-only</option>
+                <option value="usb">USB class driver</option>
+              </select>
+              <div class="hint">
+                Mixed OS and complex graphics? Think about a driver language that handles images well.
+              </div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Connectivity for Shared Access</div>
+              <select id="t1_connectivity">
+                <option value="">-- Select connectivity --</option>
+                <option value="usb_local">USB to a single workstation</option>
+                <option value="ethernet">Ethernet – printer gets its own IP</option>
+                <option value="wifi">Wi-Fi (direct wireless to users)</option>
+              </select>
+              <div class="hint">
+                The goal is multiple users printing without being cabled directly to the device.
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t1_printserver" />
+                Use a print server / built-in print server role
+              </label>
+              <span class="hint">Centralize queues, permissions, and logging.</span>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t1_auth" />
+                Require user authentication / PIN release at device
+              </label>
+              <span class="hint">Protect confidential print jobs at the shared printer.</span>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Scan Workflow</div>
+              <select id="t1_scan">
+                <option value="">-- Select scan target --</option>
+                <option value="email">Scan-to-email only</option>
+                <option value="smb">Scan-to-SMB shared folder</option>
+                <option value="cloud">Scan-to-cloud only</option>
+              </select>
+              <div class="hint">
+                Users want scanned documents to land in a shared network folder automatically.
+              </div>
+            </div>
+
+            <button class="action-btn" type="button" data-run="t1">
+              <span class="mini-dot"></span> Simulate deployment summary
+            </button>
+            <div class="output-box placeholder" id="t1_output">
+              After setting the driver, connectivity, security, and scan options, click to see a
+              simulated deployment summary for this printer.
+            </div>
+
+            <div class="workspace-footer">
+              <span>T1 Scoring: 4 points – driver, network, security, and scan settings.</span>
+              <span>Think: PostScript, Ethernet or print server, user auth, Scan-to-SMB.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ticket-workspace" data-ticket-workspace="t2">
+        <div class="workspace-body">
+          <div class="scenario-box">
+            <strong>Scenario – Faded, speckled laser printouts</strong><br><br>
+            A laser printer on the second floor has the following symptoms:<br><br>
+            • Text and images look very light and sometimes uneven across the page.<br>
+            • There are occasional speckles of toner on otherwise blank areas.<br>
+            • The printer has printed tens of thousands of pages but recently started having this issue.<br><br>
+            Use the maintenance panel to perform the first actions you would actually take on this printer.
+          </div>
+
+          <div class="controls-panel">
+            <div class="label">Maintenance Actions (check everything you will perform)</div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t2_toner" />
+                Replace toner cartridge
+              </label>
+              <span class="hint">Faded or uneven print on laser devices often starts here.</span>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t2_maintkit" />
+                Install maintenance kit (rollers, fuser, transfer components)
+              </label>
+              <span class="hint">Typically based on page count – used for worn fuser/rollers.</span>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t2_clean" />
+                Clean internal components (toner dust, corona, path)
+              </label>
+              <span class="hint">Helps with speckles and dirty components.</span>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t2_ink" />
+                Replace inkjet cartridge
+              </label>
+              <span class="hint">This is specific to inkjet printers, not lasers.</span>
+            </div>
+
+            <button class="action-btn" type="button" data-run="t2">
+              <span class="mini-dot"></span> Run test page after maintenance
+            </button>
+            <div class="output-box placeholder" id="t2_output">
+              Choose which maintenance you’ll perform, then click to simulate a test page after the work.
+            </div>
+
+            <div class="workspace-footer">
+              <span>T2 Scoring: 3 points – correct first action and supporting maintenance.</span>
+              <span>Day 5: replace toner first, then consider maintenance kit & cleaning.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ticket-workspace" data-ticket-workspace="t3">
+        <div class="workspace-body">
+          <div class="scenario-box">
+            <strong>Scenario – Inkjet feeding multiple sheets</strong><br><br>
+            An inkjet in the accounting department is having trouble with paper handling:<br><br>
+            • Frequently pulls in two sheets at once.<br>
+            • Sometimes misaligns pages, causing crooked prints.<br>
+            • Users complain about repeated jams in the input tray.<br><br>
+            Use the maintenance controls to pick your first hands-on step.
+          </div>
+
+          <div class="controls-panel">
+            <div class="label">Maintenance Actions (for this inkjet)</div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t3_rollers" />
+                Inspect and clean paper rollers and feed assembly
+              </label>
+              <span class="hint">Roller problems commonly cause multi-sheet feeds and misalignment.</span>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t3_ribbon" />
+                Replace impact ribbon
+              </label>
+              <span class="hint">Impact ribbons belong to dot matrix/impact printers.</span>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t3_thermal" />
+                Replace thermal paper roll
+              </label>
+              <span class="hint">Thermal maintenance is for POS / receipt printers.</span>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t3_printheads" />
+                Clean inkjet printheads
+              </label>
+              <span class="hint">Used more for streaks/missing lines than for multi-sheet feeding.</span>
+            </div>
+
+            <button class="action-btn" type="button" data-run="t3">
+              <span class="mini-dot"></span> Simulate paper feed test
+            </button>
+            <div class="output-box placeholder" id="t3_output">
+              Perform your chosen maintenance, then run a simulated paper feed test to see if jams improve.
+            </div>
+
+            <div class="workspace-footer">
+              <span>T3 Scoring: 3 points – rollers first, with correct printer type awareness.</span>
+              <span>Day 5: clean rollers and feeder to fix multi-sheet issues.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ticket-workspace" data-ticket-workspace="t4">
+        <div class="workspace-body">
+          <div class="scenario-box">
+            <strong>Scenario – Network printer offline & jobs stuck</strong><br><br>
+            A user reports that their jobs never print:<br><br>
+            • The printer is a network MFP listed by hostname.<br>
+            • Print jobs show as “printing” but never leave the queue.<br>
+            • Sometimes the printer shows as “offline” in Windows, even though it’s powered on.<br><br>
+            Use the controls to choose your first troubleshooting actions.
+          </div>
+
+          <div class="controls-panel">
+            <div class="control-row">
+              <div class="label">Initial Troubleshooting Step</div>
+              <select id="t4_first">
+                <option value="">-- Select what you do first --</option>
+                <option value="duplex">Adjust duplex/orientation settings</option>
+                <option value="check_network">Check printer network connection (ping / cable / IP)</option>
+                <option value="replace_toner">Replace toner cartridge</option>
+                <option value="clean_rollers">Clean paper rollers</option>
+              </select>
+              <div class="hint">
+                If jobs never reach the printer, think about connectivity and communication first.
+              </div>
+            </div>
+
+            <div class="control-row">
+              <div class="label">Queue / Service Action</div>
+              <select id="t4_queue">
+                <option value="">-- Select queue action --</option>
+                <option value="none">Do nothing to the queue</option>
+                <option value="restart_spooler">Restart print spooler service and clear stuck jobs</option>
+                <option value="change_tray">Change tray selection only</option>
+              </select>
+              <div class="hint">
+                Stuck jobs often require clearing the print queue or restarting the spooler.
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <label>
+                <input type="checkbox" id="t4_ip_reservation" />
+                Verify printer has correct IP / DHCP reservation
+              </label>
+              <span class="hint">Prevents printers “moving” on the network unexpectedly.</span>
+            </div>
+
+            <button class="action-btn" type="button" data-run="t4">
+              <span class="mini-dot"></span> Simulate job re-send
+            </button>
+            <div class="output-box placeholder" id="t4_output">
+              Choose your network and queue actions, then simulate resending print jobs to see if they complete.
+            </div>
+
+            <div class="workspace-footer">
+              <span>T4 Scoring: 4 points – network first, then spooler/queue management.</span>
+              <span>Day 5: check network connection & spooler when jobs are stuck.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Results modal -->
+  <div id="resultsOverlay">
+    <div id="resultsModal">
+      <div id="resultsHeader">
+        <h2>Ticket Evaluation – Printer Ops Console</h2>
+        <div id="resultsScore"></div>
+      </div>
+      <div id="resultsBody"></div>
+      <div class="results-note">
+        These explanations tie directly back to Day 5 topics: drivers (PCL vs PostScript),
+        connectivity and print servers, MFP security and scan-to-SMB, as well as maintenance and
+        troubleshooting steps for laser, inkjet, and network printer issues.
+      </div>
+      <button id="closeResults" type="button">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Ticket switching ----------
+    const ticketCards = document.querySelectorAll(".ticket");
+    const workspaces = document.querySelectorAll(".ticket-workspace");
+    const workspaceTitle = document.getElementById("workspaceTitle");
+    const workspaceSub = document.getElementById("workspaceSub");
+
+    const ticketText = {
+      t1: {
+        title: "Ticket T1 – New Shared MFP Deployment",
+        sub: "Configure drivers, connectivity, security, and scan settings for a new multifunction printer."
+      },
+      t2: {
+        title: "Ticket T2 – Faded & Speckled Laser Output",
+        sub: "Perform appropriate laser maintenance to correct faded, uneven print and toner speckles."
+      },
+      t3: {
+        title: "Ticket T3 – Inkjet Pulling Multiple Sheets",
+        sub: "Address paper handling issues where an inkjet is feeding multiple sheets at once."
+      },
+      t4: {
+        title: "Ticket T4 – Network Printer Offline & Queue Stuck",
+        sub: "Troubleshoot network connectivity and print spooler issues to restore printing."
+      }
+    };
+
+    ticketCards.forEach(card => {
+      card.addEventListener("click", () => {
+        const t = card.getAttribute("data-ticket");
+        ticketCards.forEach(c => c.classList.toggle("active", c === card));
+        workspaces.forEach(ws => {
+          ws.classList.toggle(
+            "active",
+            ws.getAttribute("data-ticket-workspace") === t
+          );
+        });
+        if (ticketText[t]) {
+          workspaceTitle.textContent = ticketText[t].title;
+          workspaceSub.textContent = ticketText[t].sub;
+        }
+      });
+    });
+
+    // ---------- Simulation outputs ----------
+
+    function setOutput(id, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("placeholder");
+      el.textContent = text;
+    }
+
+    function runSimulation(key) {
+      switch (key) {
+        case "t1": {
+          const driver = document.getElementById("t1_driver").value || "<none>";
+          const conn = document.getElementById("t1_connectivity").value || "<none>";
+          const ps = document.getElementById("t1_printserver").checked;
+          const auth = document.getElementById("t1_auth").checked;
+          const scan = document.getElementById("t1_scan").value || "<none>";
+
+          let out = "Deployment summary:\n";
+          out += `- Driver chosen: ${driver}\n`;
+          out += `- Connectivity: ${conn}\n`;
+          out += `- Print server: ${ps ? "Enabled" : "Not used"}\n`;
+          out += `- User authentication / secure release: ${auth ? "Enabled" : "Disabled"}\n`;
+          out += `- Scan workflow: ${scan}\n\n`;
+
+          out +=
+            "Review:\n" +
+            "- For mixed OS and complex graphics, PostScript is typically preferred.\n" +
+            "- Ethernet or a print server allows many users to access the device as a shared network printer.\n" +
+            "- User authentication / PIN release protects confidential documents at the device.\n" +
+            "- Scan-to-SMB sends scans into a shared network folder like \\\\SERVER\\Scans.";
+
+          setOutput("t1_output", out);
+          break;
+        }
+        case "t2": {
+          const toner = document.getElementById("t2_toner").checked;
+          const kit = document.getElementById("t2_maintkit").checked;
+          const clean = document.getElementById("t2_clean").checked;
+          const ink = document.getElementById("t2_ink").checked;
+
+          let out = "Laser test page after maintenance:\n";
+          if (!toner && !kit && !clean && !ink) {
+            out += "- No maintenance performed. Output remains faded and speckled.\n";
+          } else {
+            if (toner) {
+              out +=
+                "- New toner cartridge installed: print darkness improves significantly.\n";
+            }
+            if (kit) {
+              out +=
+                "- Maintenance kit installed: rollers and fuser replaced to address wear.\n";
+            }
+            if (clean) {
+              out +=
+                "- Internal cleaning completed: loose toner dust removed from path and corona wires.\n";
+            }
+            if (ink) {
+              out +=
+                "- Inkjet cartridge replaced: has no effect on a laser printer because it uses toner.\n";
+            }
+            out +=
+              "\nResult: Faded print is most directly resolved by replacing the toner first; " +
+              "maintenance kits and cleaning may be needed for long-term reliability.";
+          }
+
+          setOutput("t2_output", out);
+          break;
+        }
+        case "t3": {
+          const rollers = document.getElementById("t3_rollers").checked;
+          const ribbon = document.getElementById("t3_ribbon").checked;
+          const thermal = document.getElementById("t3_thermal").checked;
+          const printheads = document.getElementById("t3_printheads").checked;
+
+          let out = "Paper feed diagnostic:\n";
+          if (rollers) {
+            out +=
+              "- Rollers and feed assembly cleaned: multi-sheet feeding and skewed pages greatly reduce.\n";
+          }
+          if (printheads) {
+            out +=
+              "- Printheads cleaned: affects print quality (streaks) but not roller slippage.\n";
+          }
+          if (ribbon) {
+            out +=
+              "- Impact ribbon replaced: no impact here; device is an inkjet, not an impact printer.\n";
+          }
+          if (thermal) {
+            out +=
+              "- Thermal paper replaced: applies to thermal printers, not this inkjet.\n";
+          }
+          if (!rollers && !ribbon && !thermal && !printheads) {
+            out += "- No maintenance performed: printer keeps pulling multiple sheets.\n";
+          }
+
+          setOutput("t3_output", out);
+          break;
+        }
+        case "t4": {
+          const first = document.getElementById("t4_first").value || "<none>";
+          const queue = document.getElementById("t4_queue").value || "<none>";
+          const ipRes = document.getElementById("t4_ip_reservation").checked;
+
+          let out = "Network / queue simulation:\n";
+          out += `- First step: ${first}\n`;
+          out += `- Queue action: ${queue}\n`;
+          out += `- IP / reservation verified: ${ipRes ? "Yes" : "No"}\n\n`;
+
+          if (first === "check_network") {
+            out +=
+              "- Good: You verified the printer is reachable on the network (ping, cable, IP).\n";
+          } else {
+            out +=
+              "- Note: Before touching settings like duplex or toner, confirm the printer is online and reachable.\n";
+          }
+
+          if (queue === "restart_spooler") {
+            out +=
+              "- You restarted the print spooler and cleared stuck jobs so the queue can process again.\n";
+          } else if (queue === "change_tray") {
+            out +=
+              "- Changing tray selection alone will not fix stuck jobs in the queue.\n";
+          } else {
+            out += "- No queue action taken; stuck jobs may remain.\n";
+          }
+
+          if (first === "check_network" && queue === "restart_spooler") {
+            out +=
+              "\nResult: Printer comes back online and new jobs print successfully once the queue is cleared.";
+          } else {
+            out +=
+              "\nResult: Some jobs may still hang or the printer may remain offline until both the network path " +
+              "and queue/spooler are addressed.";
+          }
+
+          setOutput("t4_output", out);
+          break;
+        }
+        default:
+          break;
+      }
+    }
+
+    document.querySelectorAll("[data-run]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.getAttribute("data-run");
+        runSimulation(key);
+      });
+    });
+
+    // ---------- Grading ----------
+
+    const ticketScores = {
+      t1: 0,
+      t2: 0,
+      t3: 0,
+      t4: 0
+    };
+
+    const ticketMax = {
+      t1: 4,
+      t2: 3,
+      t3: 3,
+      t4: 4
+    };
+
+    const scenarios = {
+      t1: {
+        title: "T1 – New Shared MFP Deployment",
+        fields: {
+          driver: {
+            label: "Driver selection",
+            eval: () => {
+              const val = document.getElementById("t1_driver").value;
+              return {
+                ok: val === "postscript",
+                display: val || "<no selection>",
+                correct: "PostScript driver for complex graphics and mixed OS environments"
+              };
+            }
+          },
+          connectivity: {
+            label: "Connectivity for shared access",
+            eval: () => {
+              const val = document.getElementById("t1_connectivity").value;
+              return {
+                ok: val === "ethernet",
+                display: val || "<no selection>",
+                correct: "Ethernet (or print server) so the printer has a network IP"
+              };
+            }
+          },
+          security: {
+            label: "User authentication / secure printing",
+            eval: () => {
+              const checked = document.getElementById("t1_auth").checked;
+              return {
+                ok: checked,
+                display: checked ? "Enabled" : "Disabled",
+                correct: "User authentication / PIN release enabled for confidential jobs"
+              };
+            }
+          },
+          scan: {
+            label: "Scan-to configuration",
+            eval: () => {
+              const val = document.getElementById("t1_scan").value;
+              return {
+                ok: val === "smb",
+                display: val || "<no selection>",
+                correct: "Scan-to-SMB network folder (e.g., \\\\SERVER\\Scans)"
+              };
+            }
+          }
+        },
+        explanation:
+          "Day 5 stresses matching drivers to workloads (PostScript for complex graphics), using network connectivity and print servers for shared devices, enabling secure printing, and configuring scan-to-SMB for shared folders."
+      },
+
+      t2: {
+        title: "T2 – Faded & Speckled Laser Output",
+        fields: {
+          toner: {
+            label: "Replace toner cartridge first",
+            eval: () => {
+              const checked = document.getElementById("t2_toner").checked;
+              return {
+                ok: checked,
+                display: checked ? "Selected" : "Not selected",
+                correct:
+                  "Replace the toner cartridge first when a laser printer shows faded or uneven output"
+              };
+            }
+          },
+          kit: {
+            label: "Use maintenance kit when appropriate",
+            eval: () => {
+              const kit = document.getElementById("t2_maintkit").checked;
+              return {
+                ok: kit,
+                display: kit ? "Selected" : "Not selected",
+                correct:
+                  "Maintenance kit is appropriate for high page counts (rollers, fuser, etc.)"
+              };
+            }
+          },
+          wrongType: {
+            label: "Avoid inkjet-only replacements on lasers",
+            eval: () => {
+              const ink = document.getElementById("t2_ink").checked;
+              return {
+                ok: !ink,
+                display: ink ? "Selected inkjet cartridge" : "Did not select inkjet cartridge",
+                correct:
+                  "Inkjet cartridges are not used in laser printers; stick to toner and maintenance kits"
+              };
+            }
+          }
+        },
+        explanation:
+          "Laser maintenance starts with replacing the toner cartridge for faded output, then using maintenance kits and cleaning for worn rollers or fuser issues, while ignoring inkjet-specific parts."
+      },
+
+      t3: {
+        title: "T3 – Inkjet Pulling Multiple Sheets",
+        fields: {
+          rollers: {
+            label: "Clean rollers and feed assembly",
+            eval: () => {
+              const checked = document.getElementById("t3_rollers").checked;
+              return {
+                ok: checked,
+                display: checked ? "Selected" : "Not selected",
+                correct:
+                  "Cleaning rollers and feeder is the correct first step for multi-sheet and misaligned feeds"
+              };
+            }
+          },
+          wrongImpact: {
+            label: "Avoid impact printer-only maintenance",
+            eval: () => {
+              const rib = document.getElementById("t3_ribbon").checked;
+              return {
+                ok: !rib,
+                display: rib ? "Selected impact ribbon" : "Did not select impact ribbon",
+                correct:
+                  "Impact ribbons are for dot-matrix/impact printers, not inkjets"
+              };
+            }
+          },
+          wrongThermal: {
+            label: "Avoid thermal-only maintenance",
+            eval: () => {
+              const therm = document.getElementById("t3_thermal").checked;
+              return {
+                ok: !therm,
+                display: therm ? "Selected thermal paper replacement" : "Did not select thermal paper",
+                correct:
+                  "Thermal paper applies to thermal printers, not inkjets"
+              };
+            }
+          }
+        },
+        explanation:
+          "For inkjet paper handling problems (multiple sheets, skew), the Day 5 content calls for inspecting and cleaning rollers and feed mechanisms, not replacing impact ribbons or thermal paper."
+      },
+
+      t4: {
+        title: "T4 – Network Printer Offline & Queue Stuck",
+        fields: {
+          first: {
+            label: "Check network connectivity first",
+            eval: () => {
+              const val = document.getElementById("t4_first").value;
+              return {
+                ok: val === "check_network",
+                display: val || "<no selection>",
+                correct:
+                  "Confirm printer network connection (ping, cable, IP) before other changes"
+              };
+            }
+          },
+          queue: {
+            label: "Restart spooler / clear stuck jobs",
+            eval: () => {
+              const val = document.getElementById("t4_queue").value;
+              return {
+                ok: val === "restart_spooler",
+                display: val || "<no selection>",
+                correct:
+                  "Restart the print spooler and clear the queue when jobs are stuck"
+              };
+            }
+          },
+          ipRes: {
+            label: "Verify printer IP / reservation",
+            eval: () => {
+              const checked = document.getElementById("t4_ip_reservation").checked;
+              return {
+                ok: checked,
+                display: checked ? "Verified" : "Not verified",
+                correct:
+                  "Ensuring correct IP / DHCP reservation prevents printers from appearing offline unexpectedly"
+              };
+            }
+          },
+          wrongDuplex: {
+            label: "Avoid unrelated duplex changes",
+            eval: () => {
+              const val = document.getElementById("t4_first").value;
+              return {
+                ok: val !== "duplex",
+                display: val || "<no selection>",
+                correct:
+                  "Duplex/orientation settings do not fix offline or stuck queue conditions"
+              };
+            }
+          }
+        },
+        explanation:
+          "When jobs are stuck or printers show offline, the Day 5 materials highlight checking network connectivity, verifying IP/print server status, and restarting the spooler or clearing queues—not adjusting duplex or replacing toner."
+      }
+    };
+
+    function updateTicketScoreDisplay() {
+      Object.keys(ticketScores).forEach(t => {
+        const el = document.querySelector(`[data-ticket-score="${t}"]`);
+        if (el) {
+          el.textContent = `Score: ${ticketScores[t]} / ${ticketMax[t]}`;
+        }
+      });
+    }
+
+    const resultsOverlay = document.getElementById("resultsOverlay");
+    const resultsBody = document.getElementById("resultsBody");
+    const resultsScore = document.getElementById("resultsScore");
+    const gradeBtn = document.getElementById("gradeBtn");
+    const closeResults = document.getElementById("closeResults");
+
+    function gradeLab() {
+      // reset scores
+      Object.keys(ticketScores).forEach(t => (ticketScores[t] = 0));
+      resultsBody.innerHTML = "";
+
+      let totalScore = 0;
+      let totalMax = 0;
+
+      Object.entries(scenarios).forEach(([tid, sc]) => {
+        const block = document.createElement("div");
+        block.className = "result-scenario";
+
+        const title = document.createElement("div");
+        title.className = "result-title";
+        title.textContent = sc.title;
+        block.appendChild(title);
+
+        let localScore = 0;
+        const localMax = Object.keys(sc.fields).length;
+        totalMax += localMax;
+
+        Object.entries(sc.fields).forEach(([fid, meta]) => {
+          const res = meta.eval();
+
+          const line = document.createElement("div");
+          line.className =
+            "result-line " +
+            (res.ok
+              ? "good"
+              : res.display === "<no selection>"
+              ? ""
+              : "bad");
+          line.innerHTML =
+            `<span class="label-inline">${meta.label} – Your choice:</span> ${res.display}` +
+            (res.ok || !res.correct
+              ? ""
+              : ` | <span class="label-inline">Expected:</span> ${res.correct}`);
+          block.appendChild(line);
+
+          if (res.ok) {
+            localScore++;
+            totalScore++;
+          }
+        });
+
+        ticketScores[tid] = localScore;
+
+        const expl = document.createElement("div");
+        expl.className = "result-expl";
+        expl.textContent = sc.explanation;
+        block.appendChild(expl);
+
+        resultsBody.appendChild(block);
+      });
+
+      resultsScore.textContent = `Total Score: ${totalScore} / ${totalMax} points`;
+      updateTicketScoreDisplay();
+      resultsOverlay.style.display = "flex";
+    }
+
+    gradeBtn.addEventListener("click", gradeLab);
+
+    closeResults.addEventListener("click", () => {
+      resultsOverlay.style.display = "none";
+    });
+
+    resultsOverlay.addEventListener("click", e => {
+      if (e.target === resultsOverlay) {
+        resultsOverlay.style.display = "none";
+      }
+    });
+
+    // Initialize score display
+    updateTicketScoreDisplay();
+  </script>
+</body>
+</html>
