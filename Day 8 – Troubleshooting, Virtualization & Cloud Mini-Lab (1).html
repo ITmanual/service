@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Day 8 – Troubleshooting, Virtualization & Cloud Mini-Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #050816;
+      --card: #050816;
+      --accent: #ec4899; /* pink */
+      --accent-soft: rgba(236, 72, 153, 0.22);
+      --accent-2: #22c55e; /* green */
+      --accent-3: #38bdf8; /* cyan */
+      --danger: #fb7185;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --text: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(236, 72, 153, 0.24), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.18), transparent 55%),
+        #020617;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(90deg, #020617, #050816, #020617);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    #summaryBtn {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    #summaryBtn:hover {
+      background: rgba(236, 72, 153, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    #summaryBtn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    main {
+      flex: 1;
+      padding: 14px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .intro {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      line-height: 1.5;
+    }
+
+    .intro strong { color: var(--accent-3); }
+
+    .missions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .mission {
+      background:
+        radial-gradient(circle at top, rgba(15, 23, 42, 0.96), #020617 65%);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 11px 12px 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.4fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 950px) {
+      .mission {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mission-header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .mission-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .mission-tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+    }
+
+    .mission-left {
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+
+    .scenario-box {
+      border-radius: 10px;
+      border: 1px dashed rgba(55, 65, 81, 0.95);
+      padding: 7px 8px;
+      background: rgba(15, 23, 42, 0.97);
+      line-height: 1.5;
+    }
+
+    .scenario-box b { color: var(--accent-2); }
+
+    .bullet {
+      margin-left: 12px;
+    }
+
+    .mission-right {
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .step-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      color: var(--muted);
+      margin-bottom: 2px;
+      margin-top: 4px;
+    }
+
+    .field-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 5px 7px;
+      border-radius: 7px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: #020617;
+      color: var(--text);
+      font-size: 12px;
+      outline: none;
+      transition: border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    select:focus, input[type="text"]:focus {
+      border-color: var(--accent-3);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.55);
+      background: #020617;
+    }
+
+    .checkbox-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px 6px;
+    }
+
+    .cb-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      padding: 3px 6px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(15, 23, 42, 0.97);
+      cursor: pointer;
+    }
+
+    .cb-pill input[type="checkbox"] {
+      width: 13px;
+      height: 13px;
+      accent-color: var(--accent-2);
+      cursor: pointer;
+    }
+
+    .radio-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .radio-pill {
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(15, 23, 42, 0.97);
+      cursor: pointer;
+    }
+
+    .radio-pill input[type="radio"] {
+      width: 13px;
+      height: 13px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    small { color: var(--muted); font-size: 10px; }
+
+    .run-btn {
+      margin-top: 4px;
+      align-self: flex-start;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.98);
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    .run-btn:hover {
+      background: rgba(30, 64, 175, 0.98);
+      transform: translateY(-1px);
+    }
+
+    .run-btn:active { transform: translateY(0); }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-2);
+    }
+
+    .console {
+      margin-top: 5px;
+      border-radius: 9px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: #020617;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 6px 7px;
+      color: #e5e7eb;
+      white-space: pre-line;
+      min-height: 44px;
+    }
+
+    .console.placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .score-strip {
+      margin-top: 5px;
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Summary area */
+    .summary-bar {
+      margin-top: 6px;
+      padding: 7px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.18), transparent 60%),
+        #020617;
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+
+    .summary-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--accent-2);
+    }
+
+    .summary-line.good { color: var(--accent-2); }
+    .summary-line.bad { color: var(--danger); }
+
+    .summary-line span.label {
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Day 8 – Troubleshooting Lab</h1>
+      <div class="subtitle">
+        Network Issues • Virtualization Planning • Cloud Design – Hands-On Mini-Lab
+      </div>
+    </div>
+    <button id="summaryBtn" type="button">Check My Work</button>
+  </header>
+
+  <main>
+    <div class="intro">
+      <strong>How to use this lab:</strong> Each “mission” is a real-world ticket.
+      Instead of just picking an answer, you’ll actually build a <strong>troubleshooting plan
+      or configuration</strong>:
+      choose tools, steps, and settings, then click the <strong>Run Simulation</strong> button in each mission
+      to see what your choices would do. When you’re ready, click <strong>Check My Work</strong> at the top
+      for a scored breakdown with explanations.
+    </div>
+
+    <div class="missions">
+      <!-- Mission 1: Network Troubleshooting -->
+      <section class="mission" id="mission1">
+        <div class="mission-header">
+          <div class="mission-title">Mission 1 – VoIP & Wireless Troubleshooting Console</div>
+          <div class="mission-tag">Network Issues • Tools • Best Practices</div>
+        </div>
+
+        <div class="mission-left">
+          <div class="scenario-box">
+            <b>Ticket 1 – Choppy VoIP calls</b><br>
+            • User says: “My VoIP calls are garbled and cut out, but my web browsing seems fine.”<br>
+            • Other users on the same switch are not reporting problems.<br>
+            • You suspect a <b>network performance</b> issue affecting real-time traffic.:contentReference[oaicite:1]{index=1}
+            <br><br>
+            <b>Ticket 2 – Intermittent wireless</b><br>
+            • A different user reports that on Wi-Fi, they randomly drop from the network.<br>
+            • Other users in the same area stay connected.<br>
+            • The laptop shows strong signal, but the connection drops every few minutes.:contentReference[oaicite:2]{index=2}
+            <br><br>
+            <b>Your job:</b> For each ticket, choose the tools you will run, the likely root cause, and a best-practice fix.
+          </div>
+        </div>
+
+        <div class="mission-right">
+          <div class="step-label">Ticket 1 – VoIP (select tools you will run)</div>
+          <div class="field-block">
+            <div class="checkbox-list">
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t1_ping">
+                ping to VoIP server
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t1_tracert">
+                tracert / traceroute
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t1_speedtest">
+                Internet speed test
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t1_jitter">
+                VoIP / jitter monitor
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t1_nslookup">
+                nslookup DNS
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t1_wifiAnalyzer">
+                Wireless analyzer
+              </label>
+            </div>
+            <small>Think about which tools help prove if <b>jitter / latency</b> are the problem versus DNS or raw bandwidth.:contentReference[oaicite:3]{index=3}</small>
+          </div>
+
+          <div class="step-label">Ticket 1 – Most likely cause</div>
+          <div class="field-block">
+            <select id="m1_t1_cause">
+              <option value="">-- Select most likely cause --</option>
+              <option value="jitter">High jitter on the network path</option>
+              <option value="damaged_cable">Damaged Ethernet cable</option>
+              <option value="dns">Incorrect DNS server</option>
+              <option value="duplicate_ip">Duplicate IP address</option>
+            </select>
+          </div>
+
+          <div class="step-label">Ticket 1 – Primary fix you’ll implement</div>
+          <div class="field-block">
+            <select id="m1_t1_fix">
+              <option value="">-- Select primary fix --</option>
+              <option value="qos">Configure QoS to prioritize VoIP traffic</option>
+              <option value="change_dns">Change DNS servers</option>
+              <option value="replace_cable">Replace all switch cables</option>
+              <option value="new_ssid">Move user to a different SSID</option>
+            </select>
+            <small>Real-time voice is sensitive to jitter and delay, so consider QoS and path issues first.:contentReference[oaicite:4]{index=4}</small>
+          </div>
+
+          <div class="step-label">Ticket 2 – Wireless (tools you will run)</div>
+          <div class="field-block">
+            <div class="checkbox-list">
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t2_ping">
+                ping default gateway
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t2_ipconfig">
+                ipconfig /ifconfig
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t2_wirelessAnalyzer">
+                Wireless analyzer
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t2_move">
+                Move user away from area
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t2_swapDevice">
+                Try known-good wireless NIC
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m1_t2_changeAP">
+                Change AP channel
+              </label>
+            </div>
+            <small>Consider environmental interference (metal cabinets, microwaves) vs bad NIC vs IP config.:contentReference[oaicite:5]{index=5}</small>
+          </div>
+
+          <div class="step-label">Ticket 2 – Most likely cause</div>
+          <div class="field-block">
+            <select id="m1_t2_cause">
+              <option value="">-- Select most likely cause --</option>
+              <option value="interference">External interference / physical obstruction</option>
+              <option value="weak_antenna">Weak wireless antenna in device</option>
+              <option value="dhcp">Misconfigured DHCP</option>
+              <option value="duplicate_ip2">Duplicate IP address</option>
+            </select>
+          </div>
+
+          <button type="button" class="run-btn" id="runM1">
+            <span class="dot"></span> Run Troubleshooting Simulation
+          </button>
+
+          <div class="console placeholder" id="m1_console">
+            A simulated log of your troubleshooting steps will appear here after you run it.
+          </div>
+
+          <div class="score-strip">
+            <span>Mission 1: up to <strong>4 points</strong> – VoIP tools, VoIP cause, VoIP fix, wireless cause.</span>
+            <span>Focus: network performance, wireless issues, tools like ping/traceroute/analyzers, QoS.:contentReference[oaicite:6]{index=6}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mission 2: Virtualization -->
+      <section class="mission" id="mission2">
+        <div class="mission-header">
+          <div class="mission-title">Mission 2 – Virtualization Host Planner</div>
+          <div class="mission-tag">Hypervisors • VM Requirements • Isolation</div>
+        </div>
+
+        <div class="mission-left">
+          <div class="scenario-box">
+            <b>Scenario – New lab virtualization host</b><br>
+            Your company wants to run multiple test VMs for legacy applications and security testing.
+            Requirements:
+            <ul class="bullet">
+              <li>Max performance and direct access to hardware for the virtualization layer.</li>
+              <li>Isolated environment so untrusted test VMs don’t impact production.:contentReference[oaicite:7]{index=7}</li>
+              <li>Enough resources to host several VMs simultaneously.</li>
+            </ul>
+            You have a powerful physical server that will be dedicated to virtualization.
+            <br><br>
+            <b>Your job:</b> Design the virtualization stack and resource plan:
+            pick hypervisor type, VM usage model, network mode, and storage strategy.
+          </div>
+        </div>
+
+        <div class="mission-right">
+          <div class="step-label">Hypervisor and usage</div>
+          <div class="field-block">
+            <label>
+              Hypervisor type:
+              <select id="m2_hypervisor">
+                <option value="">-- Select hypervisor type --</option>
+                <option value="type1">Type 1 (bare metal)</option>
+                <option value="type2">Type 2 (hosted)</option>
+                <option value="containers">Containers only</option>
+                <option value="vdi">Virtual Desktop Infrastructure (VDI)</option>
+              </select>
+            </label>
+            <small>Type 1 hypervisors run directly on hardware and are common for servers.:contentReference[oaicite:8]{index=8}</small>
+          </div>
+
+          <div class="field-block">
+            <label>
+              Primary purpose:
+              <select id="m2_purpose">
+                <option value="">-- Select usage --</option>
+                <option value="lab_vms">Multiple lab/test VMs on this host</option>
+                <option value="thin_clients">Central VDI for thin clients</option>
+                <option value="single_app">Single containerized app</option>
+                <option value="personal_desktop">Single user’s personal desktop VM</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="step-label">Network & isolation</div>
+          <div class="field-block">
+            <label>
+              VM network mode:
+              <select id="m2_net">
+                <option value="">-- Select network mode --</option>
+                <option value="bridged">Bridged (VMs appear as normal LAN devices)</option>
+                <option value="nat">NAT (VMs share host IP)</option>
+                <option value="host_only">Host-only (isolated from production)</option>
+              </select>
+            </label>
+            <small>Lab / potentially unsafe software is often isolated from production networks.:contentReference[oaicite:9]{index=9}</small>
+          </div>
+
+          <div class="step-label">VM density & storage</div>
+          <div class="field-block">
+            <div class="radio-row">
+              <label class="radio-pill">
+                <input type="radio" name="m2_density" value="few">
+                2–3 VMs only
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="m2_density" value="several">
+                8–10 lab VMs
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="m2_density" value="one">
+                1 VM only
+              </label>
+            </div>
+            <small>Consider that the host is a “lab server” intended to run many test VMs.</small>
+          </div>
+
+          <div class="field-block">
+            <div class="checkbox-list">
+              <label class="cb-pill">
+                <input type="checkbox" id="m2_storage_local">
+                Local SSD storage for VM disks
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m2_storage_shared">
+                Shared NAS/SAN storage for VMs
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m2_snapshots">
+                Enable VM snapshots for testing
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m2_mixed">
+                Store VMs randomly on USB drives
+              </label>
+            </div>
+            <small>Shared storage enables migration and redundancy; snapshots support rollback.:contentReference[oaicite:10]{index=10}</small>
+          </div>
+
+          <button type="button" class="run-btn" id="runM2">
+            <span class="dot"></span> Run Virtualization Simulation
+          </button>
+
+          <div class="console placeholder" id="m2_console">
+            A summary of your virtualization host design will appear here.
+          </div>
+
+          <div class="score-strip">
+            <span>Mission 2: up to <strong>4 points</strong> – hypervisor type, usage, network mode, storage approach.</span>
+            <span>Focus: Type 1 vs Type 2, lab isolation, shared storage, snapshots.:contentReference[oaicite:11]{index=11}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mission 3: Cloud -->
+      <section class="mission" id="mission3">
+        <div class="mission-header">
+          <div class="mission-title">Mission 3 – Cloud Architecture Board</div>
+          <div class="mission-tag">Deployment Models • Service Models • Cloud Traits</div>
+        </div>
+
+        <div class="mission-left">
+          <div class="scenario-box">
+            <b>Scenario – New customer web app</b><br>
+            Your company will host a web application that:
+            <ul class="bullet">
+              <li>Needs to scale up during seasonal campaigns and then scale back down.:contentReference[oaicite:12]{index=12}</li>
+              <li>Must keep sensitive customer data under tighter control than public data.</li>
+              <li>Developers want to deploy code quickly without managing OS patching.</li>
+              <li>Executives want to pay only for the resources actually used.</li>
+            </ul>
+            <b>Your job:</b> Choose a deployment model, a service model, and cloud characteristics that match this scenario.
+          </div>
+        </div>
+
+        <div class="mission-right">
+          <div class="step-label">Deployment model</div>
+          <div class="field-block">
+            <select id="m3_deploy">
+              <option value="">-- Select deployment model --</option>
+              <option value="public">Public cloud</option>
+              <option value="private">Private cloud</option>
+              <option value="community">Community cloud</option>
+              <option value="hybrid">Hybrid cloud</option>
+            </select>
+            <small>Hybrid blends private control with public scalability for web apps.:contentReference[oaicite:13]{index=13}</small>
+          </div>
+
+          <div class="step-label">Service model</div>
+          <div class="field-block">
+            <select id="m3_service">
+              <option value="">-- Select service model --</option>
+              <option value="iaas">Infrastructure as a Service (IaaS)</option>
+              <option value="paas">Platform as a Service (PaaS)</option>
+              <option value="saas">Software as a Service (SaaS)</option>
+            </select>
+            <small>PaaS lets developers deploy code without managing OS or infrastructure.:contentReference[oaicite:14]{index=14}</small>
+          </div>
+
+          <div class="step-label">Cloud characteristics to enable</div>
+          <div class="field-block">
+            <div class="checkbox-list">
+              <label class="cb-pill">
+                <input type="checkbox" id="m3_elastic">
+                Elasticity (auto scale up/down)
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m3_metered">
+                Metered utilization (pay-as-you-go)
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m3_multitenant">
+                Multitenancy (shared infra)
+              </label>
+              <label class="cb-pill">
+                <input type="checkbox" id="m3_fixed">
+                Fixed monthly hardware subscription
+              </label>
+            </div>
+          </div>
+
+          <div class="step-label">Data placement</div>
+          <div class="field-block">
+            <div class="radio-row">
+              <label class="radio-pill">
+                <input type="radio" name="m3_data" value="all_public">
+                All data in public cloud only
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="m3_data" value="sensitive_private">
+                Sensitive data private, app in public
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="m3_data" value="all_private">
+                Everything in private cloud
+              </label>
+            </div>
+            <small>Hybrid often keeps sensitive data private while using public cloud for the app front end.</small>
+          </div>
+
+          <button type="button" class="run-btn" id="runM3">
+            <span class="dot"></span> Run Cloud Simulation
+          </button>
+
+          <div class="console placeholder" id="m3_console">
+            A description of how your cloud design would behave will appear here.
+          </div>
+
+          <div class="score-strip">
+            <span>Mission 3: up to <strong>4 points</strong> – deployment model, service model, elasticity/metering, data placement.</span>
+            <span>Focus: public/private/hybrid, IaaS/PaaS/SaaS, elasticity, metered use, multitenancy.:contentReference[oaicite:15]{index=15}</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="summary-bar" id="summaryBar" style="display:none;">
+      <div class="summary-title">Lab Summary – Scored Feedback</div>
+      <div id="summaryContent"></div>
+    </div>
+  </main>
+
+  <script>
+    function setConsole(id, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("placeholder");
+      el.textContent = text;
+    }
+
+    /* --------- Mission 1 Simulation --------- */
+    document.getElementById("runM1").addEventListener("click", () => {
+      const t1_ping = document.getElementById("m1_t1_ping").checked;
+      const t1_tracert = document.getElementById("m1_t1_tracert").checked;
+      const t1_speed = document.getElementById("m1_t1_speedtest").checked;
+      const t1_jitter = document.getElementById("m1_t1_jitter").checked;
+      const t1_ns = document.getElementById("m1_t1_nslookup").checked;
+      const t1_wifi = document.getElementById("m1_t1_wifiAnalyzer").checked;
+      const t1_cause = document.getElementById("m1_t1_cause").value;
+      const t1_fix = document.getElementById("m1_t1_fix").value;
+
+      const t2_ping = document.getElementById("m1_t2_ping").checked;
+      const t2_ipconfig = document.getElementById("m1_t2_ipconfig").checked;
+      const t2_an = document.getElementById("m1_t2_wirelessAnalyzer").checked;
+      const t2_move = document.getElementById("m1_t2_move").checked;
+      const t2_swap = document.getElementById("m1_t2_swapDevice").checked;
+      const t2_chAp = document.getElementById("m1_t2_changeAP").checked;
+      const t2_cause = document.getElementById("m1_t2_cause").value;
+
+      let out = "=== Mission 1 – Troubleshooting Simulation ===\n\n";
+      out += "Ticket 1 – VoIP:\n";
+      out += "Tools selected:\n";
+      if (t1_ping) out += "  • ping to VoIP server – baseline reachability\n";
+      if (t1_tracert) out += "  • tracert/traceroute – shows hop latency\n";
+      if (t1_speed) out += "  • Internet speed test – checks bandwidth\n";
+      if (t1_jitter) out += "  • VoIP/jitter monitor – measures jitter/packet loss\n";
+      if (t1_ns) out += "  • nslookup – tests DNS resolution (not usually voice quality)\n";
+      if (t1_wifi) out += "  • Wireless analyzer – more useful for Wi-Fi RF issues\n";
+      if (!(t1_ping || t1_tracert || t1_speed || t1_jitter || t1_ns || t1_wifi)) {
+        out += "  (no tools selected)\n";
+      }
+
+      out += "\nVoIP diagnosis: ";
+      if (t1_cause === "jitter") {
+        out += "You suspect high jitter on the voice path.\n";
+      } else if (t1_cause) {
+        out += "You selected an alternate cause.\n";
+      } else {
+        out += "No cause selected.\n";
+      }
+
+      out += "Primary fix: ";
+      if (t1_fix === "qos") {
+        out += "You plan to configure QoS to prioritize VoIP.\n";
+      } else if (t1_fix) {
+        out += "You chose a different action that may not target jitter.\n";
+      } else {
+        out += "No fix selected.\n";
+      }
+
+      out += "\nTicket 1 comments:\n";
+      if (t1_jitter || t1_tracert || t1_ping) {
+        out += "- Good: using ping/traceroute/VoIP tools helps verify latency and jitter.\n";
+      } else {
+        out += "- Missing: you did not use tools that directly measure latency/jitter.\n";
+      }
+      if (t1_ns) {
+        out += "- Note: nslookup helps if calls are failing to start due to DNS, not if they’re just garbled.\n";
+      }
+
+      out += "\nTicket 2 – Wireless:\n";
+      out += "Steps taken:\n";
+      if (t2_ping) out += "  • ping default gateway – checks local connectivity\n";
+      if (t2_ipconfig) out += "  • ipconfig/ifconfig – confirms IP, mask, gateway, DNS\n";
+      if (t2_an) out += "  • wireless analyzer – checks channel overlap/interference\n";
+      if (t2_move) out += "  • moved user away from suspected bad area\n";
+      if (t2_swap) out += "  • tried known-good NIC – isolates hardware vs environment\n";
+      if (t2_chAp) out += "  • changed AP channel – mitigates interference\n";
+      if (!(t2_ping || t2_ipconfig || t2_an || t2_move || t2_swap || t2_chAp)) {
+        out += "  (no steps selected)\n";
+      }
+
+      out += "\nWireless diagnosis: ";
+      if (t2_cause === "interference") {
+        out += "You suspect external interference / physical obstruction.\n";
+      } else if (t2_cause) {
+        out += "You selected a different cause.\n";
+      } else {
+        out += "No cause selected.\n";
+      }
+
+      out += "\nTicket 2 comments:\n";
+      if (t2_an || t2_move) {
+        out += "- Good: testing with a wireless analyzer / moving the user helps confirm interference or blockage.\n";
+      }
+      if (t2_swap) {
+        out += "- Trying a known-good NIC is useful to rule out a faulty wireless adapter.\n";
+      }
+
+      setConsole("m1_console", out);
+    });
+
+    /* --------- Mission 2 Simulation --------- */
+    document.getElementById("runM2").addEventListener("click", () => {
+      const hyper = document.getElementById("m2_hypervisor").value;
+      const purpose = document.getElementById("m2_purpose").value;
+      const net = document.getElementById("m2_net").value;
+      const density = document.querySelector('input[name="m2_density"]:checked');
+      const local = document.getElementById("m2_storage_local").checked;
+      const shared = document.getElementById("m2_storage_shared").checked;
+      const snaps = document.getElementById("m2_snapshots").checked;
+      const mixed = document.getElementById("m2_mixed").checked;
+
+      let out = "=== Mission 2 – Virtualization Simulation ===\n\n";
+
+      out += "Hypervisor choice: ";
+      if (!hyper) out += "(none selected)\n";
+      else if (hyper === "type1") out += "Type 1 (bare metal) – good for high-performance server virtualization.\n";
+      else if (hyper === "type2") out += "Type 2 (hosted) – easier for personal/lab use, but extra overhead.\n";
+      else if (hyper === "containers") out += "Containers only – you are planning app-level isolation, not full VMs.\n";
+      else if (hyper === "vdi") out += "VDI – focused on providing remote desktops to users.\n";
+
+      out += "Primary purpose: ";
+      if (!purpose) out += "(none selected)\n";
+      else if (purpose === "lab_vms") out += "Multiple lab/test VMs on this host.\n";
+      else if (purpose === "thin_clients") out += "Central VDI for thin clients.\n";
+      else if (purpose === "single_app") out += "Single containerized application.\n";
+      else if (purpose === "personal_desktop") out += "Single user desktop VM.\n";
+
+      out += "\nNetwork mode: ";
+      if (!net) out += "(none selected)\n";
+      else if (net === "bridged") out += "Bridged – VMs appear directly on production LAN.\n";
+      else if (net === "nat") out += "NAT – VMs share host IP; limited exposure to production.\n";
+      else if (net === "host_only") out += "Host-only – lab VMs isolated from production network.\n";
+
+      out += "VM density: ";
+      if (!density) out += "(none selected)\n";
+      else if (density.value === "several") out += "You expect to run many lab VMs (8–10) on this host.\n";
+      else if (density.value === "few") out += "You plan only a couple of VMs.\n";
+      else if (density.value === "one") out += "You are only planning for one VM.\n";
+
+      out += "\nStorage settings:\n";
+      if (local) out += "- Local SSD storage for VM disks – good performance.\n";
+      if (shared) out += "- Shared NAS/SAN – supports migration and redundancy.\n";
+      if (snaps) out += "- Snapshots enabled – good for testing and rollback.\n";
+      if (mixed) out += "- VMs on random USB drives – risky and not recommended.\n";
+      if (!(local || shared || snaps || mixed)) out += "- (no storage options selected)\n";
+
+      out += "\nComments:\n";
+      if (hyper === "type1" && purpose === "lab_vms") {
+        out += "- Good: Type 1 hypervisor on a dedicated host is ideal for multiple lab VMs.\n";
+      }
+      if (net === "host_only") {
+        out += "- Good: host-only networking isolates untrusted lab VMs from production.\n";
+      }
+      if (shared) {
+        out += "- Shared storage is useful if you plan to migrate VMs or need high availability.\n";
+      }
+      if (mixed) {
+        out += "- Warning: scattering VMs on USB drives is not stable or enterprise-ready.\n";
+      }
+
+      setConsole("m2_console", out);
+    });
+
+    /* --------- Mission 3 Simulation --------- */
+    document.getElementById("runM3").addEventListener("click", () => {
+      const deploy = document.getElementById("m3_deploy").value;
+      const service = document.getElementById("m3_service").value;
+      const elastic = document.getElementById("m3_elastic").checked;
+      const metered = document.getElementById("m3_metered").checked;
+      const multi = document.getElementById("m3_multitenant").checked;
+      const fixed = document.getElementById("m3_fixed").checked;
+      const dataChoice = document.querySelector('input[name="m3_data"]:checked');
+
+      let out = "=== Mission 3 – Cloud Simulation ===\n\n";
+
+      out += "Deployment model: ";
+      if (!deploy) out += "(none selected)\n";
+      else if (deploy === "public") out += "Public cloud – all resources in provider’s shared infrastructure.\n";
+      else if (deploy === "private") out += "Private cloud – dedicated infrastructure for one organization.\n";
+      else if (deploy === "community") out += "Community cloud – shared by organizations with common interests.\n";
+      else if (deploy === "hybrid") out += "Hybrid cloud – combination of private and public environments.\n";
+
+      out += "Service model: ";
+      if (!service) out += "(none selected)\n";
+      else if (service === "iaas") out += "IaaS – you manage OS and applications on provider’s virtual infrastructure.\n";
+      else if (service === "paas") out += "PaaS – you deploy applications; provider manages OS and infrastructure.\n";
+      else if (service === "saas") out += "SaaS – you just consume the app (like Microsoft 365).\n";
+
+      out += "\nCharacteristics enabled:\n";
+      if (elastic) out += "- Elasticity ON – resources can expand and shrink with campaigns.\n";
+      if (metered) out += "- Metered utilization ON – pay for what you actually use.\n";
+      if (multi) out += "- Multitenancy ON – infrastructure is shared among customers.\n";
+      if (fixed) out += "- Fixed monthly hardware subscription – behaves more like traditional hosting.\n";
+      if (!(elastic || metered || multi || fixed)) out += "- (none selected)\n";
+
+      out += "\nData placement: ";
+      if (!dataChoice) out += "(none selected)\n";
+      else if (dataChoice.value === "all_public") out += "All data in public cloud.\n";
+      else if (dataChoice.value === "sensitive_private") out += "Sensitive data in private environment; app tier in public cloud.\n";
+      else if (dataChoice.value === "all_private") out += "Everything in private cloud only.\n";
+
+      out += "\nComments:\n";
+      if (deploy === "hybrid" && dataChoice && dataChoice.value === "sensitive_private") {
+        out += "- Good: hybrid with sensitive data kept private matches the requirement for tighter control.\n";
+      }
+      if (service === "paas") {
+        out += "- PaaS aligns with developers wanting to deploy code without managing OS.\n";
+      }
+      if (elastic) {
+        out += "- Elasticity directly supports seasonal scaling for campaigns.\n";
+      }
+      if (metered) {
+        out += "- Metered utilization maps to the pay-for-what-you-use requirement.\n";
+      }
+
+      setConsole("m3_console", out);
+    });
+
+    /* --------- Scoring / Summary --------- */
+    function gradeMission1() {
+      let score = 0;
+      const max = 4;
+
+      const t1_cause = document.getElementById("m1_t1_cause").value;
+      const t1_fix = document.getElementById("m1_t1_fix").value;
+      const t1_jitter = document.getElementById("m1_t1_jitter").checked;
+      const t1_tracert = document.getElementById("m1_t1_tracert").checked || document.getElementById("m1_t1_ping").checked;
+
+      const t2_cause = document.getElementById("m1_t2_cause").value;
+
+      const lines = [];
+
+      // 1 – VoIP cause
+      const voipCauseCorrect = t1_cause === "jitter";
+      if (voipCauseCorrect) score++;
+      lines.push({
+        ok: voipCauseCorrect,
+        label: "VoIP root cause",
+        your: t1_cause || "<none>",
+        exp: "High jitter on the network impacting real-time voice."
+      });
+
+      // 2 – VoIP fix
+      const voipFixCorrect = t1_fix === "qos";
+      if (voipFixCorrect) score++;
+      lines.push({
+        ok: voipFixCorrect,
+        label: "VoIP primary fix",
+        your: t1_fix || "<none>",
+        exp: "Configure QoS to prioritize VoIP traffic."
+      });
+
+      // 3 – VoIP tools
+      const voipToolsCorrect = t1_jitter && t1_tracert;
+      if (voipToolsCorrect) score++;
+      lines.push({
+        ok: voipToolsCorrect,
+        label: "VoIP troubleshooting tools",
+        your: (t1_jitter || t1_tracert) ? "Used latency/jitter tools" : "Did not use latency/jitter tools",
+        exp: "Use ping/traceroute and VoIP/jitter monitors to verify latency/jitter."
+      });
+
+      // 4 – Wireless cause
+      const wifiCauseCorrect = t2_cause === "interference";
+      if (wifiCauseCorrect) score++;
+      lines.push({
+        ok: wifiCauseCorrect,
+        label: "Wireless root cause",
+        your: t2_cause || "<none>",
+        exp: "Intermittent drops with full signal are often caused by interference or obstruction."
+      });
+
+      return { score, max, lines };
+    }
+
+    function gradeMission2() {
+      let score = 0;
+      const max = 4;
+      const lines = [];
+
+      const hyper = document.getElementById("m2_hypervisor").value;
+      const purpose = document.getElementById("m2_purpose").value;
+      const net = document.getElementById("m2_net").value;
+      const density = document.querySelector('input[name="m2_density"]:checked');
+      const local = document.getElementById("m2_storage_local").checked;
+      const shared = document.getElementById("m2_storage_shared").checked;
+      const snaps = document.getElementById("m2_snapshots").checked;
+      const mixed = document.getElementById("m2_mixed").checked;
+
+      const hyperCorrect = hyper === "type1";
+      if (hyperCorrect) score++;
+      lines.push({
+        ok: hyperCorrect,
+        label: "Hypervisor type",
+        your: hyper || "<none>",
+        exp: "Type 1 hypervisor runs directly on hardware for maximum performance."
+      });
+
+      const purposeCorrect = purpose === "lab_vms";
+      if (purposeCorrect) score++;
+      lines.push({
+        ok: purposeCorrect,
+        label: "Usage model",
+        your: purpose || "<none>",
+        exp: "The scenario is a dedicated lab host for multiple test VMs."
+      });
+
+      const netCorrect = net === "host_only";
+      if (netCorrect) score++;
+      lines.push({
+        ok: netCorrect,
+        label: "Network mode",
+        your: net || "<none>",
+        exp: "Host-only or isolated networking keeps untrusted lab VMs away from production."
+      });
+
+      const storageCorrect = (local || shared) && snaps && !mixed;
+      if (storageCorrect) score++;
+      let yourStorage = [];
+      if (local) yourStorage.push("local SSD");
+      if (shared) yourStorage.push("shared NAS/SAN");
+      if (snaps) yourStorage.push("snapshots");
+      if (mixed) yourStorage.push("USB/random");
+      lines.push({
+        ok: storageCorrect,
+        label: "Storage & snapshots",
+        your: yourStorage.length ? yourStorage.join(", ") : "<none>",
+        exp: "Use local/shared storage plus snapshots; avoid random USB storage."
+      });
+
+      return { score, max, lines };
+    }
+
+    function gradeMission3() {
+      let score = 0;
+      const max = 4;
+      const lines = [];
+
+      const deploy = document.getElementById("m3_deploy").value;
+      const service = document.getElementById("m3_service").value;
+      const elastic = document.getElementById("m3_elastic").checked;
+      const metered = document.getElementById("m3_metered").checked;
+      const dataChoice = document.querySelector('input[name="m3_data"]:checked');
+
+      const deployCorrect = deploy === "hybrid";
+      if (deployCorrect) score++;
+      lines.push({
+        ok: deployCorrect,
+        label: "Deployment model",
+        your: deploy || "<none>",
+        exp: "Hybrid keeps sensitive data private while using public cloud for scalability."
+      });
+
+      const serviceCorrect = service === "paas";
+      if (serviceCorrect) score++;
+      lines.push({
+        ok: serviceCorrect,
+        label: "Service model",
+        your: service || "<none>",
+        exp: "PaaS lets developers deploy apps without managing OS/infrastructure."
+      });
+
+      const elasticMeteredCorrect = elastic && metered;
+      if (elasticMeteredCorrect) score++;
+      let charStr = [];
+      if (elastic) charStr.push("elasticity");
+      if (metered) charStr.push("metered");
+      lines.push({
+        ok: elasticMeteredCorrect,
+        label: "Cloud characteristics",
+        your: charStr.length ? charStr.join(" + ") : "<none>",
+        exp: "Elasticity handles seasonal spikes; metered utilization is pay-as-you-go."
+      });
+
+      const dataCorrect = dataChoice && dataChoice.value === "sensitive_private";
+      if (dataCorrect) score++;
+      lines.push({
+        ok: dataCorrect,
+        label: "Data placement",
+        your: dataChoice ? dataChoice.value : "<none>",
+        exp: "Keep sensitive data in private resources, public tier for the web front-end."
+      });
+
+      return { score, max, lines };
+    }
+
+    document.getElementById("summaryBtn").addEventListener("click", () => {
+      const m1 = gradeMission1();
+      const m2 = gradeMission2();
+      const m3 = gradeMission3();
+
+      const totalScore = m1.score + m2.score + m3.score;
+      const totalMax = m1.max + m2.max + m3.max;
+
+      const container = document.getElementById("summaryContent");
+      let html = "";
+      html += `<div class="summary-line"><span class="label">Overall score:</span> ${totalScore} / ${totalMax} points</div><br>`;
+
+      function renderSection(name, res) {
+        html += `<div><strong>${name}</strong> – ${res.score} / ${res.max} points</div>`;
+        res.lines.forEach(line => {
+          const cls = line.ok ? "good" : "bad";
+          html += `<div class="summary-line ${cls}"><span class="label">${line.label}:</span> Your choice: ${line.your}. Expected: ${line.exp}</div>`;
+        });
+        html += "<br>";
+      }
+
+      renderSection("Mission 1 – Network Troubleshooting", m1);
+      renderSection("Mission 2 – Virtualization Host Planner", m2);
+      renderSection("Mission 3 – Cloud Architecture Board", m3);
+
+      container.innerHTML = html;
+
+      const bar = document.getElementById("summaryBar");
+      bar.style.display = "block";
+      bar.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  </script>
+</body>
+</html>
