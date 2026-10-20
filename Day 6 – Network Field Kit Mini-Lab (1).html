@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Day 6 – Network Field Kit Mini-Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #041322;
+      --panel: #071827;
+      --accent: #f97316; /* orange */
+      --accent-soft: rgba(249, 115, 22, 0.18);
+      --accent-2: #22c55e; /* green */
+      --accent-3: #38bdf8; /* cyan */
+      --danger: #fb7185;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --text: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #020617 0, #020617 45%, #020617 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(90deg, #020617, #0f172a, #111827);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    #gradeBtn {
+      padding: 9px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    #gradeBtn:hover {
+      background: rgba(249, 115, 22, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+    }
+
+    #gradeBtn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 14px 16px;
+      gap: 10px;
+      background: radial-gradient(circle at top right, rgba(34, 197, 94, 0.18), #020617 65%);
+      min-height: 0;
+    }
+
+    /* Mission selector */
+
+    .mission-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 4px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border);
+    }
+
+    .mission-tab {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s ease, border 0.12s ease, transform 0.08s ease;
+    }
+
+    .mission-tab span.num {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #6b7280;
+    }
+
+    .mission-tab.active {
+      background: radial-gradient(circle at top, rgba(34, 197, 94, 0.24), rgba(15, 23, 42, 0.9));
+      border-color: rgba(34, 197, 94, 0.8);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .mission-tab .score-pill {
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      font-size: 10px;
+      color: #a5f3fc;
+    }
+
+    .hint-bar {
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hint-bar strong {
+      color: var(--accent-2);
+    }
+
+    /* Mission content layout */
+
+    .mission {
+      display: none;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .mission.active {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mission-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .mission-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .mission-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mission-body {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 960px) {
+      .mission-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .scenario-box {
+      font-size: 12px;
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.97);
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 9px 10px;
+      line-height: 1.5;
+    }
+
+    .scenario-box strong {
+      color: var(--accent-3);
+    }
+
+    .controls-panel {
+      background: var(--panel);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--muted);
+      margin-top: 2px;
+      margin-bottom: 2px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 3px;
+    }
+
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    select:focus {
+      border-color: var(--accent-3);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.45);
+      background: #020617;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .toggle-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent-2);
+      cursor: pointer;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .pill-tag {
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .action-btn {
+      margin-top: 4px;
+      align-self: flex-start;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.97);
+      color: var(--text);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(30, 64, 175, 0.98);
+      transform: translateY(-1px);
+    }
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    .mini-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-2);
+    }
+
+    .output-box {
+      margin-top: 5px;
+      border-radius: 10px;
+      border: 1px dashed rgba(55, 65, 81, 0.9);
+      padding: 7px 9px;
+      font-size: 11px;
+      color: #e5e7eb;
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), #020617 70%);
+      white-space: pre-line;
+    }
+
+    .output-box.placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .mission-footer {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    /* Results overlay */
+
+    #resultsOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      padding: 16px;
+    }
+
+    #resultsModal {
+      max-width: 960px;
+      width: 100%;
+      max-height: 90vh;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.8);
+      padding: 14px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #resultsHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #resultsHeader h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #resultsScore {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #resultsBody {
+      font-size: 12px;
+      color: #e5e7eb;
+      padding: 9px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), #020617 60%);
+      overflow-y: auto;
+    }
+
+    .result-block {
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed rgba(55, 65, 81, 0.9);
+    }
+
+    .result-block:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .result-line {
+      margin-bottom: 2px;
+    }
+
+    .result-line span.label-inline {
+      color: var(--muted);
+    }
+
+    .result-line.good {
+      color: #22c55e;
+    }
+
+    .result-line.bad {
+      color: var(--danger);
+    }
+
+    .result-expl {
+      margin-top: 3px;
+    }
+
+    #closeResults {
+      align-self: flex-end;
+      margin-top: 3px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    #closeResults:hover {
+      background: rgba(30, 64, 175, 0.98);
+      transform: translateY(-1px);
+    }
+
+    #closeResults:active {
+      transform: translateY(0);
+    }
+
+    .results-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: -3px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Network Field Kit</h1>
+      <div class="subtitle">
+        Day 6 – Network devices, host services, configuration concepts & wireless (hands-on mini-lab)
+      </div>
+    </div>
+    <button id="gradeBtn" type="button">Grade My Missions</button>
+  </header>
+
+  <main>
+    <!-- Mission tabs -->
+    <div class="mission-tabs">
+      <div class="mission-tab active" data-mission-tab="m1">
+        <span class="num">Mission 1</span>
+        Branch Office Network
+        <span class="score-pill" data-mission-score="m1">0 / 6</span>
+      </div>
+      <div class="mission-tab" data-mission-tab="m2">
+        <span class="num">Mission 2</span>
+        Secure Wireless & IoT
+        <span class="score-pill" data-mission-score="m2">0 / 6</span>
+      </div>
+      <div class="mission-tab" data-mission-tab="m3">
+        <span class="num">Mission 3</span>
+        DNS & Email Services
+        <span class="score-pill" data-mission-score="m3">0 / 6</span>
+      </div>
+    </div>
+
+    <div class="hint-bar">
+      <span>
+        <strong>How to use this lab:</strong> Pick a mission tab, read the scenario, then actually configure
+        the network using the controls (devices, services, DNS, wireless). Click the small
+        <strong>Simulate</strong> button in each mission to see what your design would “do”.
+      </span>
+      <span>
+        When you’re ready, hit <strong>Grade My Missions</strong> for a scored breakdown with explanations.
+      </span>
+    </div>
+
+    <!-- Mission 1: Branch Office Network -->
+    <section class="mission active" data-mission="m1">
+      <div class="mission-header">
+        <div>
+          <div class="mission-title">Mission 1 – Branch Office Network Build</div>
+          <div class="mission-sub">
+            Choose the right devices and host services to bring a new branch office online.
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-body">
+        <div class="scenario-box">
+          <strong>Scenario – New branch office</strong><br><br>
+          Your company is opening a small branch office. The requirements:<br><br>
+          • Users need internet access and internal resources over a <strong>single WAN connection</strong>.<br>
+          • Local devices (PCs, printers, IP phones, IoT camera) should be on <strong>separate VLANs</strong> for security.:contentReference[oaicite:1]{index=1}<br>
+          • IP addresses must be assigned <strong>automatically</strong> to clients. (No manual IPs.)<br>
+          • Critical devices (servers, camera) should always keep the same IP for easier management.<br>
+          • Logs from key devices should be collected centrally for later review.<br><br>
+          Using the configuration panel, build a realistic network design for this branch by selecting:<br>
+          • Edge device / router type<br>
+          • Switching & PoE strategy<br>
+          • Where DHCP, DNS, and NTP live<br>
+          • Whether you’ll use <strong>VLANs</strong> and <strong>VPN</strong> back to HQ.:contentReference[oaicite:2]{index=2}
+        </div>
+
+        <div class="controls-panel">
+          <div class="label">Edge & Switching</div>
+          <div class="control-row">
+            <div class="label">Primary edge device</div>
+            <select id="m1_edge">
+              <option value="">-- Select edge device --</option>
+              <option value="soho_router">SOHO router (ISP combo modem/router)</option>
+              <option value="enterprise_router">Enterprise router (with NAT & DHCP)</option>
+              <option value="switch_only">Just a managed switch (no router)</option>
+            </select>
+            <div class="hint">
+              The branch needs routing between LAN and WAN, plus NAT to the internet.:contentReference[oaicite:3]{index=3}
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Switching & PoE strategy</div>
+            <select id="m1_switch">
+              <option value="">-- Select switching --</option>
+              <option value="unmanaged">Unmanaged switch + separate PoE injectors</option>
+              <option value="managed_poe">Managed PoE switch</option>
+              <option value="patch_panel_only">Patch panel only, no switch</option>
+            </select>
+            <div class="hint">
+              Think about powering APs, VoIP phones, and cameras over Ethernet.:contentReference[oaicite:4]{index=4}
+            </div>
+          </div>
+
+          <div class="label">Host Services</div>
+          <div class="control-row">
+            <div class="label">DHCP location</div>
+            <select id="m1_dhcp">
+              <option value="">-- Select DHCP host --</option>
+              <option value="router">Edge router runs DHCP</option>
+              <option value="server">Dedicated DHCP server</option>
+              <option value="manual">Static/manual IP addressing for clients</option>
+            </select>
+            <div class="hint">
+              DHCP should automatically hand out IPs, gateway, and DNS to clients.:contentReference[oaicite:5]{index=5}
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">DNS & NTP strategy</div>
+            <select id="m1_dns">
+              <option value="">-- DNS choice --</option>
+              <option value="local_dns">Local DNS server at branch</option>
+              <option value="hq_dns">Forward DNS queries to HQ / cloud DNS</option>
+              <option value="no_dns">No DNS server configured</option>
+            </select>
+            <select id="m1_ntp">
+              <option value="">-- NTP choice --</option>
+              <option value="ntp_server">Use internal NTP server</option>
+              <option value="internet_ntp">Use public internet NTP servers</option>
+              <option value="no_ntp">Don’t configure NTP</option>
+            </select>
+            <div class="hint">
+              NTP keeps timestamps aligned across logs and security devices.:contentReference[oaicite:6]{index=6}
+            </div>
+          </div>
+
+          <div class="label">Segmentation & Remote Access</div>
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" id="m1_vlans" />
+              Use VLANs to separate users, VoIP, and IoT/guest devices
+            </label>
+          </div>
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" id="m1_vpn" />
+              Establish a site-to-site VPN tunnel back to HQ
+            </label>
+            <span class="hint">VPN secures branch traffic over the internet.:contentReference[oaicite:7]{index=7}</span>
+          </div>
+
+          <button class="action-btn" type="button" data-run="m1">
+            <span class="mini-dot"></span> Simulate branch network status
+          </button>
+          <div class="output-box placeholder" id="m1_output">
+            Configure the edge, switch, and host services, then run the simulation to see how well
+            the branch office is designed.
+          </div>
+
+          <div class="mission-footer">
+            <span>Mission 1: 6 points – router choice, PoE, DHCP, DNS/NTP, VLANs, and VPN.</span>
+            <span>Based on: routers, switches, PoE, DHCP/DNS/NTP, VLANs, VPNs, syslog.:contentReference[oaicite:8]{index=8}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mission 2: Secure Wireless & IoT -->
+    <section class="mission" data-mission="m2">
+      <div class="mission-header">
+        <div>
+          <div class="mission-title">Mission 2 – Secure Wireless & IoT Layout</div>
+          <div class="mission-sub">
+            Tune bands, channels, and security for both office users and IoT devices.
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-body">
+        <div class="scenario-box">
+          <strong>Scenario – Mixed client wireless network</strong><br><br>
+          Your network has:<br>
+          • Office laptops and phones needing <strong>high throughput</strong> with minimal interference.:contentReference[oaicite:9]{index=9}<br>
+          • Legacy barcode scanners that only support 2.4 GHz.<br>
+          • IoT temperature sensors and cameras that should be <strong>isolated</strong> from the main LAN.:contentReference[oaicite:10]{index=10}<br>
+          • Users connecting with modern Wi-Fi 6-capable devices.<br><br>
+          Your task:<br>
+          • Choose the primary band and channel width for office SSID.<br>
+          • Create an IoT/guest SSID configuration.<br>
+          • Apply correct wireless security and disable weak options.<br>
+          • Decide how to segment IoT from main users.
+        </div>
+
+        <div class="controls-panel">
+          <div class="label">Office SSID – Performance</div>
+          <div class="control-row">
+            <div class="label">Primary band for office SSID</div>
+            <select id="m2_band">
+              <option value="">-- Select band --</option>
+              <option value="2.4">2.4 GHz only</option>
+              <option value="5">5 GHz</option>
+              <option value="6">6 GHz (Wi-Fi 6E capable)</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Channel width</div>
+            <select id="m2_width">
+              <option value="">-- Select width --</option>
+              <option value="20">20 MHz</option>
+              <option value="40">40 MHz</option>
+              <option value="80">80 MHz</option>
+              <option value="160">160 MHz</option>
+            </select>
+            <div class="hint">
+              Wider channels on 5/6 GHz can give higher throughput but may increase interference.:contentReference[oaicite:11]{index=11}
+            </div>
+          </div>
+
+          <div class="control-row">
+            <div class="label">802.11 standard to prioritize</div>
+            <select id="m2_standard">
+              <option value="">-- Select standard --</option>
+              <option value="ac">802.11ac (Wi-Fi 5)</option>
+              <option value="ax">802.11ax (Wi-Fi 6 / 6E)</option>
+              <option value="g">802.11g</option>
+              <option value="b">802.11b</option>
+            </select>
+            <div class="hint">
+              802.11ax is designed for high efficiency in dense environments.:contentReference[oaicite:12]{index=12}
+            </div>
+          </div>
+
+          <div class="label">Security & IoT Segmentation</div>
+          <div class="control-row">
+            <div class="label">Wi-Fi security mode</div>
+            <select id="m2_security">
+              <option value="">-- Select security --</option>
+              <option value="open">Open (no password)</option>
+              <option value="wpa2">WPA2-PSK</option>
+              <option value="wpa3">WPA3 (preferred)</option>
+              <option value="wep">WEP (legacy)</option>
+            </select>
+          </div>
+
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" id="m2_wps" />
+              Enable WPS (Wi-Fi Protected Setup)
+            </label>
+            <span class="hint">Consider whether this should be left on for security.:contentReference[oaicite:13]{index=13}</span>
+          </div>
+
+          <div class="control-row">
+            <div class="label">IoT / Guest SSID handling</div>
+            <select id="m2_iot_vlan">
+              <option value="">-- IoT / guest network design --</option>
+              <option value="same_lan">Place IoT on same LAN as users</option>
+              <option value="vlan">Place IoT on separate VLAN with limited access</option>
+              <option value="open_guest">Open guest Wi-Fi bridged to LAN</option>
+            </select>
+            <div class="hint">
+              Segment IoT devices onto their own VLAN or network for security.:contentReference[oaicite:14]{index=14}
+            </div>
+          </div>
+
+          <div class="label">Short-range tech selection</div>
+          <div class="control-row">
+            <div class="label">Headset pairing for warehouse workers</div>
+            <select id="m2_headset">
+              <option value="">-- Select technology --</option>
+              <option value="wifi">Wi-Fi (802.11)</option>
+              <option value="bluetooth">Bluetooth</option>
+              <option value="nfc">NFC</option>
+              <option value="rfid">RFID</option>
+            </select>
+          </div>
+
+          <button class="action-btn" type="button" data-run="m2">
+            <span class="mini-dot"></span> Simulate wireless behavior
+          </button>
+          <div class="output-box placeholder" id="m2_output">
+            Build the wireless design (bands, width, security, IoT segmentation), then run the
+            simulation to see coverage, performance, and security implications.
+          </div>
+
+          <div class="mission-footer">
+            <span>Mission 2: 6 points – band, width, standard, security, segmentation, and Bluetooth usage.</span>
+            <span>Based on: wireless bands, 802.11 standards, WPA2/WPA3, WPS, IoT, Bluetooth/NFC/RFID.:contentReference[oaicite:15]{index=15}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mission 3: DNS & Email Services -->
+    <section class="mission" data-mission="m3">
+      <div class="mission-header">
+        <div>
+          <div class="mission-title">Mission 3 – DNS & Email Service Builder</div>
+          <div class="mission-sub">
+            Configure DNS and email-related records for a secure, dual-stack domain.
+          </div>
+        </div>
+      </div>
+
+      <div class="mission-body">
+        <div class="scenario-box">
+          <strong>Scenario – services.example.com</strong><br><br>
+          Your company has registered <code>example.com</code> and wants to deploy services:<br><br>
+          • A public website reachable over both <strong>IPv4 and IPv6</strong>.:contentReference[oaicite:16]{index=16}<br>
+          • A mail server at <code>mail.example.com</code> using your own corporate mail host.<br>
+          • Strong protection against <strong>spoofed email</strong> claiming to be from your domain.:contentReference[oaicite:17]{index=17}<br>
+          • A short alias for users: when they go to <code>portal.example.com</code>, they should be sent to
+            <code>intranet01.example.local</code> without changing client configs.<br><br>
+          Use the panel to build a realistic DNS and email security configuration.
+        </div>
+
+        <div class="controls-panel">
+          <div class="label">Web & Dual-Stack DNS</div>
+          <div class="control-row">
+            <div class="label">Website “www.example.com” records</div>
+            <select id="m3_a">
+              <option value="">-- IPv4 record for www --</option>
+              <option value="a">Create A record</option>
+              <option value="aaaa">Create only AAAA record</option>
+              <option value="cname">CNAME to another name</option>
+              <option value="none">No record</option>
+            </select>
+            <select id="m3_aaaa">
+              <option value="">-- IPv6 record for www --</option>
+              <option value="aaaa">Create AAAA record</option>
+              <option value="a">Create only A record</option>
+              <option value="none">No IPv6 support</option>
+            </select>
+            <div class="hint">
+              Use A for IPv4, AAAA for IPv6, so both address families work.:contentReference[oaicite:18]{index=18}
+            </div>
+          </div>
+
+          <div class="label">Mail Routing & Anti-Spoofing</div>
+          <div class="control-row">
+            <div class="label">Mail routing record</div>
+            <select id="m3_mx">
+              <option value="">-- Mail routing --</option>
+              <option value="mx">Create MX record pointing to mail.example.com</option>
+              <option value="a_only">Rely on A record only</option>
+              <option value="cname_only">Use only CNAME records</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <div class="label">Email authentication & anti-spoofing</div>
+            <select id="m3_spf">
+              <option value="">-- SPF record --</option>
+              <option value="set_spf">Create SPF TXT record specifying authorized senders</option>
+              <option value="no_spf">Skip SPF</option>
+            </select>
+            <select id="m3_dkim">
+              <option value="">-- DKIM record --</option>
+              <option value="set_dkim">Publish DKIM TXT / key record</option>
+              <option value="no_dkim">Skip DKIM</option>
+            </select>
+            <select id="m3_dmarc">
+              <option value="">-- DMARC policy --</option>
+              <option value="set_dmarc">Create DMARC TXT record referencing SPF/DKIM</option>
+              <option value="no_dmarc">Skip DMARC</option>
+            </select>
+            <div class="hint">
+              SPF, DKIM, and DMARC work together to reduce spoofed email.:contentReference[oaicite:19]{index=19}
+            </div>
+          </div>
+
+          <div class="label">Aliases & Internal Services</div>
+          <div class="control-row">
+            <div class="label">Portal redirect behavior</div>
+            <select id="m3_alias">
+              <option value="">-- How portal.example.com behaves --</option>
+              <option value="cname">Use CNAME to point to intranet01.example.local</option>
+              <option value="a_record">Give portal.example.com its own A record</option>
+              <option value="txt">Use TXT record to “redirect”</option>
+            </select>
+            <div class="hint">
+              CNAMEs are used to alias one name to another host name.:contentReference[oaicite:20]{index=20}
+            </div>
+          </div>
+
+          <div class="label">Log & Time Infrastructure</div>
+          <div class="control-row">
+            <div class="label">Core services you will deploy</div>
+            <div class="pill-row">
+              <label class="pill-tag">
+                <input type="checkbox" id="m3_dns_srv" /> DNS server
+              </label>
+              <label class="pill-tag">
+                <input type="checkbox" id="m3_dhcp_srv" /> DHCP server
+              </label>
+              <label class="pill-tag">
+                <input type="checkbox" id="m3_syslog_srv" /> Syslog server
+              </label>
+              <label class="pill-tag">
+                <input type="checkbox" id="m3_ntp_srv" /> NTP server
+              </label>
+            </div>
+            <div class="hint">
+              DNS & DHCP provide core network services; NTP & syslog support logging and time sync.:contentReference[oaicite:21]{index=21}
+            </div>
+          </div>
+
+          <button class="action-btn" type="button" data-run="m3">
+            <span class="mini-dot"></span> Simulate DNS & mail behavior
+          </button>
+          <div class="output-box placeholder" id="m3_output">
+            Configure DNS records, email security, and core services, then simulate how clients and
+            email providers will see your domain.
+          </div>
+
+          <div class="mission-footer">
+            <span>Mission 3: 6 points – A/AAAA, MX, SPF+DKIM+DMARC, CNAME, and core host services.</span>
+            <span>Based on: DNS records, TXT/SPF/DKIM/DMARC, host services (DNS, DHCP, NTP, syslog).:contentReference[oaicite:22]{index=22}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Results modal -->
+  <div id="resultsOverlay">
+    <div id="resultsModal">
+      <div id="resultsHeader">
+        <h2>Mission Results – Network Field Kit</h2>
+        <div id="resultsScore"></div>
+      </div>
+      <div id="resultsBody"></div>
+      <div class="results-note">
+        Use these results to reinforce Day 6 topics: routing/switching & PoE; DHCP/DNS/NTP and
+        VLAN/VPN; wireless bands and 802.11 standards; and DNS + email security (SPF, DKIM, DMARC).
+      </div>
+      <button id="closeResults" type="button">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // ------- Mission tab switching -------
+    const missionTabs = document.querySelectorAll(".mission-tab");
+    const missions = document.querySelectorAll(".mission");
+
+    missionTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        const id = tab.getAttribute("data-mission-tab");
+        missionTabs.forEach(t => t.classList.toggle("active", t === tab));
+        missions.forEach(m =>
+          m.classList.toggle("active", m.getAttribute("data-mission") === id)
+        );
+      });
+    });
+
+    // ------- Helper for outputs -------
+    function setOutput(id, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("placeholder");
+      el.textContent = text;
+    }
+
+    // ------- Simulations (per mission) -------
+    function runSimulation(key) {
+      switch (key) {
+        case "m1": {
+          const edge = document.getElementById("m1_edge").value || "<none>";
+          const sw = document.getElementById("m1_switch").value || "<none>";
+          const dhcp = document.getElementById("m1_dhcp").value || "<none>";
+          const dns = document.getElementById("m1_dns").value || "<none>";
+          const ntp = document.getElementById("m1_ntp").value || "<none>";
+          const vlans = document.getElementById("m1_vlans").checked;
+          const vpn = document.getElementById("m1_vpn").checked;
+
+          let out = "Branch network simulation:\n";
+          out += `- Edge device: ${edge}\n`;
+          out += `- Switching/PoE: ${sw}\n`;
+          out += `- DHCP location: ${dhcp}\n`;
+          out += `- DNS strategy: ${dns}\n`;
+          out += `- NTP strategy: ${ntp}\n`;
+          out += `- VLANs enabled: ${vlans ? "Yes" : "No"}\n`;
+          out += `- Site-to-site VPN to HQ: ${vpn ? "Yes" : "No"}\n\n`;
+
+          // Commentary
+          if (edge === "enterprise_router") {
+            out += "- Edge: Enterprise router can handle routing, NAT, and often DHCP for the branch.\n";
+          } else if (edge === "soho_router") {
+            out += "- Edge: SOHO router provides basic NAT/DHCP but may lack advanced features.\n";
+          } else {
+            out += "- Edge: Without a router, the branch cannot reach the WAN properly.\n";
+          }
+
+          if (sw === "managed_poe") {
+            out += "- Switching: Managed PoE switch powers APs/VoIP phones/IP cameras directly.\n";
+          } else if (sw === "unmanaged") {
+            out += "- Switching: Unmanaged switch works, but separate PoE injectors add complexity.\n";
+          } else {
+            out += "- Switching: Patch panel alone is for cable organization, not switching.\n";
+          }
+
+          if (dhcp === "router" || dhcp === "server") {
+            out += "- DHCP: Clients will receive automatic IPs from a DHCP host.\n";
+          } else if (dhcp === "manual") {
+            out += "- DHCP: Static addressing increases admin overhead and risk of conflicts.\n";
+          }
+
+          if (dns === "no_dns") {
+            out += "- DNS: Without DNS, users would need to use raw IP addresses.\n";
+          } else {
+            out += "- DNS: Name resolution is available for users and apps.\n";
+          }
+
+          if (ntp === "no_ntp") {
+            out += "- NTP: No time sync; log timestamps may drift between systems.\n";
+          } else {
+            out += "- NTP: Devices can synchronize time for consistent logs.\n";
+          }
+
+          if (vlans) {
+            out += "- Segmentation: VLANs separate VoIP, IoT, and user traffic for security.\n";
+          } else {
+            out += "- Segmentation: All devices share a broadcast domain (less secure, more noisy).\n";
+          }
+
+          if (vpn) {
+            out += "- VPN: Site-to-site VPN secures traffic to HQ over the internet.\n";
+          } else {
+            out += "- VPN: Branch traffic to HQ may be exposed or require direct internet access.\n";
+          }
+
+          setOutput("m1_output", out);
+          break;
+        }
+
+        case "m2": {
+          const band = document.getElementById("m2_band").value || "<none>";
+          const width = document.getElementById("m2_width").value || "<none>";
+          const std = document.getElementById("m2_standard").value || "<none>";
+          const sec = document.getElementById("m2_security").value || "<none>";
+          const wps = document.getElementById("m2_wps").checked;
+          const iot = document.getElementById("m2_iot_vlan").value || "<none>";
+          const headset = document.getElementById("m2_headset").value || "<none>";
+
+          let out = "Wireless network simulation:\n";
+          out += `- Office band: ${band}\n`;
+          out += `- Channel width: ${width} MHz\n`;
+          out += `- 802.11 standard: ${std}\n`;
+          out += `- Security mode: ${sec}\n`;
+          out += `- WPS enabled: ${wps ? "Yes" : "No"}\n`;
+          out += `- IoT / guest design: ${iot}\n`;
+          out += `- Headset technology: ${headset}\n\n`;
+
+          if (band === "5" || band === "6") {
+            out += "- Band: Upper band (5/6 GHz) offers higher throughput and less interference for modern clients.\n";
+          } else if (band === "2.4") {
+            out += "- Band: 2.4 GHz has better range but more interference and fewer non-overlapping channels.\n";
+          }
+
+          if (std === "ax") {
+            out += "- Standard: 802.11ax provides efficiency and better support for crowded environments.\n";
+          } else if (std === "ac") {
+            out += "- Standard: 802.11ac is still fast but not as efficient as 802.11ax.\n";
+          } else if (std === "b" || std === "g") {
+            out += "- Standard: 802.11b/g are legacy and slower.\n";
+          }
+
+          if (sec === "wpa3") {
+            out += "- Security: WPA3 is the preferred modern Wi-Fi security standard.\n";
+          } else if (sec === "wpa2") {
+            out += "- Security: WPA2 is still widely used and acceptable.\n";
+          } else if (sec === "wep" || sec === "open") {
+            out += "- Security: This configuration is weak and should be avoided on corporate networks.\n";
+          }
+
+          if (wps) {
+            out += "- WPS: Enabled – easier onboarding but introduces security concerns.\n";
+          } else {
+            out += "- WPS: Disabled – reduces attack surface.\n";
+          }
+
+          if (iot === "vlan") {
+            out += "- IoT: Devices are segmented on a separate VLAN with limited access – good practice.\n";
+          } else if (iot === "same_lan") {
+            out += "- IoT: Sharing the same LAN as users can increase risk if IoT is compromised.\n";
+          } else if (iot === "open_guest") {
+            out += "- IoT: Open guest bridged to LAN exposes internal network.\n";
+          }
+
+          if (headset === "bluetooth") {
+            out += "- Headsets: Bluetooth is the correct short-range technology for pairing audio devices.\n";
+          } else if (headset !== "<none>") {
+            out += "- Headsets: That technology is not ideal for ongoing audio streaming between phone and headset.\n";
+          }
+
+          setOutput("m2_output", out);
+          break;
+        }
+
+        case "m3": {
+          const a = document.getElementById("m3_a").value || "<none>";
+          const aaaa = document.getElementById("m3_aaaa").value || "<none>";
+          const mx = document.getElementById("m3_mx").value || "<none>";
+          const spf = document.getElementById("m3_spf").value || "<none>";
+          const dkim = document.getElementById("m3_dkim").value || "<none>";
+          const dmarc = document.getElementById("m3_dmarc").value || "<none>";
+          const alias = document.getElementById("m3_alias").value || "<none>";
+          const dnsSrv = document.getElementById("m3_dns_srv").checked;
+          const dhcpSrv = document.getElementById("m3_dhcp_srv").checked;
+          const syslogSrv = document.getElementById("m3_syslog_srv").checked;
+          const ntpSrv = document.getElementById("m3_ntp_srv").checked;
+
+          let out = "DNS & email simulation:\n";
+          out += `- www IPv4 choice: ${a}\n`;
+          out += `- www IPv6 choice: ${aaaa}\n`;
+          out += `- Mail routing: ${mx}\n`;
+          out += `- SPF: ${spf}\n`;
+          out += `- DKIM: ${dkim}\n`;
+          out += `- DMARC: ${dmarc}\n`;
+          out += `- Portal alias: ${alias}\n`;
+          out += `- Services: DNS=${dnsSrv}, DHCP=${dhcpSrv}, Syslog=${syslogSrv}, NTP=${ntpSrv}\n\n`;
+
+          if (a === "a" && aaaa === "aaaa") {
+            out += "- Web: Both A and AAAA records exist – dual-stack clients can reach the site over IPv4 and IPv6.\n";
+          } else {
+            out += "- Web: Dual-stack may not be fully configured; check A and AAAA records.\n";
+          }
+
+          if (mx === "mx") {
+            out += "- Mail: MX record properly points to mail.example.com for inbound email.\n";
+          } else {
+            out += "- Mail: Without an MX, mail delivery may be unreliable.\n";
+          }
+
+          if (spf === "set_spf" && dkim === "set_dkim" && dmarc === "set_dmarc") {
+            out += "- Email security: SPF, DKIM, and DMARC together strongly reduce spoofing.\n";
+          } else {
+            out += "- Email security: Incomplete SPF/DKIM/DMARC configuration leaves spoofing paths open.\n";
+          }
+
+          if (alias === "cname") {
+            out += "- Alias: CNAME for portal.example.com properly points to the intranet server.\n";
+          } else {
+            out += "- Alias: Without a CNAME, clients may not be redirected as intended.\n";
+          }
+
+          if (dnsSrv && dhcpSrv) {
+            out += "- Core services: DNS and DHCP are in place for clients.\n";
+          } else {
+            out += "- Core services: Consider deploying both DNS and DHCP for a complete environment.\n";
+          }
+
+          if (syslogSrv && ntpSrv) {
+            out += "- Logging/time: Syslog + NTP support accurate timestamps across devices.\n";
+          }
+
+          setOutput("m3_output", out);
+          break;
+        }
+
+        default:
+          break;
+      }
+    }
+
+    document.querySelectorAll("[data-run]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.getAttribute("data-run");
+        runSimulation(key);
+      });
+    });
+
+    // ------- Grading logic -------
+    const missionScores = { m1: 0, m2: 0, m3: 0 };
+    const missionMax = { m1: 6, m2: 6, m3: 6 };
+
+    const scenarios = {
+      m1: {
+        title: "Mission 1 – Branch Office Network Build",
+        fields: {
+          edge: {
+            label: "Edge device provides routing & NAT",
+            eval: () => {
+              const val = document.getElementById("m1_edge").value;
+              return {
+                ok: val === "enterprise_router" || val === "soho_router",
+                display: val || "<no selection>",
+                correct: "Router at the edge to connect LAN to WAN with NAT"
+              };
+            }
+          },
+          switch: {
+            label: "Switching & PoE choice",
+            eval: () => {
+              const val = document.getElementById("m1_switch").value;
+              return {
+                ok: val === "managed_poe",
+                display: val || "<no selection>",
+                correct: "Managed PoE switch to power APs/VoIP/IoT and support VLANs"
+              };
+            }
+          },
+          dhcp: {
+            label: "DHCP for automatic addressing",
+            eval: () => {
+              const val = document.getElementById("m1_dhcp").value;
+              return {
+                ok: val === "router" || val === "server",
+                display: val || "<no selection>",
+                correct: "DHCP server (on router or dedicated host) for automatic IP assignment"
+              };
+            }
+          },
+          dns: {
+            label: "DNS available to clients",
+            eval: () => {
+              const val = document.getElementById("m1_dns").value;
+              return {
+                ok: val === "local_dns" || val === "hq_dns",
+                display: val || "<no selection>",
+                correct: "DNS provided by local or HQ/cloud servers"
+              };
+            }
+          },
+          ntp: {
+            label: "NTP for time synchronization",
+            eval: () => {
+              const val = document.getElementById("m1_ntp").value;
+              return {
+                ok: val === "ntp_server" || val === "internet_ntp",
+                display: val || "<no selection>",
+                correct: "NTP used so devices share consistent time"
+              };
+            }
+          },
+          vlans_vpn: {
+            label: "Segmentation & secure connection to HQ",
+            eval: () => {
+              const vlans = document.getElementById("m1_vlans").checked;
+              const vpn = document.getElementById("m1_vpn").checked;
+              return {
+                ok: vlans && vpn,
+                display:
+                  `VLANs=${vlans ? "on" : "off"}, VPN=${vpn ? "on" : "off"}`,
+                correct:
+                  "Use VLANs to isolate traffic and a site-to-site VPN back to HQ"
+              };
+            }
+          }
+        },
+        explanation:
+          "Routers connect LANs to WANs and often provide DHCP. Managed PoE switches power network devices and support VLANs. DHCP, DNS, and NTP are core host services, while VLANs and VPNs provide segmentation and secure remote connectivity."
+      },
+
+      m2: {
+        title: "Mission 2 – Secure Wireless & IoT Layout",
+        fields: {
+          band: {
+            label: "Band choice for high throughput",
+            eval: () => {
+              const val = document.getElementById("m2_band").value;
+              return {
+                ok: val === "5" || val === "6",
+                display: val || "<no selection>",
+                correct: "5 GHz or 6 GHz for higher throughput and less interference"
+              };
+            }
+          },
+          width: {
+            label: "Channel width selection",
+            eval: () => {
+              const val = document.getElementById("m2_width").value;
+              return {
+                ok: val === "40" || val === "80",
+                display: val || "<no selection>",
+                correct: "40–80 MHz on upper band for good throughput without excessive interference"
+              };
+            }
+          },
+          standard: {
+            label: "802.11 standard for dense environment",
+            eval: () => {
+              const val = document.getElementById("m2_standard").value;
+              return {
+                ok: val === "ax",
+                display: val || "<no selection>",
+                correct: "802.11ax (Wi-Fi 6/6E) for higher efficiency and performance"
+              };
+            }
+          },
+          security: {
+            label: "Wi-Fi security mode",
+            eval: () => {
+              const val = document.getElementById("m2_security").value;
+              return {
+                ok: val === "wpa3" || val === "wpa2",
+                display: val || "<no selection>",
+                correct: "WPA3 preferred (or WPA2) – avoid WEP and open networks"
+              };
+            }
+          },
+          wps: {
+            label: "WPS exposure",
+            eval: () => {
+              const enabled = document.getElementById("m2_wps").checked;
+              return {
+                ok: !enabled,
+                display: enabled ? "WPS enabled" : "WPS disabled",
+                correct: "Disable WPS to reduce attack surface"
+              };
+            }
+          },
+          iot_vlan: {
+            label: "IoT / guest segmentation",
+            eval: () => {
+              const val = document.getElementById("m2_iot_vlan").value;
+              return {
+                ok: val === "vlan",
+                display: val || "<no selection>",
+                correct: "Place IoT/guests on a separate VLAN or network segment"
+              };
+            }
+          },
+          headset: {
+            label: "Short-range headset technology",
+            eval: () => {
+              const val = document.getElementById("m2_headset").value;
+              return {
+                ok: val === "bluetooth",
+                display: val || "<no selection>",
+                correct: "Bluetooth for short-range audio/headset connections"
+              };
+            }
+          }
+        },
+        // We'll count only 6 of these toward missionMax; headset is a bonus inside grade
+        explanation:
+          "Day 6 highlights using 5/6 GHz with 802.11ax for high throughput in dense environments, securing Wi-Fi with WPA2/WPA3 and disabling WPS, and segmenting IoT/guest devices. Bluetooth is used for short-range headset connections, while NFC/RFID target other use cases."
+      },
+
+      m3: {
+        title: "Mission 3 – DNS & Email Service Builder",
+        fields: {
+          dual_stack: {
+            label: "Dual-stack web support",
+            eval: () => {
+              const a = document.getElementById("m3_a").value;
+              const aaaa = document.getElementById("m3_aaaa").value;
+              return {
+                ok: a === "a" && aaaa === "aaaa",
+                display: `A=${a || "<none>"}, AAAA=${aaaa || "<none>"}`,
+                correct: "Configure both A (IPv4) and AAAA (IPv6) for www.example.com"
+              };
+            }
+          },
+          mx: {
+            label: "Mail routing via MX",
+            eval: () => {
+              const val = document.getElementById("m3_mx").value;
+              return {
+                ok: val === "mx",
+                display: val || "<no selection>",
+                correct: "Use MX record pointing to mail.example.com"
+              };
+            }
+          },
+          spf_dkim_dmarc: {
+            label: "SPF, DKIM, and DMARC together",
+            eval: () => {
+              const spf = document.getElementById("m3_spf").value;
+              const dkim = document.getElementById("m3_dkim").value;
+              const dmarc = document.getElementById("m3_dmarc").value;
+              const ok = spf === "set_spf" && dkim === "set_dkim" && dmarc === "set_dmarc";
+              return {
+                ok,
+                display:
+                  `SPF=${spf || "<none>"}, DKIM=${dkim || "<none>"}, DMARC=${dmarc || "<none>"}`,
+                correct: "Publish SPF, DKIM, and DMARC TXT records to reduce spoofing"
+              };
+            }
+          },
+          cname_alias: {
+            label: "Portal alias using CNAME",
+            eval: () => {
+              const val = document.getElementById("m3_alias").value;
+              return {
+                ok: val === "cname",
+                display: val || "<no selection>",
+                correct: "Use CNAME to alias portal.example.com to the internal host name"
+              };
+            }
+          },
+          dns_dhcp: {
+            label: "Deploy DNS and DHCP services",
+            eval: () => {
+              const dns = document.getElementById("m3_dns_srv").checked;
+              const dhcp = document.getElementById("m3_dhcp_srv").checked;
+              return {
+                ok: dns && dhcp,
+                display: `DNS=${dns ? "on" : "off"}, DHCP=${dhcp ? "on" : "off"}`,
+                correct: "Deploy both DNS and DHCP servers for core network services"
+              };
+            }
+          },
+          syslog_ntp: {
+            label: "Logging and time sync infrastructure",
+            eval: () => {
+              const syslog = document.getElementById("m3_syslog_srv").checked;
+              const ntp = document.getElementById("m3_ntp_srv").checked;
+              return {
+                ok: syslog && ntp,
+                display: `Syslog=${syslog ? "on" : "off"}, NTP=${ntp ? "on" : "off"}`,
+                correct: "Syslog + NTP centralize logs and align timestamps"
+              };
+            }
+          }
+        },
+        explanation:
+          "Day 6 explains how A and AAAA records provide IPv4/IPv6 web access, MX records handle mail routing, and SPF/DKIM/DMARC TXT records protect against email spoofing. Core network services include DNS, DHCP, and supporting infrastructure like syslog and NTP."
+      }
+    };
+
+    // We’ll treat mission 2’s headset field as extra but still count it (missionMax=6)
+    // Adjust missionMax if needed:
+    missionMax.m2 = 6; // band, width, standard, security, WPS, IoT VLAN; headset becomes part of grade as well
+
+    const resultsOverlay = document.getElementById("resultsOverlay");
+    const resultsBody = document.getElementById("resultsBody");
+    const resultsScore = document.getElementById("resultsScore");
+    const gradeBtn = document.getElementById("gradeBtn");
+    const closeResults = document.getElementById("closeResults");
+
+    function updateMissionScoreDisplay() {
+      Object.keys(missionScores).forEach(m => {
+        const el = document.querySelector(`[data-mission-score="${m}"]`);
+        if (el) {
+          el.textContent = `${missionScores[m]} / ${missionMax[m]}`;
+        }
+      });
+    }
+
+    function gradeLab() {
+      Object.keys(missionScores).forEach(m => (missionScores[m] = 0));
+      resultsBody.innerHTML = "";
+      let totalScore = 0;
+      let totalMax = 0;
+
+      Object.entries(scenarios).forEach(([mid, sc]) => {
+        const block = document.createElement("div");
+        block.className = "result-block";
+
+        const title = document.createElement("div");
+        title.className = "result-title";
+        title.textContent = sc.title;
+        block.appendChild(title);
+
+        let localScore = 0;
+        const fields = sc.fields;
+        const fieldKeys = Object.keys(fields);
+        totalMax += missionMax[mid];
+
+        fieldKeys.forEach(fid => {
+          const meta = fields[fid];
+          const res = meta.eval();
+          const line = document.createElement("div");
+          line.className =
+            "result-line " +
+            (res.ok
+              ? "good"
+              : res.display === "<no selection>"
+              ? ""
+              : "bad");
+
+          line.innerHTML =
+            `<span class="label-inline">${meta.label} – Your config:</span> ${res.display}` +
+            (res.ok || !res.correct
+              ? ""
+              : ` | <span class="label-inline">Expected:</span> ${res.correct}`);
+
+          block.appendChild(line);
+
+          if (res.ok && localScore < missionMax[mid]) {
+            localScore++;
+            totalScore++;
+          }
+        });
+
+        missionScores[mid] = localScore;
+
+        const expl = document.createElement("div");
+        expl.className = "result-expl";
+        expl.textContent = sc.explanation;
+        block.appendChild(expl);
+
+        resultsBody.appendChild(block);
+      });
+
+      resultsScore.textContent = `Total Score: ${totalScore} / ${totalMax} points`;
+      updateMissionScoreDisplay();
+      resultsOverlay.style.display = "flex";
+    }
+
+    gradeBtn.addEventListener("click", gradeLab);
+
+    closeResults.addEventListener("click", () => {
+      resultsOverlay.style.display = "none";
+    });
+
+    resultsOverlay.addEventListener("click", e => {
+      if (e.target === resultsOverlay) {
+        resultsOverlay.style.display = "none";
+      }
+    });
+
+    // Initialize score display
+    updateMissionScoreDisplay();
+  </script>
+</body>
+</html>
